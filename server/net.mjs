@@ -13,10 +13,31 @@ export function isPrivateIp(ip) {
     return a === 0 || a === 10 || a === 127 || (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
       (a === 192 && b === 168) || (a === 192 && b === 0) || (a === 198 && (b === 18 || b === 19)) || a >= 224;
   }
-  const v = ip.toLowerCase();
-  if (v === '::' || v === '::1') return true;
-  if (v.startsWith('::ffff:')) return isPrivateIp(v.slice(7));
-  return /^(f[c-d]|fe[89ab]|ff|64:ff9b:|100::|2001:db8|2001:0?:)/.test(v) || !v.includes(':');
+  const v = ip.toLowerCase().replace(/^\[|\]$/g, '').split('%')[0];
+  const h = hextets(v);
+  if (!h) return true; // not an address we can read: refuse
+  if (h.every(x => x === 0) || (h.slice(0, 7).every(x => x === 0) && h[7] === 1)) return true; // :: and ::1
+  const v4 = (hi, lo) => `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`;
+  // an IPv4 address inside an IPv6 one (mapped ::ffff:a.b.c.d, compatible ::a.b.c.d, 6to4 2002:abcd:...): judge the IPv4 part
+  if (h.slice(0, 5).every(x => x === 0) && (h[5] === 0xffff || h[5] === 0)) return isPrivateIp(v4(h[6], h[7]));
+  if (h[0] === 0x2002) return isPrivateIp(v4(h[1], h[2]));
+  const top = h[0];
+  return (top & 0xfe00) === 0xfc00 || (top & 0xffc0) === 0xfe80 || (top & 0xff00) === 0xff00 || // unique local, link local, multicast
+    (top === 0x64 && h[1] === 0xff9b) || (top === 0x100 && h[1] === 0 && h[2] === 0 && h[3] === 0) || // NAT64, discard
+    (top === 0x2001 && (h[1] === 0xdb8 || h[1] < 0x200)); // documentation, Teredo and other special 2001::/23 blocks
+}
+
+/** An IPv6 address as its 8 numbers, or null. Accepts :: shortening and a dotted IPv4 tail. */
+function hextets(v) {
+  if (!net.isIPv6(v)) return null;
+  let s = v;
+  const dotted = s.match(/(\d+\.\d+\.\d+\.\d+)$/);
+  if (dotted) { const [a, b, c, d] = dotted[1].split('.').map(Number); s = s.slice(0, -dotted[1].length) + ((a << 8) | b).toString(16) + ':' + ((c << 8) | d).toString(16); }
+  const [head, tail] = s.split('::');
+  const part = x => x ? x.split(':').map(n => parseInt(n, 16)) : [];
+  const a = part(head), b = s.includes('::') ? part(tail) : [];
+  const out = s.includes('::') ? [...a, ...Array(8 - a.length - b.length).fill(0), ...b] : a;
+  return out.length === 8 && out.every(n => n >= 0 && n <= 0xffff) ? out : null;
 }
 
 // a dns.lookup replacement that refuses private answers; used by the socket itself

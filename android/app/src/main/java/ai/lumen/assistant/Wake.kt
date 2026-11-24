@@ -46,7 +46,10 @@ class WakeService : Service(), RecognitionListener {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) { stopSelf(); return START_NOT_STICKY }
         val n = notification()
-        if (Build.VERSION.SDK_INT >= 30) startForeground(1, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE) else startForeground(1, n)
+        // Android 14+ refuses a microphone service without the permission, or when started from the background: stop quietly
+        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) { stopSelf(); return START_NOT_STICKY }
+        try { if (Build.VERSION.SDK_INT >= 30) startForeground(1, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE) else startForeground(1, n) }
+        catch (e: Exception) { Telemetry.warn("wake", "Android did not allow listening now: ${e.message}"); stopSelf(); return START_NOT_STICKY }
         if (model == null) Thread {
             try {
                 model = Model(ensureModel(this).absolutePath)
@@ -104,7 +107,8 @@ class WakeService : Service(), RecognitionListener {
     private fun release() { speech?.stop(); speech?.shutdown(); speech = null }
 
     /** Lumen itself is on screen and needs the microphone; give it up until Lumen goes away. */
-    fun pause() { paused = true; main.removeCallbacks(resumeLater); release() }
+    @Volatile private var uiSeen = false
+    fun pause() { uiSeen = true; paused = true; main.removeCallbacks(resumeLater); release() }
     private val resumeLater = Runnable { if (!paused && model != null) listen() }
     fun resume() { paused = false; main.removeCallbacks(resumeLater); main.postDelayed(resumeLater, 4000) } // after Lumen's own voice has gone quiet
 
@@ -118,8 +122,11 @@ class WakeService : Service(), RecognitionListener {
         if (text != "hey lumen" || !clear || System.currentTimeMillis() - lastFire < 3000) return
         lastFire = System.currentTimeMillis()
         Telemetry.info("wake", "heard: $text")
-        pause()
+        uiSeen = false
+        paused = true; main.removeCallbacks(resumeLater); release()
         summon(this)
+        // Android may block opening the panel from the background: if no Lumen screen showed up, listen again
+        main.postDelayed({ if (!uiSeen && paused) { paused = false; Telemetry.warn("wake", "the panel did not open; listening again"); listen() } }, 5000)
     }
 
     override fun onPartialResult(hypothesis: String?) {}

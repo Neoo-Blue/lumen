@@ -65,7 +65,7 @@ open class MainActivity : AppCompatActivity() {
             if (m == "phone") LumenCore.ensure(this@MainActivity) else Tailnet.start(this@MainActivity)
         }
         @android.webkit.JavascriptInterface fun control(url: String) { if (onConnectPage()) Tailnet.setControl(this@MainActivity, url) }
-        @android.webkit.JavascriptInterface fun open() { if (onConnectPage()) runOnUiThread { webView.loadUrl(if (overlay) LumenOrigin.HOME + "/?overlay=1" else LumenOrigin.HOME) } }
+        @android.webkit.JavascriptInterface fun open() { if (onConnectPage()) runOnUiThread { if (!incoming(intent)) webView.loadUrl(if (overlay) LumenOrigin.HOME + "/?overlay=1" else LumenOrigin.HOME) } } // a share or shortcut that started Lumen goes through once connected
     }
     private fun <T> runOnUiThreadBlocking(f: () -> T): T {
         if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) return f()

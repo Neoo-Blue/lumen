@@ -251,6 +251,7 @@ class LumenAccess : AccessibilityService() {
     fun screenText(): String = last.joinToString(" ") { label(it) }
 
     fun type(args: JSONObject): JSONObject {
+        if (args.optString("text").contains('\n') || args.optString("text").contains('\r')) args.put("text", args.optString("text").replace(Regex("[\\r\\n]+$"), "")) // Enter would send in chat apps: sending is a tap Lumen asks about
         val into = args.optJSONObject("into") ?: JSONObject()
         // a label matched (e.g. "Depart*"): use the input box that goes with it, the next editable item on screen
         val hit = if (into.length() > 0) find(into) else null
@@ -357,9 +358,9 @@ class LumenAccess : AccessibilityService() {
     companion object {
         @Volatile var instance: LumenAccess? = null
         private val BROWSERS = setOf("com.sec.android.app.sbrowser", "com.android.chrome", "org.mozilla.firefox", "com.microsoft.emmx", "com.brave.browser", "com.opera.browser", "com.duckduckgo.mobile.android", "com.google.android.googlequicksearchbox")
-        val RISKY = Regex("\\b(send|pay|buy|purchase|order|checkout|check out|delete|remove|transfer|post|publish|confirm|submit|book|subscribe|unsubscribe|uninstall|install|update|reset|erase|call|allow|grant|accept|agree|sign|withdraw)\\b|发送|支付|付款|购买|删除|确认|转账|下单|提交", RegexOption.IGNORE_CASE)
+        val RISKY = Regex("\\b(send|pay|buy|purchase|order|checkout|check out|delete|remove|transfer|post|publish|confirm|submit|book|subscribe|unsubscribe|uninstall|install|update|reset|erase|call|allow|grant|accept|agree|sign|withdraw|sell|trade|swap|approve|authorize|authorise|complete|donate|wire|forward|reply|wipe|format|start now|share|accept all|place order|confirm and pay|sign in|log in)\\b|发送|支付|付款|购买|删除|确认|转账|下单|提交|傳送|付款|購買|刪除|確認|送信|支払|購入|削除|보내기|결제|구매|삭제|enviar|pagar|comprar|eliminar", RegexOption.IGNORE_CASE)
         // installers and permission screens: every tap there needs the person, plans cannot pre-approve them
-        private val GUARDED_APPS = setOf("com.google.android.packageinstaller", "com.android.packageinstaller", "com.google.android.permissioncontroller", "com.android.permissioncontroller", "com.samsung.android.packageinstaller")
+        private val GUARDED_APPS = setOf("com.google.android.packageinstaller", "com.android.packageinstaller", "com.google.android.permissioncontroller", "com.android.permissioncontroller", "com.samsung.android.packageinstaller", "com.samsung.android.permissioncontroller", "com.android.vending", "com.sec.android.app.samsungapps", "com.miui.packageinstaller", "com.oplus.appdetail", "com.google.android.gms")
         fun err(m: String): JSONObject = JSONObject().put("ok", false).put("error", m)
     }
 }

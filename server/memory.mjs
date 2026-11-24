@@ -14,13 +14,49 @@ export async function load(uid, profile = {}) {
   await mkdir(d, { recursive: true, mode: 0o700 });
   const mem = await readJSON(`${d}/memory.json`, { created: new Date().toISOString(), profile: '', style: '', facts: [], turns: 0, reflectedAt: 0 });
   Object.assign(mem, { email: profile.email || mem.email, name: profile.name || mem.name });
-  return { dir: d, mem, history: await readJSON(`${d}/history.json`, []) };
+  return { dir: d, mem, history: sane(await readJSON(`${d}/history.json`, [])) }; // repairs a history saved before sane() existed
 }
 
-export const save = u => Promise.all([
+/**
+ * A history the model service will accept: it starts with something the person said, every tool call is answered by
+ * its result in the next message, and no result is left without its call. Cutting history at a fixed count (or a turn
+ * that failed half way) can break those pairs, and a broken pair makes every later request fail, so this runs on save
+ * and on load.
+ */
+export function sane(h, keep = 60) {
+  let out = h.slice(-keep);
+  const blocks = m => Array.isArray(m?.content) ? m.content : [];
+  const plainUser = m => m?.role === 'user' && (typeof m.content === 'string' || !blocks(m).some(b => b.type === 'tool_result'));
+  while (out.length && !plainUser(out[0])) out.shift();
+  const fixed = [];
+  for (let i = 0; i < out.length; i++) {
+    const m = out[i];
+    if (m.role === 'user' && blocks(m).some(b => b.type === 'tool_result')) {
+      const prev = fixed[fixed.length - 1], calls = new Set(blocks(prev).filter(b => b.type === 'tool_use').map(b => b.id));
+      const content = blocks(m).filter(b => b.type !== 'tool_result' || calls.has(b.tool_use_id));
+      if (!content.length) continue;
+      fixed.push({ ...m, content }); continue;
+    }
+    if (m.role === 'assistant' && blocks(m).some(b => b.type === 'tool_use')) {
+      const next = out[i + 1], answered = new Set(blocks(next).filter(b => b.type === 'tool_result').map(b => b.tool_use_id));
+      const missing = blocks(m).filter(b => b.type === 'tool_use' && !answered.has(b.id));
+      fixed.push(m);
+      if (missing.length) { // a turn that stopped half way: close each open call so the pair is whole
+        const results = missing.map(b => ({ type: 'tool_result', tool_use_id: b.id, content: '(no result: the request was interrupted)', is_error: true }));
+        if (next?.role === 'user' && blocks(next).some(b => b.type === 'tool_result')) { out[i + 1] = { ...next, content: [...blocks(next), ...results] }; }
+        else fixed.push({ role: 'user', content: results });
+      }
+      continue;
+    }
+    fixed.push(m);
+  }
+  return fixed;
+}
+
+export const save = u => { u.history = sane(u.history); return Promise.all([
   writeFile(`${u.dir}/memory.json`, JSON.stringify(u.mem, null, 1), { mode: 0o600 }),
-  writeFile(`${u.dir}/history.json`, JSON.stringify(u.history.slice(-60)), { mode: 0o600 }),
-]);
+  writeFile(`${u.dir}/history.json`, JSON.stringify(u.history), { mode: 0o600 }),
+]); };
 
 // type: said | tapped | lumen | did | connected | look
 export const log = (u, type, text) => appendFile(`${u.dir}/log.jsonl`, JSON.stringify({ t: new Date().toISOString(), type, text: String(text).slice(0, 2000) }) + '\n', { mode: 0o600 });

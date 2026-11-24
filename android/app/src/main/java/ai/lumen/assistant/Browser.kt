@@ -81,7 +81,8 @@ class BrowserActivity : Activity() {
         Sessions.configure(web)
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
-                request.url.scheme !in setOf("https", "http") // no app links or intents from inside sites
+                !WebGuard.ok(request.url) // https sites only: no app links, intents, plain http or this phone's own addresses
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest) = WebGuard.block(request.url)
             override fun onPageFinished(view: WebView, url: String?) {
                 title.text = Uri.parse(url ?: "").host ?: ""
             }
@@ -122,7 +123,8 @@ class HiddenPage(private val ctx: Context, private val done: (JSONObject) -> Uni
         w.measure(1080, 2200); w.layout(0, 0, 1080, 2200)
         var started = false
         w.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest) = request.url.scheme !in setOf("https", "http")
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest) = !WebGuard.ok(request.url)
+            override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest) = WebGuard.block(request.url)
             override fun onPageFinished(view: WebView, u: String?) {
                 if (started) return
                 started = true
@@ -174,5 +176,24 @@ if(s.type){var f=find(s.type.into);if(!f)return 'missing';f.focus();var d=Object
 f.dispatchEvent(new Event('input',{bubbles:true}));f.dispatchEvent(new Event('change',{bubbles:true}));return 'ok'}
 if(s.submit){var g=(document.activeElement&&document.activeElement.form)||document.querySelector('form');if(!g)return 'missing';if(g.requestSubmit)g.requestSubmit();else g.submit();return 'ok'}
 return 'ok'}"""
+    }
+}
+
+
+/**
+ * Lumen's browsers share the app's cookie store, and Lumen's own pages live on this phone (127.0.0.1). A site must
+ * never be able to steer them to this phone's or the home network's addresses, or downgrade to plain http.
+ */
+object WebGuard {
+    fun ok(u: android.net.Uri?): Boolean = u != null && u.scheme == "https" && !private(u.host ?: "")
+    /** Blocks any request (page or part of a page) to this phone or a private network. */
+    fun block(u: android.net.Uri?): android.webkit.WebResourceResponse? =
+        if (u != null && (u.scheme == "http" || u.scheme == "https") && private(u.host ?: "")) android.webkit.WebResourceResponse("text/plain", "utf-8", 403, "Forbidden", emptyMap(), java.io.ByteArrayInputStream(ByteArray(0))) else null
+    fun private(host: String): Boolean {
+        val h = host.lowercase().trim('[', ']')
+        if (h.isEmpty() || h == "localhost" || h.endsWith(".localhost") || h.endsWith(".local") || h.endsWith(".internal")) return true
+        val v4 = Regex("^(\\d+)\\.(\\d+)\\.(\\d+)\\.(\\d+)$").find(h)?.groupValues?.drop(1)?.map { it.toInt() }
+        if (v4 != null) { val (a, b) = v4; return a == 0 || a == 10 || a == 127 || (a == 169 && b == 254) || (a == 172 && b in 16..31) || (a == 192 && b == 168) || (a == 100 && b in 64..127) || a >= 224 }
+        return h.contains(':') // any raw IPv6 address: sites use names
     }
 }

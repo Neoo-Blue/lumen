@@ -293,7 +293,9 @@ function phoneCaller(req) {
 }
 function caller(req) {
   if (PHONE) return { local: phoneCaller(req), login: '', name: '' };
-  const local = TRUSTED.has(req.socket.localAddress) && /^(::ffff:)?127\./.test(req.socket.remoteAddress || '');
+  // Tailscale Funnel brings in the public internet through the same serve address: never treat that as the owner
+  const funnel = !!req.headers['tailscale-funnel-request'];
+  const local = !funnel && TRUSTED.has(req.socket.localAddress) && /^(::ffff:)?127\./.test(req.socket.remoteAddress || '');
   const login = local ? String(req.headers['tailscale-user-login'] || '').toLowerCase().slice(0, 200) : '';
   return { local, login, name: local ? String(req.headers['tailscale-user-name'] || '').slice(0, 100) : '' };
 }
@@ -600,6 +602,9 @@ async function turn(p, text, kind, tz, lang, write, device = [], here = null, sk
       if (msg.stop_reason !== 'tool_use') return write('\n');
 
       const calls = msg.content.filter(b => b.type === 'tool_use').slice(0, 6);
+      // calls in one step run side by side: if any of them reads words written by others, the whole step counts as tainted
+      // before any of them runs (otherwise a job could be added in the same step as the text message that asked for it)
+      if (calls.some(c => /^(web_search|api_get|api_call|find_connector)$|__/.test(c.name) || (c.name === 'phone' && /^(notifications|smsInbox|browserRead|screenRead|screenshot|lifeSearch|screenDo|screenTap|calendarEvents)$/.test(c.input?.action)))) tainted = true;
       for (const extra of msg.content.filter(b => b.type === 'tool_use').slice(6)) calls.push({ ...extra, skip: 'too many tools in one step' });
       line({ c: '_status', text: calls.map(c => c.name).join(',') });
       const results = await Promise.all(calls.map(async c => {
@@ -802,7 +807,7 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('x-content-type-options', 'nosniff'); res.setHeader('referrer-policy', 'strict-origin-when-cross-origin'); res.setHeader('x-frame-options', 'DENY');
     // the home network sees the first-run setup and nothing else; after setup, only the tailnet (through tailscale serve)
     const from = caller(req), setup = url.pathname === '/setup' || url.pathname.startsWith('/setup/');
-    if (!from.local && url.pathname !== '/health' && !(setup && !config().setupDone && !PHONE)) { res.writeHead(403, { 'content-type': 'text/plain' }); return res.end('Lumen is only reachable on your private network (Tailscale).'); }
+    if (!from.local && url.pathname !== '/health' && url.pathname !== '/calls/hook' && !(setup && !config().setupDone && !PHONE)) { res.writeHead(403, { 'content-type': 'text/plain' }); return res.end('Lumen is only reachable on your private network (Tailscale).'); }
     if (req.method === 'POST') { // only this page may post: JSON, same site
       const site = req.headers['sec-fetch-site'], origin = req.headers.origin, mine = process.env.LUMEN_PUBLIC_URL ? new URL(process.env.LUMEN_PUBLIC_URL).origin : null;
       const okSite = site ? site === 'same-origin' : (!origin || !mine || origin === mine);

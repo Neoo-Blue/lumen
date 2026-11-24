@@ -31,6 +31,7 @@ export function makeBrain(cfg) {
   const call = async (params, onText) => {
     if (cfg.beforeCall) await cfg.beforeCall(); // e.g. start the model on the phone
     const r = await fetch(base + '/chat/completions', {
+      signal: AbortSignal.timeout(cfg.provider === 'device' ? 600000 : 300000), // a stuck model never holds Lumen forever
       method: 'POST',
       headers: { 'content-type': 'application/json', ...(cfg.apiKey ? { authorization: 'Bearer ' + cfg.apiKey } : {}) },
       body: JSON.stringify({ model: cfg.provider === 'device' ? undefined : params.model || model, max_tokens: cfg.provider === 'device' ? Math.min(params.max_tokens || 2048, 2048) : params.max_tokens, stream: true, ...(cfg.provider === 'device' ? { chat_template_kwargs: { enable_thinking: false } } : {}), messages: toOpenAI(params.system, params.messages), ...(params.tools?.length ? { tools: toolsOf(params.tools) } : {}) }),
