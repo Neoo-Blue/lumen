@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lumen</string>
+    <string name="sc_talk">Talk</string>
+    <string name="sc_scan">What is this?</string>
+    <string name="sc_day">My day</string>
+    <string name="ask_lumen">Ask Lumen</string>
+    <string name="access_desc">Lets Lumen see the screen and tap, type and scroll for you in any app, and flip Quick Settings switches. Anything that sends, pays, buys, deletes or posts waits for your confirmation first.</string>
+    <string name="photo_source_title">Add a photo</string>
+    <string name="photo_source_camera">Take photo</string>
+    <string name="photo_source_library">Choose from library</string>
+    <string name="share_title">Share</string>
+</resources>

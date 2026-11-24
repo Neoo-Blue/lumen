@@ -1,0 +1,44 @@
+# Lumen + Tailscale. Start with:  docker compose up -d
+# Then open http://<this machine>:8080/setup on your home network to finish setup.
+services:
+  tailscale:
+    image: tailscale/tailscale:v1.104
+    hostname: ${LUMEN_HOSTNAME:-lumen}
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:-}            # optional; without it, the dashboard shows a sign-in link
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_USERSPACE: "true"                   # no special permissions needed
+      TS_AUTH_ONCE: "true"
+      TS_NO_LOGS_NO_SUPPORT: "true"          # nothing is reported to Tailscale's log service
+      TS_SERVE_CONFIG: /config/serve.json    # https://<hostname>.<tailnet>.ts.net -> Lumen
+      TS_EXTRA_ARGS: ${TS_EXTRA_ARGS:-}      # e.g. --login-server=https://headscale.example.com
+    volumes:
+      - ts-state:/var/lib/tailscale
+      - ts-socket:/var/run/tailscale
+      - ./tailscale:/config:ro
+    ports:
+      # First-run setup from your home network. After setup, Lumen refuses everything on this port
+      # except a health check; you can also delete these two lines and run `docker compose up -d` again.
+      - "${LUMEN_SETUP_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  lumen:
+    build: { context: .., dockerfile: Dockerfile }
+    image: ghcr.io/neoo-blue/lumen:latest
+    network_mode: service:tailscale          # shares Tailscale's network: tailscale serve reaches it on 127.0.0.1
+    depends_on: [tailscale]
+    env_file: [{ path: .env, required: false }]
+    environment:
+      PORT: 8080
+      LUMEN_DATA: /data
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+    volumes:
+      - lumen-data:/data
+      - ts-socket:/var/run/tailscale:ro
+    restart: unless-stopped
+
+volumes:
+  lumen-data:
+  ts-state:
+  ts-socket:

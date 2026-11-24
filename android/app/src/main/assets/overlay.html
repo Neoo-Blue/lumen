@@ -1,0 +1,134 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>
+:root{--ink:#f4f5fb;--mute:#a7abc0;--faint:#6f7390;--a:#8b7bff;--b:#3ad6c6;--c:#ff8a6b;--line:rgba(255,255,255,.09);--glass:rgba(255,255,255,.05);--ease:cubic-bezier(.2,.9,.25,1)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:transparent;color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;height:100%;overflow:hidden}
+.veil{position:fixed;inset:0;background:rgba(5,6,12,.55);opacity:0;transition:opacity .45s}
+.on .veil{opacity:1}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:88%;display:flex;flex-direction:column;border-radius:30px 30px 0 0;
+  background:radial-gradient(120% 60% at 15% 0%,rgba(139,123,255,.22),transparent 60%),radial-gradient(90% 50% at 100% 10%,rgba(58,214,198,.14),transparent 60%),rgba(12,13,22,.97);
+  border-top:1px solid rgba(255,255,255,.1);box-shadow:0 -24px 70px rgba(0,0,0,.55);transform:translateY(105%);transition:transform .65s var(--ease)}
+.on .sheet{transform:none}
+.grab{width:42px;height:5px;border-radius:9px;background:rgba(255,255,255,.2);margin:10px auto 4px}
+.head{display:flex;gap:14px;align-items:center;padding:12px 22px 6px}
+.orb{width:42px;height:42px;border-radius:50%;flex:none;background:conic-gradient(from 0deg,var(--a),var(--b),var(--c),var(--a));filter:blur(.3px);animation:spin 6s linear infinite;box-shadow:0 0 30px rgba(139,123,255,.45);position:relative}
+.orb::after{content:"";position:absolute;inset:6px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,rgba(255,255,255,.25) 35%,transparent 70%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.head h1{font-size:20px;font-weight:650;letter-spacing:-.01em}
+.head p{font-size:13px;color:var(--mute);margin-top:2px}
+.site{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:3px 10px;margin-top:6px}
+.site i{width:7px;height:7px;border-radius:50%;background:var(--b);box-shadow:0 0 8px var(--b)}
+.list{overflow:auto;padding:8px 16px 4px;flex:1}
+.row{display:flex;gap:12px;align-items:center;padding:12px 14px;margin:8px 0;border-radius:18px;background:var(--glass);border:1px solid var(--line);
+  opacity:0;transform:translateY(14px);transition:opacity .5s var(--ease),transform .5s var(--ease),border-color .3s,background .3s}
+.on .row{opacity:1;transform:none}
+.row label{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.row small{font-size:11.5px;letter-spacing:.04em;color:var(--faint);text-transform:uppercase}
+.row input{background:transparent;border:0;outline:0;color:var(--ink);font:500 16px/1.3 inherit;width:100%;padding:2px 0}
+.row input::placeholder{color:#ff9f86}
+.row.need{border-color:rgba(255,138,107,.45);background:rgba(255,138,107,.07)}
+.tick{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(255,255,255,.22);flex:none;display:grid;place-items:center;transition:.35s var(--ease);cursor:pointer}
+.tick svg{width:14px;height:14px;stroke:#0b0c14;stroke-width:3;fill:none;opacity:0;transform:scale(.4);transition:.35s var(--ease)}
+.row.ok .tick{background:linear-gradient(135deg,var(--a),var(--b));border-color:transparent}
+.row.ok .tick svg{opacity:1;transform:none}
+.foot{padding:12px 18px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
+.go{appearance:none;border:0;border-radius:20px;padding:18px;font:650 17px/1 inherit;color:#0b0c14;cursor:pointer;
+  background:linear-gradient(135deg,#a597ff,#5fe3d4);box-shadow:0 14px 34px rgba(95,227,212,.25);transition:transform .25s var(--ease),filter .25s,opacity .3s}
+.go:active{transform:scale(.97)}.go[disabled]{opacity:.45}
+.go.warn{background:linear-gradient(135deg,#ffb199,#ff7a8a);box-shadow:0 14px 34px rgba(255,122,138,.3)}
+.no{appearance:none;background:none;border:0;color:var(--mute);font:500 15px inherit;padding:8px;cursor:pointer}
+.hint{font-size:12.5px;color:var(--faint);text-align:center}
+/* filling: a slim card at the top; touches pass through */
+.pill{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));border-radius:22px;padding:12px 16px 14px;
+  background:rgba(12,13,22,.94);border:1px solid rgba(255,255,255,.1);box-shadow:0 16px 40px rgba(0,0,0,.45);transform:translateY(-130%);transition:transform .6s var(--ease)}
+.on .pill{transform:none}
+.pill .top{display:flex;align-items:center;gap:10px}
+.pill .orb{width:26px;height:26px}
+.pill b{font-size:14.5px;font-weight:620;flex:1}
+.pill .n{font-size:12px;color:var(--mute)}
+.steps{margin-top:8px;display:flex;flex-direction:column;gap:4px;max-height:140px;overflow:hidden}
+.st{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--faint);transition:color .3s}
+.st i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18);flex:none;transition:.3s}
+.st.now{color:var(--ink)}.st.now i{background:var(--b);box-shadow:0 0 10px var(--b);animation:pulse 1s ease-in-out infinite}
+.st.done{color:var(--mute)}.st.done i{background:linear-gradient(135deg,var(--a),var(--b))}
+@keyframes pulse{50%{transform:scale(1.5)}}
+.bar{height:3px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--b));transition:width .4s var(--ease)}
+/* final confirmation */
+.big{font-size:26px;font-weight:700;letter-spacing:-.02em;padding:6px 22px 2px}
+.detail{padding:6px 22px 4px;color:var(--mute);font-size:14.5px}
+.kv{margin:10px 16px 0;border-radius:18px;border:1px solid var(--line);background:var(--glass);padding:4px 16px}
+.kv div{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv div:last-child{border:0}.kv span{color:var(--mute)}.kv b{font-weight:600;text-align:right}
+</style></head>
+<body>
+<script>
+// Lumen's overlay: drawn over any app while Lumen fills it in. Data arrives as JSON; everything is shown as text.
+const send = o => { try { LumenOverlay.done(JSON.stringify(o)); } catch (e) {} };
+const h = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const TICK = '<svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+function orbHead(title, sub, site) {
+  const head = h('div', 'head'); head.append(h('div', 'orb'));
+  const t = h('div'); t.append(h('h1', '', title)); if (sub) t.append(h('p', '', sub));
+  if (site) { const s = h('span', 'site'); s.append(h('i')); s.append(document.createTextNode(site)); t.append(s); }
+  head.append(t); return head;
+}
+function review(d) {
+  document.body.append(h('div', 'veil'));
+  const sheet = h('div', 'sheet'); sheet.append(h('div', 'grab'));
+  sheet.append(orbHead(d.title || 'Check before I fill this in', d.note || 'Tap any box to change it', d.site));
+  const list = h('div', 'list'), rows = [];
+  (d.fields || []).forEach((f, i) => {
+    const row = h('div', 'row'); row.style.transitionDelay = (80 + i * 45) + 'ms';
+    const lab = h('label'); lab.append(h('small', '', f.label || ''));
+    const inp = h('input'); inp.value = f.value == null ? '' : String(f.value); inp.placeholder = 'Needed'; if (f.secret) inp.type = 'password';
+    inp.autocomplete = 'off'; lab.append(inp);
+    const tick = h('div', 'tick'); tick.innerHTML = TICK;
+    const sync = () => { row.classList.toggle('need', !inp.value.trim() && !f.optional); row.classList.toggle('ok', !!inp.value.trim()); go.disabled = rows.some(r => !r.inp.value.trim() && !r.f.optional); };
+    inp.oninput = sync; tick.onclick = () => inp.focus();
+    row.append(lab, tick); list.append(row); rows.push({ f, inp, sync });
+  });
+  sheet.append(list);
+  const ap = (d.approves || []).map(String).filter(x => x.trim().length >= 3).slice(0, 6);
+  if (ap.length) sheet.append(h('div', 'hint', 'Your OK also lets me tap: ' + ap.map(x => '\u201c' + x + '\u201d').join(', ') + ' (next 3 minutes)'));
+  const foot = h('div', 'foot'), go = h('button', 'go', typeof d.confirm === 'string' && d.confirm.trim() ? d.confirm : 'Confirm & fill'), no = h('button', 'no', typeof d.cancel === 'string' && d.cancel.trim() ? d.cancel : 'Not now');
+  foot.append(go, no); if (d.hint) foot.append(h('div', 'hint', d.hint)); sheet.append(foot);
+  document.body.append(sheet); rows.forEach(r => r.sync());
+  go.onclick = () => send({ ok: true, fields: rows.map(r => ({ label: r.f.label, value: r.inp.value })) });
+  no.onclick = () => send({ ok: false });
+  document.querySelector('.veil').onclick = () => send({ ok: false });
+}
+let pill;
+function progress(d) {
+  if (!pill) {
+    pill = h('div', 'pill'); const top = h('div', 'top'); top.append(h('div', 'orb'), h('b', '', d.title || 'Filling it in'), h('span', 'n', ''));
+    pill.append(top, h('div', 'steps'), h('div', 'bar')); pill.querySelector('.bar').append(h('i'));
+    document.body.append(pill);
+  }
+  const box = pill.querySelector('.steps'); box.textContent = '';
+  const steps = d.steps || [], at = d.at || 0;
+  steps.forEach((s, i) => { if (i < at - 2 || i > at + 2) return; const st = h('div', 'st' + (i < at ? ' done' : i === at ? ' now' : '')); st.append(h('i'), document.createTextNode(s)); box.append(st); });
+  pill.querySelector('.n').textContent = steps.length ? Math.min(at + 1, steps.length) + ' / ' + steps.length : '';
+  pill.querySelector('.bar i').style.width = (steps.length ? Math.round(100 * at / steps.length) : 0) + '%';
+  if (d.done) { pill.querySelector('b').textContent = d.done; pill.querySelector('.bar i').style.width = '100%'; }
+}
+function confirmIt(d) {
+  document.body.append(h('div', 'veil'));
+  const sheet = h('div', 'sheet'); sheet.append(h('div', 'grab'));
+  sheet.append(orbHead(d.kicker || 'Your OK, please', '', d.site));
+  sheet.append(h('div', 'big', d.title || 'Go ahead?'));
+  if (d.detail) sheet.append(h('div', 'detail', d.detail));
+  if (d.rows && d.rows.length) { const kv = h('div', 'kv'); d.rows.forEach(([k, v]) => { const r = h('div'); r.append(h('span', '', k), h('b', '', v)); kv.append(r); }); sheet.append(kv); }
+  const foot = h('div', 'foot'), go = h('button', 'go' + (d.danger ? ' warn' : ''), d.confirm || 'Confirm'), no = h('button', 'no', d.cancel || 'Not now');
+  foot.append(go, no); sheet.append(foot); document.body.append(sheet);
+  go.onclick = () => send({ ok: true }); no.onclick = () => send({ ok: false });
+  document.querySelector('.veil').onclick = () => send({ ok: false });
+}
+window.show = (mode, d) => {
+  if (mode !== 'progress') { document.body.textContent = ''; pill = null; }
+  ({ review, progress, confirm: confirmIt })[mode](d || {});
+  requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add('on')));
+};
+</script>
+</body></html>

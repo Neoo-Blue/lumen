@@ -1,0 +1,35 @@
+{
+  "servers": {
+    "deepwiki": {
+      "url": "https://mcp.deepwiki.com/mcp",
+      "label": "DeepWiki (any GitHub repo explained)"
+    },
+    "huggingface": {
+      "url": "https://huggingface.co/mcp",
+      "label": "Hugging Face"
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "label": "Context7 (library docs)"
+    }
+  },
+  "_examples": {
+    "remote_with_key": {
+      "url": "https://example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer env:EXAMPLE_TOKEN"
+      },
+      "label": "Any remote MCP; the token is read from the environment",
+      "disabled": true
+    },
+    "local_command": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "label": "Any local MCP server started as a command",
+      "disabled": true
+    }
+  }
+}

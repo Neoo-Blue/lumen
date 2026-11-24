@@ -1,0 +1,12 @@
+node_modules
+data/
+.env
+*.apk
+android/tsbridge/out/
+android/app/build/
+android/.gradle/
+android/local.properties
+*.keystore
+*.jks
+signing/
+android/dist/

@@ -1,0 +1,42 @@
+# Builds the Android app (with Tailscale built in) and the server image, and publishes a release on tags v*.
+name: release
+on:
+  push: { tags: ["v*"] }
+  workflow_dispatch:
+permissions: { contents: write, packages: write }
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: android/tsbridge/go.mod }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: android-actions/setup-android@v3
+      - name: Tailscale bridge
+        run: cd android/tsbridge && bash build.sh
+      - name: Signing key
+        env: { KS: "${{ secrets.LUMEN_KEYSTORE_B64 }}" }
+        run: mkdir -p android/signing && echo "$KS" | base64 -d > android/signing/lumen.keystore
+      - name: Build
+        env: { LUMEN_KEYSTORE_PASSWORD: "${{ secrets.LUMEN_KEYSTORE_PASSWORD }}" }
+        run: cd android && bash ci-build.sh
+      - name: Release files
+        run: |
+          cd android/dist
+          code=$(grep -oP 'versionCode = \K\d+' ../app/build.gradle.kts); ver=$(grep -oP 'versionName = "\K[^"]+' ../app/build.gradle.kts)
+          sum=$(sha256sum lumen.apk | cut -d' ' -f1)
+          printf '{"code": %s, "version": "%s", "sha256": "%s", "url": "https://github.com/%s/releases/download/%s/lumen.apk", "notes": "%s"}\n' \
+            "$code" "$ver" "$sum" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "See the release notes" > version.json
+          rm -f ../signing/lumen.keystore
+      - uses: softprops/action-gh-release@v2
+        with: { files: "android/dist/lumen.apk\nandroid/dist/version.json", generate_release_notes: true }
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: docker/build-push-action@v6
+        with: { context: ., push: true, tags: "ghcr.io/neoo-blue/lumen:latest,ghcr.io/neoo-blue/lumen:${{ github.ref_name }}" }

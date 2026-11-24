@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>Set up your assistant</title>
+<style>
+  :root { --bg: #0d0f14; --card: #161a22; --line: #262c38; --text: #eef1f6; --soft: #9aa3b5; --accent: #8fb4ff; --ok: #6fd3a0; --warn: #f0c36b; --bad: #ff8a8a; --r: 18px; }
+  @media (prefers-color-scheme: light) { :root { --bg: #f6f7fa; --card: #ffffff; --line: #e3e6ee; --text: #141821; --soft: #5d6678; --accent: #3a6ff0; --ok: #1f9d63; --warn: #a36b00; --bad: #c93b3b; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+  main { max-width: 640px; margin: 0 auto; padding: 56px 20px 120px; }
+  .orb { width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(from 0deg, #8fb4ff, #b99cff, #7fe0c8, #8fb4ff); animation: spin 9s linear infinite; margin-bottom: 22px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h1 { font-size: 32px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .lead { color: var(--soft); margin: 0 0 34px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 22px; margin: 0 0 16px; opacity: 0; transform: translateY(10px); animation: rise .5s cubic-bezier(.2,.8,.2,1) forwards; }
+  section:nth-of-type(2) { animation-delay: .06s } section:nth-of-type(3) { animation-delay: .12s } section:nth-of-type(4) { animation-delay: .18s } section:nth-of-type(5) { animation-delay: .24s } section:nth-of-type(6) { animation-delay: .3s }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { section, .orb { animation: none; opacity: 1; transform: none; } }
+  h2 { font-size: 18px; margin: 0 0 4px; display: flex; gap: 10px; align-items: center; }
+  .n { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); display: inline-grid; place-items: center; font-size: 13px; color: var(--soft); flex: none; transition: background .3s, color .3s, border-color .3s; }
+  .done .n { background: var(--ok); color: #fff; border-color: var(--ok); }
+  p.hint { color: var(--soft); margin: 0 0 14px; font-size: 15px; }
+  label { display: block; font-size: 14px; color: var(--soft); margin: 14px 0 6px; }
+  input[type=text], input[type=password], input[type=url] { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; transition: border-color .2s; }
+  input:focus { outline: none; border-color: var(--accent); }
+  .choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
+  .choice { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: border-color .2s, transform .15s; background: transparent; color: var(--text); font: inherit; text-align: left; }
+  .choice:hover { transform: translateY(-1px); }
+  .choice[aria-pressed=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  button.main, a.main { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; padding: 12px 18px; border-radius: 12px; border: 0; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; transition: transform .15s, opacity .2s; }
+  button.main:active, a.main:active { transform: scale(.98); }
+  button.quiet { margin-top: 16px; margin-left: 8px; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  .status { margin-top: 12px; font-size: 15px; min-height: 1.5em; }
+  .ok { color: var(--ok); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+  .switch { position: relative; width: 46px; height: 28px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; border-radius: 99px; background: var(--line); transition: background .2s; cursor: pointer; }
+  .switch span::after { content: ""; position: absolute; width: 22px; height: 22px; left: 3px; top: 3px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .switch input:checked + span { background: var(--ok); } .switch input:checked + span::after { transform: translateX(18px); }
+  ol.steps { margin: 6px 0 0; padding-left: 20px; } ol.steps li { margin: 6px 0; }
+  code { font-size: 14px; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--line); }
+  .finish { position: sticky; bottom: 0; text-align: center; margin: 0 -20px; padding: 36px 20px 18px; background: linear-gradient(to bottom, transparent, var(--bg) 45%); }
+  .finish button { padding: 15px 28px; font-size: 17px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .tools { display: grid; gap: 8px; margin-top: 4px; }
+  .tool { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: border-color .2s; }
+  .tool[aria-pressed=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .tool div { flex: 1; } .tool small { display: block; color: var(--soft); font-size: 13px; }
+  .tool .st { font-size: 13px; color: var(--soft); white-space: nowrap; } .tool .st.ok { color: var(--ok); }
+  .tool button { margin: 0; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+  .term { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 14px; }
+  .term pre { margin: 0; max-height: 180px; overflow: auto; white-space: pre-wrap; word-break: break-word; color: var(--soft); font: 13px/1.45 ui-monospace, Menlo, monospace; }
+  .term .links a { display: inline-block; margin: 10px 8px 0 0; color: var(--accent); }
+  .term form { display: flex; gap: 8px; margin-top: 10px; } .term form input { flex: 1; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="orb" aria-hidden="true"></div>
+  <h1 id="title">Set up your assistant</h1>
+  <p class="lead">A few minutes, once. Everything stays on this server and your phone; nothing is open to the internet.</p>
+
+  <section id="s-name">
+    <h2><span class="n">1</span> Give it a name</h2>
+    <p class="hint">What you will call it, and what it calls itself.</p>
+    <input type="text" id="name" maxlength="40" placeholder="Lumen" autocomplete="off">
+  </section>
+
+  <section id="s-brain">
+    <h2><span class="n">2</span> Choose its brain</h2>
+    <p class="hint">The AI model that thinks for it. You bring your own key; it is stored only on this server.</p>
+    <div class="choices" id="providers"></div>
+    <div id="cliBox" hidden>
+      <p class="hint" style="margin-top:14px">Use a plan you already pay for. The server runs that company's own app, signed in as you. Personal use only; check your plan's terms.</p>
+      <div class="tools" id="tools"></div>
+      <div class="term" id="term" hidden><pre id="termOut"></pre><div class="links" id="termLinks"></div>
+        <form id="termForm"><input type="text" id="termIn" placeholder="Paste a code or answer here" autocomplete="off" spellcheck="false"><button class="quiet" style="margin:0">Send</button></form></div>
+      <details style="margin-top:12px;color:var(--soft);font-size:14px"><summary>Signed in on your own computer instead?</summary>
+        <p class="hint" style="margin-top:8px">Paste the tool's sign-in file here: Claude Code: the token from <code>claude setup-token</code>. Codex: <code>~/.codex/auth.json</code>. Gemini CLI: <code>~/.gemini/oauth_creds.json</code>. OpenCode: <code>~/.local/share/opencode/auth.json</code>.</p>
+        <textarea id="creds" rows="4" style="width:100%;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);padding:10px;font:13px ui-monospace,monospace"></textarea>
+        <button class="quiet" id="credsSave" style="margin-left:0">Save for the selected tool</button></details>
+    </div>
+    <div id="keyBox"><label for="apiKey" id="keyLabel">API key</label><input type="password" id="apiKey" autocomplete="off" spellcheck="false"></div>
+    <div id="baseBox"><label for="baseUrl">Address of the model service</label><input type="url" id="baseUrl" spellcheck="false"></div>
+    <label for="model">Model</label><input type="text" id="model" spellcheck="false">
+    <button class="main" id="test">Save and test</button>
+    <div class="status" id="brainStatus" role="status"></div>
+  </section>
+
+  <section id="s-voice">
+    <h2><span class="n">3</span> Its voice <span class="hint" style="margin:0;font-weight:400">(optional)</span></h2>
+    <p class="hint">For speaking to it and hearing it answer. Typing works without it.</p>
+    <div class="choices" id="voiceProviders"></div>
+    <label for="voiceKey">API key</label><input type="password" id="voiceKey" autocomplete="off" spellcheck="false">
+    <div id="voiceSecretBox" hidden><label for="voiceSecret">API secret</label><input type="password" id="voiceSecret" autocomplete="off" spellcheck="false"></div>
+    <label for="voiceId">Voice (optional)</label><input type="text" id="voiceId" spellcheck="false" placeholder="the provider's default">
+  </section>
+
+  <section id="s-net">
+    <h2><span class="n">4</span> Private connection</h2>
+    <p class="hint">Your phone reaches this server through Tailscale, a private network only your devices are on. The phone app has it built in.</p>
+    <div class="status" id="tsStatus" role="status">Checking…</div>
+    <a class="main" id="tsLogin" target="_blank" rel="noopener" hidden>Sign in to Tailscale</a>
+  </section>
+
+  <section id="s-phone">
+    <h2><span class="n">5</span> Your phone</h2>
+    <ol class="steps">
+      <li>Install the app on your Android phone: <a id="apkLink" href="https://github.com/Neoo-Blue/lumen/releases/latest" target="_blank" rel="noopener">download the latest release</a>.</li>
+      <li>Open it and sign in to the <b>same Tailscale account</b>.</li>
+      <li>It finds this server by itself<span id="addr"></span>. Then set it as your phone's assistant when it asks.</li>
+    </ol>
+  </section>
+
+  <section id="s-who">
+    <h2><span class="n">6</span> Who can use it</h2>
+    <div class="row"><span>Everyone on my Tailscale network<br><span class="hint" style="font-size:14px">Each person gets their own private memory.</span></span>
+      <label class="switch"><input type="checkbox" id="allowAll"><span></span></label></div>
+    <div id="allowBox"><label for="allowed">Only these Tailscale logins (comma separated)</label><input type="text" id="allowed" spellcheck="false"></div>
+  </section>
+
+  <div class="finish"><button class="main" id="finish">Finish setup</button><div class="status" id="finishStatus"></div></div>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+let st = null, provider = 'anthropic';
+const post = (p, b) => fetch(p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b || {}) }).then(r => r.json());
+let cli = 'claude', termTimer = null, voiceProvider = 'cartesia';
+function pickVoice(id) {
+  voiceProvider = id;
+  document.querySelectorAll('#voiceProviders .choice').forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id));
+  const v = st.voices[id] || {}; $('#voiceSecretBox').hidden = !(v.needs || []).includes('apiSecret');
+  $('#voiceId').placeholder = v.defaults?.voice ? 'default: ' + v.defaults.voice : "the provider's default";
+}
+async function loadTools() {
+  const r = await (await fetch('/setup/cli')).json(), box = $('#tools'); box.innerHTML = '';
+  for (const t of r.tools) {
+    const el = document.createElement('div'); el.className = 'tool'; el.setAttribute('aria-pressed', t.id === cli);
+    el.innerHTML = `<div><b></b><small></small></div><span class="st ${t.signedIn ? 'ok' : ''}"></span>`;
+    el.querySelector('b').textContent = t.label; el.querySelector('small').textContent = t.plan + (t.version ? ' · ' + t.version : '');
+    el.querySelector('.st').textContent = t.signedIn ? 'Signed in' : t.installed ? 'Not signed in' : t.installable ? 'Not installed' : 'Not on this server';
+    const btn = document.createElement('button'); btn.type = 'button';
+    if (!t.installed && t.installable) { btn.textContent = 'Install'; btn.onclick = async e => { e.stopPropagation(); btn.disabled = true; btn.textContent = 'Installing…'; const x = await post('/setup/cli/install', { id: t.id }); if (!x.ok) alert(x.error); loadTools(); }; }
+    else if (t.installed) { btn.textContent = t.signedIn ? 'Sign in again' : 'Sign in'; btn.onclick = async e => { e.stopPropagation(); showTerm(await post('/setup/cli/login', { id: t.id })); }; }
+    else btn.hidden = true;
+    el.append(btn); el.onclick = () => { cli = t.id; document.querySelectorAll('.tool').forEach(x => x.setAttribute('aria-pressed', x === el)); $('#model').placeholder = 'default for ' + t.label; };
+    box.append(el);
+  }
+  if (r.login?.running) showTerm(r.login);
+}
+function showTerm(st) {
+  $('#term').hidden = false; $('#termOut').textContent = st.out || 'Starting…'; $('#termOut').scrollTop = 1e9;
+  $('#termLinks').innerHTML = ''; for (const u of st.links || []) { const a = document.createElement('a'); a.href = u; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Open sign-in page'; $('#termLinks').append(a); }
+  clearTimeout(termTimer);
+  if (st.running) termTimer = setTimeout(async () => showTerm((await (await fetch('/setup/cli')).json()).login), 1500); else loadTools();
+}
+$('#termForm').onsubmit = async e => { e.preventDefault(); showTerm(await post('/setup/cli/login', { input: $('#termIn').value })); $('#termIn').value = ''; };
+$('#credsSave').onclick = async () => { const r = await post('/setup/cli/credentials', { id: cli, text: $('#creds').value }); alert(r.ok ? 'Saved.' : r.error); if (r.ok) { $('#creds').value = ''; loadTools(); } };
+const KEYS = { anthropic: 'Anthropic API key', openai: 'OpenAI API key', gemini: 'Google AI Studio API key', ollama: 'API key (usually empty for Ollama)', custom: 'API key (if the service needs one)' };
+
+function pickProvider(id, keepModel) {
+  provider = id;
+  document.querySelectorAll('.choice').forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id));
+  const pr = st.presets[id];
+  $('#keyLabel').textContent = KEYS[id];
+  $('#baseBox').hidden = !(id === 'ollama' || id === 'custom');
+  $('#keyBox').hidden = id === 'cli'; $('#cliBox').hidden = id !== 'cli'; if (id === 'cli') loadTools();
+  if (!keepModel) { $('#model').value = pr.model || ''; $('#baseUrl').value = pr.base || ''; }
+}
+
+function render() {
+  const c = st.config;
+  $('#name').value = c.name || 'Lumen';
+  $('#title').textContent = c.setupDone ? `${c.name} settings` : 'Set up your assistant';
+  $('#providers').innerHTML = '';
+  for (const [id, pr] of Object.entries(st.presets)) {
+    const b = document.createElement('button'); b.className = 'choice'; b.dataset.id = id; b.textContent = pr.label; b.type = 'button';
+    b.onclick = () => pickProvider(id); $('#providers').append(b);
+  }
+  cli = c.cli || 'claude';
+  pickProvider(c.provider || 'anthropic', true);
+  $('#voiceProviders').innerHTML = '';
+  for (const [id, v] of Object.entries(st.voices || {})) { const b = document.createElement('button'); b.className = 'choice'; b.type = 'button'; b.dataset.id = id; b.textContent = v.label; b.onclick = () => pickVoice(id); $('#voiceProviders').append(b); }
+  pickVoice(c.voiceProvider || 'cartesia'); $('#voiceId').value = c.voiceId || ''; $('#voiceSecret').value = c.voiceSecret || '';
+  $('#model').value = c.model || st.presets[provider].model || '';
+  $('#baseUrl').value = c.baseUrl || st.presets[provider].base || '';
+  $('#apiKey').value = c.apiKey || ''; $('#voiceKey').value = c.voiceKey || '';
+  $('#allowAll').checked = c.allowAll !== false; $('#allowed').value = (c.allowed || []).join(', ');
+  $('#allowBox').hidden = $('#allowAll').checked;
+  $('#s-name').classList.toggle('done', !!c.name);
+  $('#s-brain').classList.toggle('done', !!c.apiKey || provider === 'ollama' || provider === 'cli');
+  $('#s-voice').classList.toggle('done', !!c.voiceKey);
+  $('#finish').textContent = c.setupDone ? 'Save' : 'Finish setup';
+  net();
+}
+
+function net() {
+  const t = st.tailscale, el = $('#tsStatus'), btn = $('#tsLogin');
+  btn.hidden = true; $('#s-net').classList.remove('done'); $('#addr').textContent = '';
+  if (t.state === 'missing') el.innerHTML = '<span class="warn">Tailscale is not running next to this server yet.</span> The installer sets it up; if you skipped it, see the guide.';
+  else if (t.state === 'NeedsLogin') { el.textContent = 'One step left: connect this server to your Tailscale account.'; if (t.loginUrl) { btn.href = t.loginUrl; btn.hidden = false; } }
+  else if (t.state === 'Running') {
+    $('#s-net').classList.add('done'); $('#s-phone').classList.add('done');
+    el.innerHTML = `<span class="ok">Connected</span> as <code>${t.url.replace('https://', '')}</code>` + (t.certs ? '' : '<br><span class="warn">Turn on HTTPS certificates in your Tailscale admin console (DNS page) so the phone can connect securely.</span>');
+    $('#addr').innerHTML = ` at <code>${t.url.replace('https://', '')}</code>`;
+  } else el.textContent = 'Tailscale is ' + String(t.state || 'starting').toLowerCase() + '…';
+}
+
+async function save() {
+  const b = { name: $('#name').value, provider, cli, apiKey: $('#apiKey').value, baseUrl: $('#baseUrl').value, model: $('#model').value, voiceKey: $('#voiceKey').value, voiceSecret: $('#voiceSecret').value, voiceProvider, voiceId: $('#voiceId').value,
+    allowAll: $('#allowAll').checked, allowed: $('#allowed').value.split(',').map(x => x.trim()).filter(Boolean) };
+  const r = await post('/setup/save', b); if (r.ok) st.config = r.config; return r;
+}
+
+$('#test').onclick = async () => {
+  const s = $('#brainStatus'); $('#test').disabled = true; s.className = 'status'; s.textContent = 'Testing…';
+  await save(); const r = await post('/setup/test');
+  s.className = 'status ' + (r.ok ? 'ok' : 'bad');
+  s.textContent = r.ok ? `It works: answered in ${(r.ms / 1000).toFixed(1)} s.` : r.error;
+  $('#s-brain').classList.toggle('done', !!r.ok); $('#test').disabled = false;
+};
+$('#allowAll').onchange = () => { $('#allowBox').hidden = $('#allowAll').checked; };
+$('#finish').onclick = async () => {
+  const f = $('#finishStatus'); await save();
+  if (!st.config.setupDone) { const r = await post('/setup/finish'); if (!r.ok) { f.className = 'status bad'; f.textContent = 'Could not finish.'; return; } }
+  f.className = 'status ok'; f.textContent = st.tailscale.state === 'Running' ? 'All set. Open the app on your phone.' : 'Saved. Connect Tailscale (step 4) to use it from your phone.';
+  setTimeout(load, 600);
+};
+
+async function load() { st = await (await fetch('/setup/state')).json(); render(); }
+load();
+setInterval(async () => { if (!st || st.tailscale.state === 'Running') return; st.tailscale = (await (await fetch('/setup/state')).json()).tailscale; net(); }, 4000);
+</script>
+</body>
+</html>
