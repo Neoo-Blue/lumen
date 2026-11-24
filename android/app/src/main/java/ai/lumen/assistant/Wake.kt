@@ -65,14 +65,15 @@ class WakeService : Service(), RecognitionListener {
         if (paused || yielded) return
         if (speech != null) return
         try {
-            speech = SpeechService(Recognizer(m, 16000f, "[\"hey lumen\", \"[unk]\"]"), 16000f).also { it.startListening(this) }
+            val rec = Recognizer(m, 16000f, "[\"hey lumen\", \"[unk]\"]").apply { setWords(true) } // per-word confidence, checked in heard()
+            speech = SpeechService(rec, 16000f).also { it.startListening(this) }
         } catch (e: Exception) {
             Telemetry.warn("wake", "microphone busy: ${e.message}")
             main.postDelayed({ if (!paused) listen() }, 5000)
         }
     }
 
-    /** Every two seconds: hand the microphone over when the screen is off, during a call, or while another app records. */
+    /** Every two seconds: hand the microphone over when the screen is off, during a call, while another app records, or while audio plays. */
     private fun watch() {
         val am = getSystemService(android.media.AudioManager::class.java)
         val pm = getSystemService(android.os.PowerManager::class.java)
@@ -80,11 +81,23 @@ class WakeService : Service(), RecognitionListener {
         // screen off: only while driving, or when the person chose "listen with the screen off" and the phone is charging
         val charging = getSystemService(android.os.BatteryManager::class.java)?.isCharging == true
         val screenOk = pm.isInteractive || Driving.on(this) || (screenOff(this) && charging)
-        val busy = !screenOk || am.mode != android.media.AudioManager.MODE_NORMAL || others > 0
+        // also while a video, music or podcast plays: speech in it is the main source of false "Hey Lumen"s
+        val busy = !screenOk || am.mode != android.media.AudioManager.MODE_NORMAL || others > 0 || playing(am)
         if (busy && !yielded) { yielded = true; release() }
         else if (!busy && yielded) { yielded = false; if (!paused) listen() }
         main.postDelayed({ watch() }, 2000)
     }
+
+    /** Any app playing media, a game or a video right now (covers AAudio players that isMusicActive misses). */
+    private var lastPlayback = ""
+    private fun playing(am: android.media.AudioManager): Boolean = try {
+        val media = am.activePlaybackConfigurations.filter { it.audioAttributes.usage in setOf(android.media.AudioAttributes.USAGE_MEDIA, android.media.AudioAttributes.USAGE_GAME, android.media.AudioAttributes.USAGE_UNKNOWN) }
+        // a player counts only while it is actually playing (state 2 = started); paused and idle players do not
+        val states = media.map { c -> try { c.javaClass.getMethod("getPlayerState").invoke(c) as Int } catch (_: Throwable) { -1 } }
+        val now = "${am.isMusicActive} $states"
+        if (now != lastPlayback) { lastPlayback = now; Telemetry.info("wake", "playback: $now") }
+        am.isMusicActive || states.any { it == 2 }
+    } catch (_: Exception) { am.isMusicActive }
 
     fun recheck() { main.post { yielded = false; if (!paused) listen() } }
 
@@ -95,18 +108,23 @@ class WakeService : Service(), RecognitionListener {
     private val resumeLater = Runnable { if (!paused && model != null) listen() }
     fun resume() { paused = false; main.removeCallbacks(resumeLater); main.postDelayed(resumeLater, 4000) } // after Lumen's own voice has gone quiet
 
-    private fun heard(json: String?, key: String) {
-        val text = try { JSONObject(json ?: "").optString(key) } catch (_: Exception) { "" }
-        if (text.trim() != "hey lumen" || System.currentTimeMillis() - lastFire < 3000) return
+    /** Only a final result counts, and both words must be heard clearly: partial guesses fire on near-misses. */
+    private fun heard(json: String?) {
+        val j = try { JSONObject(json ?: "") } catch (_: Exception) { return }
+        val text = j.optString("text").trim()
+        val words = j.optJSONArray("result")
+        val clear = words != null && words.length() == 2 && (0 until 2).all { words.getJSONObject(it).optDouble("conf", 0.0) >= MIN_CONF }
+        if (text == "hey lumen" && !clear) { Telemetry.info("wake", "near miss ignored: ${words}"); return }
+        if (text != "hey lumen" || !clear || System.currentTimeMillis() - lastFire < 3000) return
         lastFire = System.currentTimeMillis()
         Telemetry.info("wake", "heard: $text")
         pause()
         summon(this)
     }
 
-    override fun onPartialResult(hypothesis: String?) = heard(hypothesis, "partial")
-    override fun onResult(hypothesis: String?) = heard(hypothesis, "text")
-    override fun onFinalResult(hypothesis: String?) = heard(hypothesis, "text")
+    override fun onPartialResult(hypothesis: String?) {}
+    override fun onResult(hypothesis: String?) = heard(hypothesis)
+    override fun onFinalResult(hypothesis: String?) = heard(hypothesis)
     override fun onError(exception: Exception?) { Telemetry.warn("wake", "listener error: ${exception?.message}"); release(); main.postDelayed({ if (!paused) listen() }, 3000) }
     override fun onTimeout() { release(); if (!paused) listen() }
 
@@ -128,6 +146,8 @@ class WakeService : Service(), RecognitionListener {
     }
 
     companion object {
+        /** How sure the recognizer must be of each word (Vosk gives 1.0 for a clear phrase). */
+        const val MIN_CONF = 0.9
         const val ACTION_STOP = "ai.lumen.assistant.WAKE_STOP"
         private const val CHANNEL = "wake"
         private const val MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip"
