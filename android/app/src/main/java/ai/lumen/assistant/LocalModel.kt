@@ -38,7 +38,8 @@ object LocalModel {
 
     private fun model(ctx: Context, id: String): JSONObject? { val c = catalog(ctx); return (0 until c.length()).map { c.getJSONObject(it) }.firstOrNull { it.optString("id") == id } }
     private fun files(m: JSONObject) = m.getJSONArray("files").let { a -> (0 until a.length()).map { a.getJSONObject(it) } }
-    private fun have(ctx: Context, m: JSONObject) = files(m).all { File(dir(ctx), it.getString("name")).length() == it.getLong("bytes") }
+    private fun mdir(ctx: Context, m: JSONObject) = File(dir(ctx), m.getString("id")).apply { mkdirs() } // each model keeps its own files
+    private fun have(ctx: Context, m: JSONObject) = files(m).all { File(mdir(ctx, m), it.getString("name")).length() == it.getLong("bytes") }
 
     fun handle(ctx: Context, args: JSONObject): JSONObject = try {
         when (args.optString("action")) {
@@ -46,7 +47,7 @@ object LocalModel {
             "download" -> { startDownload(ctx, args.optString("model")); ok(status(ctx)) }
             "start" -> { start(ctx, args.optString("model")); ok(status(ctx)) }
             "stop" -> { stop(); ok(status(ctx)) }
-            "delete" -> { stop(); model(ctx, args.optString("model"))?.let { m -> files(m).forEach { File(dir(ctx), it.getString("name")).delete() } }; ok(status(ctx)) }
+            "delete" -> { stop(); model(ctx, args.optString("model"))?.let { m -> mdir(ctx, m).deleteRecursively() }; ok(status(ctx)) }
             else -> LumenAccess.err("unknown action")
         }
     } catch (e: Exception) { LumenAccess.err(e.message ?: "local model error") }
@@ -75,10 +76,12 @@ object LocalModel {
             try {
                 var before = 0L
                 for (f in files(m)) {
-                    val name = f.getString("name"); val bytes = f.getLong("bytes"); val out = File(dir(ctx), name)
+                    val name = f.getString("name"); val bytes = f.getLong("bytes"); val out = File(mdir(ctx, m), name)
                     if (out.length() == bytes) { before += bytes; continue }
-                    val part = File(dir(ctx), "$name.part")
+                    val part = File(mdir(ctx, m), "$name.part")
+                    var stalls = 0
                     while (part.length() < bytes) {
+                        val was = part.length()
                         val c = URL(f.getString("url")).openConnection() as HttpURLConnection
                         c.instanceFollowRedirects = true; c.connectTimeout = 20000; c.readTimeout = 60000
                         if (part.length() > 0) c.setRequestProperty("Range", "bytes=${part.length()}-")
@@ -90,6 +93,7 @@ object LocalModel {
                                     download?.put("done", before + raf.filePointer) } }
                         }
                         c.disconnect()
+                        if (part.length() <= was && ++stalls >= 3) throw IllegalStateException("the download of $name stopped growing (no internet, or a sign-in page in the way)")
                     }
                     download?.put("checking", name)
                     val md = MessageDigest.getInstance("SHA-256")
@@ -116,8 +120,8 @@ object LocalModel {
         val fs = files(m); val main = fs.first { !it.getString("name").startsWith("mmproj") }; val proj = fs.firstOrNull { it.getString("name").startsWith("mmproj") }
         val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 6)
         val cmd = mutableListOf(bin.absolutePath, "--host", "127.0.0.1", "--port", PORT.toString(), "--api-key", key(ctx), "--jinja", "--reasoning", "off",
-            "-m", File(dir(ctx), main.getString("name")).absolutePath, "-c", "8192", "-ctk", "q8_0", "-ctv", "q8_0", "-fa", "on", "--threads", threads.toString(), "--no-webui")
-        if (proj != null) cmd += listOf("--mmproj", File(dir(ctx), proj.getString("name")).absolutePath)
+            "-m", File(mdir(ctx, m), main.getString("name")).absolutePath, "-c", "16384", "-ctk", "q8_0", "-ctv", "q8_0", "-fa", "on", "--threads", threads.toString(), "--no-webui")
+        if (proj != null) cmd += listOf("--mmproj", File(mdir(ctx, m), proj.getString("name")).absolutePath)
         val pb = ProcessBuilder(cmd).redirectErrorStream(true).directory(ctx.cacheDir)
         pb.environment()["LD_LIBRARY_PATH"] = lib
         val p = pb.start(); proc = p; running = id

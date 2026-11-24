@@ -127,8 +127,10 @@ if [ -f "${ROOT}/llama/models.json" ]; then cp "${ROOT}/llama/models.json" "${RO
 if [ -d "${ROOT}/llama/out/jniLibs/arm64-v8a" ]; then mkdir -p "${ROOT}/app/src/main/jniLibs/arm64-v8a" && for f in "${ROOT}/llama/out/jniLibs/arm64-v8a/"*.so; do [ "$(basename "$f")" = libc++_shared.so ] || cp "$f" "${ROOT}/app/src/main/jniLibs/arm64-v8a/"; done; fi
 # phone mode: Node 24 inside the app (pinned, hash-checked download)
 bash "${ROOT}/nodejs/fetch.sh"
-"${GRADLE_HOME}/bin/gradle" --no-daemon assembleDebug
+# with the project key: a release build (not debuggable); without it, a debug build for trying things out
+if [ -f "${ROOT}/signing/lumen.keystore" ]; then VARIANT=release; else VARIANT=debug; fi
+"${GRADLE_HOME}/bin/gradle" --no-daemon "assemble${VARIANT^}"
 
 mkdir -p "${ROOT}/dist"
-cp -f "${ROOT}/app/build/outputs/apk/debug/app-debug.apk" "${ROOT}/dist/lumen.apk"
+cp -f "${ROOT}/app/build/outputs/apk/${VARIANT}/app-${VARIANT}.apk" "${ROOT}/dist/lumen.apk"
 echo "Built ${ROOT}/dist/lumen.apk"

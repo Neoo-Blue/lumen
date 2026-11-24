@@ -33,7 +33,7 @@ export function makeBrain(cfg) {
     const r = await fetch(base + '/chat/completions', {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...(cfg.apiKey ? { authorization: 'Bearer ' + cfg.apiKey } : {}) },
-      body: JSON.stringify({ model: params.model || model, max_tokens: params.max_tokens, stream: true, ...(cfg.provider === 'device' ? { chat_template_kwargs: { enable_thinking: false } } : {}), messages: toOpenAI(params.system, params.messages), ...(params.tools?.length ? { tools: toolsOf(params.tools) } : {}) }),
+      body: JSON.stringify({ model: cfg.provider === 'device' ? undefined : params.model || model, max_tokens: cfg.provider === 'device' ? Math.min(params.max_tokens || 2048, 2048) : params.max_tokens, stream: true, ...(cfg.provider === 'device' ? { chat_template_kwargs: { enable_thinking: false } } : {}), messages: toOpenAI(params.system, params.messages), ...(params.tools?.length ? { tools: toolsOf(params.tools) } : {}) }),
     });
     if (!r.ok) throw new Error(`model ${r.status}: ${(await r.text()).slice(0, 300)}`);
     let text = '', finish = 'stop', buf = ''; const calls = [];
@@ -47,7 +47,8 @@ export function makeBrain(cfg) {
         const ch = j.choices?.[0]; if (!ch) continue;
         if (ch.delta?.content) { text += ch.delta.content; onText?.(ch.delta.content); }
         for (const t of ch.delta?.tool_calls || []) {
-          const c = calls[t.index ?? calls.length] ||= { id: '', name: '', args: '' };
+          const at = t.index ?? (t.id || !calls.length ? calls.length : calls.length - 1); // some servers omit index on later fragments
+          const c = calls[at] ||= { id: '', name: '', args: '' };
           if (t.id) c.id = t.id; if (t.function?.name) c.name += t.function.name; if (t.function?.arguments) c.args += t.function.arguments;
         }
         if (ch.finish_reason) finish = ch.finish_reason;

@@ -3,7 +3,7 @@
     {
       "id": "qwen3.5-4b",
       "label": "Qwen3.5 4B (Q4_K_M)",
-      "minRamGb": 7.5,
+      "minRamGb": 7.0,
       "files": [
         {
           "name": "Qwen3.5-4B-Q4_K_M.gguf",

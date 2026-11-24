@@ -146,7 +146,7 @@ class LumenAccess : AccessibilityService() {
             val app0 = n.packageName?.toString() ?: ""
             val res = sheet.ask("confirm", JSONObject().put("kicker", "Your OK, please").put("title", "Tap \u201c" + what.take(40) + "\u201d?")
                 .put("detail", "Lumen is about to do this in " + appName(app0) + ". Nothing happens unless you confirm.").put("site", appName(app0))
-                .put("confirm", "Yes, " + what.take(24).lowercase()).put("danger", true), 5)
+                .put("confirm", "Yes, " + what.take(24).lowercase()).put("danger", true), 3) // minutes: shorter than the server's 4-minute wait, so a late Yes never taps after the model gave up
             if (res != null) {
                 if (!res.optBoolean("ok")) return err("the person said not now to \"$what\"")
                 Telemetry.info("confirm", "confirmed on the overlay: $what")

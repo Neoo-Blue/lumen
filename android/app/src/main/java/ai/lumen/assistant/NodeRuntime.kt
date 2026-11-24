@@ -52,8 +52,14 @@ object NodeRuntime {
             Runnable {
                 try {
                     exitCode = startNode(args)
+                } catch (e: Throwable) {
+                    android.util.Log.e("lumen-node", "node ended with an error", e)
                 } finally {
                     running = false
+                    PhoneMode.up = false
+                    // Node cannot be started twice in one process: let Android restart Lumen (LumenCore is sticky)
+                    android.util.Log.w("lumen-node", "server stopped (exit $exitCode); restarting Lumen")
+                    android.os.Process.killProcess(android.os.Process.myPid())
                 }
             },
             "node",

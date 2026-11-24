@@ -80,6 +80,13 @@ object PhoneMode {
     } catch (_: Exception) { false }
 }
 
+/** Phone mode comes back after a reboot or an app update without the person opening Lumen. */
+class BootReceiver : android.content.BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) {
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == Intent.ACTION_MY_PACKAGE_REPLACED) LumenCore.ensure(ctx)
+    }
+}
+
 /** Keeps Lumen's server running in phone mode, so jobs, triggers and calls carry on when the app is closed. */
 class LumenCore : Service() {
     override fun onBind(intent: Intent?): IBinder? = null

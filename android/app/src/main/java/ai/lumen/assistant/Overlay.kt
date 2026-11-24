@@ -14,11 +14,15 @@ import org.json.JSONObject
  * cards drawn on top of that app. Touches above the sheet still reach the app; a tap there closes the panel.
  */
 class OverlayActivity : MainActivity() {
+    companion object { @Volatile private var current: OverlayActivity? = null }
     override val overlay = true
     private var busy = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // one panel at a time: an earlier one still on screen would show through above the new sheet
+        current?.takeIf { it !== this && !it.isFinishing }?.finishAndRemoveTask()
+        current = this
         window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         window.setGravity(Gravity.BOTTOM)
         window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, (resources.displayMetrics.heightPixels * 0.30).toInt())
@@ -41,6 +45,8 @@ class OverlayActivity : MainActivity() {
             }
         }
     }
+
+    override fun onDestroy() { if (current === this) current = null; super.onDestroy() }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_OUTSIDE && !busy) { finishAndRemoveTask(); return true }

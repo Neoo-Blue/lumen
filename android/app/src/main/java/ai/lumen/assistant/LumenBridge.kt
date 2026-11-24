@@ -72,7 +72,10 @@ class LumenBridge(private val activity: MainActivity) {
 
     fun invoke(requestId: String?, method: String?, argsJson: String?) {
         if (requestId.isNullOrEmpty() || method.isNullOrEmpty()) return
-        if (activity.pageHost != LumenOrigin.HOST) return
+        if (activity.pageHost != LumenOrigin.HOST) {
+            if (requestId.startsWith("srv:")) Thread { DeviceRelay.answer(requestId.removePrefix("srv:"), ServiceActions.run(activity, method, try { JSONObject(argsJson ?: "{}") } catch (_: Exception) { JSONObject() })) }.start()
+            return
+        }
         val args = try {
             if (argsJson.isNullOrBlank() || argsJson == "null") JSONObject() else JSONObject(argsJson)
         } catch (_: Exception) {
@@ -247,6 +250,8 @@ class LumenBridge(private val activity: MainActivity) {
                     "dnd" -> Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
                     "systemSettings" -> Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + activity.packageName))
                     "permissions" -> { activity.askMissing(); null }
+                    "mode" -> { PhoneMode.choose(activity, ""); Tailnet.forget(activity); activity.getSystemService(android.app.ActivityManager::class.java).appTasks.forEach { it.finishAndRemoveTask() }
+                        activity.startActivity(Intent(activity, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); android.os.Process.killProcess(android.os.Process.myPid()); null }
                     else -> null
                 }
                 if (i != null) startExternal(activity, i)

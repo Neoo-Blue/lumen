@@ -26,7 +26,7 @@ services:
   lumen:
     build: { context: .., dockerfile: Dockerfile }
     image: ghcr.io/neoo-blue/lumen:latest
-    network_mode: service:tailscale          # shares Tailscale's network: tailscale serve reaches it on 127.0.0.1
+    network_mode: service:tailscale          # shares Tailscale's network: tailscale serve reaches it on 127.0.0.2 (the only address Lumen trusts)
     depends_on: [tailscale]
     env_file: [{ path: .env, required: false }]
     environment:

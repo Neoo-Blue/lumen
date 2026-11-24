@@ -97,10 +97,11 @@ body.driving .words{font-size:30px}
 html.overlay,html.overlay body{background:transparent!important;height:auto;min-height:0;overflow:hidden}
 html.overlay .aurora,html.overlay .top,html.overlay .welcome,html.overlay .turn.past,html.overlay .field,html.overlay .stage .end{display:none!important}
 html.overlay .phone{position:fixed;left:0;right:0;bottom:0;height:auto;max-height:none;display:flex;flex-direction:column;
-  background:rgba(13,14,22,.94);border-radius:30px 30px 0 0;box-shadow:0 -18px 60px rgba(0,0,0,.45);border-top:1px solid rgba(255,255,255,.08);
+  background:#0d0e16;border-radius:30px 30px 0 0;max-height:var(--panelMax,78vh);box-shadow:0 -18px 60px rgba(0,0,0,.45);border-top:1px solid rgba(255,255,255,.08);
   animation:sheetup .55s cubic-bezier(.2,.9,.25,1) both}
 html.overlay .grabber{display:block;width:42px;height:5px;border-radius:9px;background:rgba(255,255,255,.22);margin:10px auto 2px;cursor:pointer}
-html.overlay .feed{flex:none;overflow:visible;padding:4px 16px 0}
+html.overlay .feed{flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 16px 0}
+html.overlay .dock{background:#0d0e16;position:relative;z-index:3}
 html.overlay .turn .ask{display:none}
 html.overlay .turn,html.overlay body.voice .turn{padding-bottom:6px!important;min-height:0}
 html.overlay .stage{position:relative!important;inset:auto!important;opacity:1;transform:none;visibility:visible;padding:4px 22px 0;min-height:0;text-align:center;pointer-events:none}
@@ -1012,6 +1013,7 @@ function afterTurn(canvas) {
 if (OVERLAY) {
   addEventListener('DOMContentLoaded', () => {
     const ph = document.querySelector('.phone');
+    document.documentElement.style.setProperty('--panelMax', Math.round(screen.height * 0.78) + 'px'); // the same cap as the window (OverlayActivity)
     const fit = () => panel('overlay', { h: Math.ceil(ph.getBoundingClientRect().height) });
     new ResizeObserver(fit).observe(ph); new MutationObserver(() => requestAnimationFrame(fit)).observe(feed, { childList: true, subtree: true });
     ph.addEventListener('click', e => { if (e.target.closest('.grabber')) panel('close'); });
@@ -1033,10 +1035,11 @@ function tapToRun(canvas, label, fn) {
 }
 const shrink = (file, max = 1280) => new Promise(res => { const img = new Image(); img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = img.width * k; c.height = img.height * k; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', .85)); URL.revokeObjectURL(img.src); }; img.src = URL.createObjectURL(file); });
 const pickFiles = (capture, multiple) => new Promise(res => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; if (capture) i.capture = 'environment'; i.multiple = !!multiple; i.onchange = async () => res(await Promise.all([...i.files].slice(0, 6).map(f => shrink(f)))); i.click(); });
+// waits as long as the server does for the same action (forms 10 min, screen work 4 min)
 async function nativeCall(method, args = {}, canvas, gesture = false) {
   // a real tap already counts as the touch browsers require: act at once
   if (!NATIVE && gesture) { if (method === 'openUrl') { const u = safeUrl(args.url); if (u) open(u, '_blank', 'noopener'); return { ok: !!u, data: {} }; } if (method === 'share' && navigator.share) { await navigator.share({ text: args.text, url: args.url }).catch(() => {}); return { ok: true, data: {} }; } if (method === 'navigate') { open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(args.destination || '')}&travelmode=${args.mode || 'driving'}`, '_blank', 'noopener'); return { ok: true, data: {} }; } if (method === 'takePhoto' || method === 'pickPhotos') { const imgs = await pickFiles(method === 'takePhoto', method === 'pickPhotos' && args.multiple !== false); return { ok: true, data: method === 'takePhoto' ? { image: imgs[0] } : imgs.map(image => ({ image })) }; } }
-  if (NATIVE) return new Promise(res => { const id = Math.random().toString(36).slice(2); nativeWait.set(id, res); setTimeout(() => { if (nativeWait.delete(id)) res({ ok: false, error: 'timeout' }); }, 60000); window.LumenNative.postMessage(JSON.stringify({ id, method, args })); });
+  if (NATIVE) return new Promise(res => { const id = Math.random().toString(36).slice(2); nativeWait.set(id, res); setTimeout(() => { if (nativeWait.delete(id)) res({ ok: false, error: 'timeout' }); }, method === 'formReview' ? 600000 : /^(screenDo|screenTap|skillRun)$/.test(method) ? 240000 : 60000); window.LumenNative.postMessage(JSON.stringify({ id, method, args })); });
   const num = String(args.number || '').replace(/[^\d+]/g, '');
   switch (method) {
     case 'call': location.href = 'tel:' + num; return { ok: true, data: { placed: false } };
@@ -1121,6 +1124,7 @@ function makeDeck(turn) {
   deck.querySelectorAll('.dots i').forEach((d, j) => d.onclick = () => slides.scrollTo({ left: j * slides.clientWidth, behavior: 'smooth' }));
 }
 function fitScreen(turn) {
+  if (OVERLAY) return; // the panel scrolls: show every card whole instead of folding it
   const room = feed.clientHeight - 24;
   const fold = k => { if (k.classList.contains('fold')) { k.style.maxHeight = '150px'; return; } k.classList.add('fold'); k.style.maxHeight = '170px'; k.insertAdjacentHTML('beforeend', `<button class="morebtn">${esc(t('more'))}</button>`); };
   const used = () => turn.querySelector('.ask').offsetHeight + turn.querySelector('.canvas').offsetHeight + 34;
@@ -1158,10 +1162,10 @@ async function ask(text, opts = {}) {
       return;
     }
   }
-  if (NATIVE && !navigator.onLine) { canvas.querySelector('.wait')?.remove(); mount(canvas, { c: 'note', text: t('offline_note') }); busy = false; document.body.classList.remove('busy'); voice.turnDone(); return; }
+  if (NATIVE && !navigator.onLine && !(await fetch('/health', { cache: 'no-store' }).then(r => r.ok, () => false))) { canvas.querySelector('.wait')?.remove(); mount(canvas, { c: 'note', text: t('offline_note') }); busy = false; document.body.classList.remove('busy'); voice.turnDone(); return; }
   try {
     const res = await api('/ask', { method: 'POST', body: JSON.stringify({ text, kind, lang: LANG, device: DEVICE, native: NATIVE, image: lookFrame(), here: HERE, skills: await mySkills(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone }) });
-    if (res.status === 401) { location.reload(); return; }
+    if (res.status === 401 || res.status === 403) { location.reload(); return; }
     if (!res.ok) tel('warn', 'ask_http', `HTTP ${res.status}`, { kind });
     if (res.status === 429) throw new Error(t('rate_limited'));
     if (res.status === 409) throw new Error(t('one_at_a_time'));
@@ -1412,7 +1416,7 @@ async function boot() {
   const h = new Date().getHours(), hi = t(h < 5 ? 'hi_night' : h < 12 ? 'hi_morning' : h < 18 ? 'hi_afternoon' : 'hi_evening');
   const name = (me.name || '').split(/\s+/)[0];
   if (me.turns > 0 && $('#hello')) { $('#hello').dataset.back = 1; $('#hello').innerHTML = letters(t('hello_back', { hi, name: name ? (/^zh/.test(LANG) ? '，' : ', ') + name : '' })) + '<br>' + letters(t('today_q'), 22); }
-  if (me.local) $('#logout').hidden = true;
+  $('#logout').hidden = true; // identity comes from Tailscale or this phone; there is nothing to sign out of
   api('/home?lang=' + encodeURIComponent(LANG)).then(r => r.json()).then(h => {
     const box = $('#now'); if (!box) return; box.innerHTML = '';
     for (const c of h.cards || []) { const d = inert(c), node = R[d.c] && el(R[d.c](d)); if (!node) continue; box.append(node); animate(node); }
@@ -1524,7 +1528,7 @@ async function loadHealth() {
     ${srow(null, t('h_drive_auto'), t('h_drive_auto_sub'), swb(h.drivingAuto, 'data-pref="drivingAuto"'))}
     ${srow(null, t('h_drive_now'), t('h_drive_now_sub'), swb(h.driving, 'data-pref="driving"'))}
   </div>
-  <div class="sgroup"><h3>${esc(t('set_app'))}</h3>${srow(h.installs ? '' : 'idle', 'Lumen One ' + h.version, h.installs ? t('h_updates_on') : t('h_updates_off'), `<button class="go" data-update>${esc(t('check_update'))}</button>`)}</div>`;
+  <div class="sgroup"><h3>${esc(t('set_app'))}</h3>${srow(null, t('h_mode'), t('h_mode_sub'), `<button class="go" data-fix="mode">${esc(t('h_change'))}</button>`)}${srow(h.installs ? '' : 'idle', 'Lumen ' + h.version, h.installs ? t('h_updates_on') : t('h_updates_off'), `<button class="go" data-update>${esc(t('check_update'))}</button>`)}</div>`;
   document.body.classList.toggle('driving', !!h.driving);
 }
 async function loadJobs() {

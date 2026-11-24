@@ -33,6 +33,12 @@ android {
     // LUMEN_KEYSTORE_PASSWORD (never commit it). Without it, the standard Android debug key is used.
     val ks = rootProject.file("signing/lumen.keystore")
     if (ks.exists()) signingConfigs {
+        create("release") {
+            storeFile = ks
+            storePassword = System.getenv("LUMEN_KEYSTORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("LUMEN_KEY_ALIAS") ?: "lumen"
+            keyPassword = System.getenv("LUMEN_KEYSTORE_PASSWORD") ?: "android"
+        }
         getByName("debug") {
             storeFile = ks
             storePassword = System.getenv("LUMEN_KEYSTORE_PASSWORD") ?: "android"
@@ -43,6 +49,7 @@ android {
 
     buildTypes {
         release {
+            if (ks.exists()) signingConfig = signingConfigs.getByName("release") // not debuggable: no WebView inspection of a published build
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
