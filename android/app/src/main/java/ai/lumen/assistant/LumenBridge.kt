@@ -222,7 +222,7 @@ class LumenBridge(private val activity: MainActivity) {
                     .put("assistant", Build.VERSION.SDK_INT >= 29 && activity.getSystemService(android.app.role.RoleManager::class.java)?.isRoleHeld(android.app.role.RoleManager.ROLE_ASSISTANT) == true)
                     .put("control", LumenAccess.instance != null)
                     .put("notifications", NotificationAccess.enabled(activity))
-                    .put("wake", WakeService.enabled(activity)).put("wakeRunning", WakeService.instance != null)
+                    .put("wake", WakeService.enabled(activity)).put("samsung", android.os.Build.MANUFACTURER.equals("samsung", true)).put("wakeRunning", WakeService.instance != null)
                     .put("installs", Build.VERSION.SDK_INT < 26 || activity.packageManager.canRequestPackageInstalls())
                     .put("battery", pm.isIgnoringBatteryOptimizations(activity.packageName))
                     .put("dnd", activity.getSystemService(android.app.NotificationManager::class.java).isNotificationPolicyAccessGranted)
@@ -240,6 +240,10 @@ class LumenBridge(private val activity: MainActivity) {
                     "assistant" -> Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
                     "installs" -> Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + activity.packageName))
                     "battery" -> Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + activity.packageName))
+                    // Samsung: the battery page, where Background usage limits holds the "Never sleeping apps" list
+                    "sleeping" -> Intent("com.samsung.android.sm.ACTION_BATTERY").takeIf { it.resolveActivity(activity.packageManager) != null } ?: Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS)
+                    // Samsung: press and hold the side key -> Digital assistant (no microphone while waiting)
+                    "sideKey" -> Intent("com.samsung.android.intent.action.SIDE_KEY_LONG_PRESS_SETTINGS").takeIf { it.resolveActivity(activity.packageManager) != null } ?: Intent(Settings.ACTION_VOICE_INPUT_SETTINGS)
                     "dnd" -> Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
                     "systemSettings" -> Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + activity.packageName))
                     "permissions" -> { activity.askMissing(); null }

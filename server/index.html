@@ -1512,12 +1512,14 @@ async function loadHealth() {
     ${srow(h.control ? '' : 'off', t('h_control'), h.control ? t('h_control_on') : t('h_control_off'), h.control ? '' : fix('control') + `<button class="go" data-fix="restricted">⋮</button>`)}
     ${srow(h.notifications ? '' : 'off', t('h_notif'), h.notifications ? t('h_notif_on') : t('h_notif_off'), h.notifications ? '' : fix('notifications'))}
     ${srow(h.battery ? '' : 'off', t('h_battery'), h.battery ? t('h_battery_on') : t('h_battery_off'), h.battery ? '' : fix('battery'))}
+    ${h.samsung ? srow(null, t('h_sleep'), t('h_sleep_sub'), `<button class="go" data-fix="sleeping">${esc(t('h_open'))}</button>`) : ''}
     ${h.missing.length ? srow('off', t('h_perms'), t('h_perms_off', { n: h.missing.length }), fix('permissions')) : srow('', t('h_perms'), t('h_perms_on'))}
     ${srow(h.dnd ? '' : 'idle', t('h_dnd'), h.dnd ? t('h_on') : t('h_optional'), h.dnd ? '' : fix('dnd'))}
     ${srow(h.systemSettings ? '' : 'idle', t('h_sys'), h.systemSettings ? t('h_on') : t('h_optional'), h.systemSettings ? '' : fix('systemSettings'))}
   </div>
   <div class="sgroup"><h3>${esc(t('set_handsfree'))}</h3>
-    ${srow(null, t('h_wake'), h.wakeRunning ? t('h_wake_on') : t('h_wake_off'), swb(h.wake, 'data-wake'))}
+    ${h.samsung ? srow(null, t('h_sidekey'), t('h_sidekey_sub'), `<button class="go" data-fix="sideKey">${esc(t('h_setup'))}</button>`) : ''}
+    ${srow(null, t('h_wake'), (h.wakeRunning ? t('h_wake_on') : t('h_wake_off')) + ' · ' + t('h_wake_dot'), swb(h.wake, 'data-wake'))}
     ${srow(null, t('h_wake_off_screen'), t('h_wake_off_screen_sub'), swb(h.wakeScreenOff, 'data-pref="wakeScreenOff"'))}
     ${srow(null, t('h_drive_auto'), t('h_drive_auto_sub'), swb(h.drivingAuto, 'data-pref="drivingAuto"'))}
     ${srow(null, t('h_drive_now'), t('h_drive_now_sub'), swb(h.driving, 'data-pref="driving"'))}
