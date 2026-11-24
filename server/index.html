@@ -101,7 +101,7 @@ html.overlay .phone{position:fixed;left:0;right:0;bottom:0;height:auto;max-heigh
   animation:sheetup .55s cubic-bezier(.2,.9,.25,1) both}
 html.overlay .grabber{display:block;width:42px;height:5px;border-radius:9px;background:rgba(255,255,255,.22);margin:10px auto 2px;cursor:pointer}
 html.overlay .feed{flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px 16px 0}
-html.overlay .dock{background:#0d0e16;position:relative;z-index:3}
+html.overlay .dock{background:#0d0e16;position:relative;z-index:3;flex:none}html.overlay .stage,html.overlay .grabber{flex:none} /* only the answer scrolls; the caption and buttons keep their room */
 html.overlay .turn .ask{display:none}
 html.overlay .turn,html.overlay body.voice .turn{padding-bottom:6px!important;min-height:0}
 html.overlay .stage{position:relative!important;inset:auto!important;opacity:1;transform:none;visibility:visible;padding:4px 22px 0;min-height:0;text-align:center;pointer-events:none}
