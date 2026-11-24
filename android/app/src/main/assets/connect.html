@@ -26,6 +26,9 @@
   input { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; margin-top: 10px; }
   .err { color: var(--bad); font-size: 15px; min-height: 1.4em; margin-top: 14px; }
   details { margin-top: 22px; color: var(--soft); font-size: 15px; } summary { cursor: pointer; }
+  .pick { display: grid; gap: 10px; margin-top: 6px; }
+  .pick button { text-align: left; margin: 0; padding: 18px; background: var(--card); color: var(--text); border: 1px solid var(--line); font-weight: 400; display: block; }
+  .pick button b { display: block; font-size: 18px; margin-bottom: 4px; } .pick button span { color: var(--soft); font-size: 15px; }
   [hidden] { display: none !important; }
   @media (prefers-reduced-motion: reduce) { .orb { animation: none; } }
 </style>
@@ -35,6 +38,10 @@
   <div class="orb busy" id="orb"></div>
   <h1 id="title">Connect to your assistant</h1>
   <p id="sub">Your phone talks to your own server over a private network. Nothing goes through anyone else's computers.</p>
+  <div class="pick" id="pick" hidden>
+    <button id="pickPhone"><b>On this phone</b><span>Everything runs here. Use your own AI key, or a model on the phone that works offline.</span></button>
+    <button id="pickServer"><b>On my own server</b><span>A home server or computer running Lumen, reached privately over Tailscale.</span></button>
+  </div>
   <div class="step" id="s1"><span class="dot"></span><b>Start the private connection</b></div>
   <div class="step" id="s2"><span class="dot"></span><b>Sign in to Tailscale</b></div>
   <div class="step" id="s3"><span class="dot"></span><b>Find your server</b></div>
@@ -54,6 +61,15 @@ function mark(n, cls) { ['s1', 's2', 's3'].forEach((id, i) => $(id).className = 
 function tick() {
   if (done) return;
   let s = {}; try { s = JSON.parse(L.status()); } catch {}
+  const chose = s.mode === 'phone' || s.mode === 'server';
+  $('pick').hidden = chose; ['s1', 's2', 's3'].forEach(id => $(id).hidden = !chose || s.mode === 'phone'); $('manual').hidden = s.mode !== 'server';
+  if (!chose) { $('title').textContent = 'Where should Lumen run?'; $('sub').textContent = 'You can change this later.'; $('orb').classList.remove('busy'); return; }
+  if (s.mode === 'phone') {
+    $('orb').classList.add('busy'); $('title').textContent = 'Starting Lumen on this phone'; $('sub').textContent = 'The first start takes a few seconds.';
+    if (s.ready) { done = true; $('orb').classList.remove('busy'); $('title').textContent = 'Ready'; setTimeout(() => L.open(), 400); }
+    return;
+  }
+  $('title').textContent = 'Connect to your assistant';
   const st = s.state || 'starting';
   $('go').hidden = true;
   if (st === 'needs_login') { mark(1); $('go').hidden = false; $('sub').textContent = 'Sign in with the same Tailscale account your server uses.'; }
@@ -72,6 +88,8 @@ function finish(name) {
   setTimeout(() => L.open(), 700);
 }
 $('go').onclick = () => L.login();
+$('pickPhone').onclick = () => { L.mode('phone'); tick(); };
+$('pickServer').onclick = () => { L.mode('server'); $('sub').textContent = 'Your phone talks to your own server over a private network. Nothing goes through anyone else\'s computers.'; tick(); };
 $('useAddr').onclick = () => { $('err').textContent = 'Checking…'; setTimeout(() => { if (L.use($('addr').value)) finish(JSON.parse(L.status()).name); else $('err').textContent = JSON.parse(L.status()).error; }, 30); };
 $('useCtl').onclick = () => { L.control($('ctl').value); $('err').textContent = 'Saved. Close and reopen the app.'; };
 tick(); setInterval(tick, 1500);

@@ -72,6 +72,7 @@ object ServiceActions {
             "setting" -> Knobs.set(ctx, args.optString("name"), args.optString("value"))
             "settings" -> ok(Knobs.read(ctx))
             "skillList" -> ok(Skills.list(ctx))
+            "localModel" -> LocalModel.handle(ctx, args) // the AI model on this phone: download, start, stop, status
             "refreshTriggers" -> { Triggers.forget(); ok(JSONObject().put("refreshed", true)) }
             "lifeSearch" -> ok(Powers.lifeSearch(ctx, args.optString("query"), args.optString("from"), args.optString("to"), args.optInt("limit", 8).coerceIn(1, 25)))
             else -> {

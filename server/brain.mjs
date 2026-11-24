@@ -11,6 +11,7 @@ export const PRESETS = {
   ollama: { label: 'Local (Ollama)', base: 'http://host.docker.internal:11434/v1', model: 'qwen3:32b' },
   custom: { label: 'Other OpenAI-compatible', base: '', model: '' },
   cli: { label: 'Your subscription (Claude, ChatGPT, Gemini…)', model: '' },
+  device: { label: 'On this phone (works offline)', base: 'http://127.0.0.1:47130/v1', model: 'local' },
 };
 
 /** cfg: { provider, apiKey, baseUrl, model }. Returns { model, stream(params, onText), create(params), webSearch }. */
@@ -28,10 +29,11 @@ export function makeBrain(cfg) {
   }
   const base = (cfg.baseUrl || preset.base).replace(/\/+$/, '');
   const call = async (params, onText) => {
+    if (cfg.beforeCall) await cfg.beforeCall(); // e.g. start the model on the phone
     const r = await fetch(base + '/chat/completions', {
       method: 'POST',
       headers: { 'content-type': 'application/json', ...(cfg.apiKey ? { authorization: 'Bearer ' + cfg.apiKey } : {}) },
-      body: JSON.stringify({ model: params.model || model, max_tokens: params.max_tokens, stream: true, messages: toOpenAI(params.system, params.messages), ...(params.tools?.length ? { tools: toolsOf(params.tools) } : {}) }),
+      body: JSON.stringify({ model: params.model || model, max_tokens: params.max_tokens, stream: true, ...(cfg.provider === 'device' ? { chat_template_kwargs: { enable_thinking: false } } : {}), messages: toOpenAI(params.system, params.messages), ...(params.tools?.length ? { tools: toolsOf(params.tools) } : {}) }),
     });
     if (!r.ok) throw new Error(`model ${r.status}: ${(await r.text()).slice(0, 300)}`);
     let text = '', finish = 'stop', buf = ''; const calls = [];

@@ -18,6 +18,7 @@ const merge = () => { const c = { ...DEFAULTS, ...saved }; for (const [k, v] of 
 let cfg = merge();
 
 let brainNow = null;
+export const hooks = { beforeDevice: null }; // set by server.mjs: wake the model on the phone before a call
 export const config = () => cfg;
 export function saveConfig(patch) {
   saved = { ...saved, ...patch }; cfg = merge(); brainNow = null;
@@ -26,8 +27,8 @@ export function saveConfig(patch) {
 }
 /** The configured model; throws a plain sentence when setup is not finished. */
 export function brain() {
-  if (!cfg.apiKey && !['ollama', 'custom', 'cli'].includes(cfg.provider)) throw new Error('Lumen has no AI model yet: finish setup in the dashboard');
-  return (brainNow ||= makeBrain(cfg));
+  if (!cfg.apiKey && !['ollama', 'custom', 'cli', 'device'].includes(cfg.provider)) throw new Error('Lumen has no AI model yet: finish setup in the dashboard');
+  return (brainNow ||= makeBrain(cfg.provider === 'device' ? { ...cfg, apiKey: process.env.LUMEN_DEVICE_KEY || '', baseUrl: '', beforeCall: hooks.beforeDevice } : cfg));
 }
 /** Settings safe to show in the dashboard: keys are reduced to their last four characters. */
 export const publicConfig = () => ({ ...cfg, apiKey: cfg.apiKey ? '••••' + cfg.apiKey.slice(-4) : '', voiceKey: cfg.voiceKey ? '••••' + cfg.voiceKey.slice(-4) : '', voiceSecret: cfg.voiceSecret ? '••••' : '', callKey: cfg.callKey ? '••••' : '' });

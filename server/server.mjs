@@ -11,7 +11,7 @@ import { makeCalls } from './calls.mjs';
 import { readFile as readF, writeFile as writeF } from 'node:fs/promises';
 import { STRINGS, LANGS, RTL, norm, langName, S } from './i18n.mjs';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { DATA, config, saveConfig, brain, publicConfig } from './config.mjs';
+import { DATA, config, saveConfig, brain, publicConfig, hooks } from './config.mjs';
 import { PRESETS } from './brain.mjs';
 import { tailscale } from './tailnet.mjs';
 import { VOICE_PROVIDERS, tts as speak, voices as listVoices, handleUpgrade } from './voice.mjs';
@@ -459,6 +459,22 @@ setInterval(async () => { // the scheduler: every 30 s, run whatever is due
   }
 }, 30e3).unref();
 // ---------- calls on the person's behalf (see calls.mjs) ----------
+// Ask the phone to do something outside a conversation (phone mode: the model on the phone). Null if the phone is not connected.
+async function phoneCall(method, args, ms = 30000) {
+  const p = await loadPerson({ uid: 'local', name: '', email: '' });
+  if (!relayLive(p.who.uid)) return null;
+  const did = randomBytes(9).toString('base64url');
+  return new Promise(res => { p.deviceWait.set(did, res); setTimeout(() => { if (p.deviceWait.delete(did)) res(null); }, ms); relaySend(p.who.uid, { id: did, method, args }); });
+}
+const LOCAL_MODEL = 'http://127.0.0.1:47130';
+const modelUp = () => fetch(LOCAL_MODEL + '/health', { signal: AbortSignal.timeout(1500) }).then(r => r.ok, () => false);
+hooks.beforeDevice = async () => { // the model on the phone sleeps until needed: start it and wait until it has loaded
+  if (await modelUp()) return;
+  const r = await phoneCall('localModel', { action: 'start', model: config().model });
+  if (!r?.ok) throw new Error(r?.error || 'the model on this phone could not start: open Lumen once');
+  for (let i = 0; i < 90; i++) { if (await modelUp()) return; await new Promise(ok => setTimeout(ok, 1000)); }
+  throw new Error('the model on this phone took too long to load');
+};
 async function reportCall(c) { // a finished call: a receipt, a notification and a line in the conversation
   if (!c?.owner || !(c.status === 'done' || c.status === 'failed' || c.summary)) return;
   const pr = await loadPerson(c.who || { uid: c.owner.split('|')[0] }, c.profile || 'personal').catch(() => null);
@@ -878,6 +894,12 @@ const server = http.createServer(async (req, res) => {
           if (act === 'credentials') { saveCredentials(id, String(b.text || '')); return json(res, 200, { ok: true, status: await cliStatus(id) }); }
         } catch (e) { return json(res, 200, { ok: false, error: String(e.message || e).slice(0, 300) }); }
         return json(res, 404, {});
+      }
+      if (url.pathname === '/setup/model') { // the model on the phone: what is downloaded, download, start, stop, delete
+        const b = req.method === 'POST' ? await readBody(req) : { action: 'status' };
+        if (!['status', 'download', 'start', 'stop', 'delete'].includes(b.action)) return json(res, 400, {});
+        const r = await phoneCall('localModel', { action: b.action, model: String(b.model || '').slice(0, 60) });
+        return json(res, 200, r || { ok: false, error: 'the phone is not connected yet' });
       }
       if (req.method === 'POST' && url.pathname === '/setup/finish') { saveConfig({ setupDone: true, owner: cf.owner || from.login || '' }); return json(res, 200, { ok: true }); }
       return json(res, 404, {});

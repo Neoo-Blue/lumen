@@ -12,7 +12,7 @@ import java.net.URL
  */
 object DeviceRelay {
     // what the server may ask for over the direct line: reading and steering, never sending texts, calls, installs or settings of Lumen itself
-    private val RELAY_OK = setOf("formReview", "screenshot", "lifeSearch", "notify", "refreshTriggers", "skillList", "screenRead", "screenTap", "screenType", "screenScroll", "screenDo", "press", "toggle", "setting", "settings", "openApp", "openUrl", "skillRun", "flashlight", "battery", "phoneInfo", "location", "media")
+    private val RELAY_OK = setOf("formReview", "screenshot", "lifeSearch", "notify", "refreshTriggers", "skillList", "screenRead", "screenTap", "screenType", "screenScroll", "screenDo", "press", "toggle", "setting", "settings", "openApp", "openUrl", "skillRun", "flashlight", "battery", "phoneInfo", "location", "media", "localModel")
     @Volatile var bridge: LumenBridge? = null   // set while Lumen's screen exists; otherwise the always-on service answers
     @Volatile private var started = false
     private var ctx: Context? = null
@@ -25,7 +25,9 @@ object DeviceRelay {
         while (true) {
             try {
                 val ck = cookie()
-                if (!ck.contains("lumen_auth=")) { Thread.sleep(5000); continue }
+                // phone mode: wait until this install's secret is in place; server mode: Tailscale says who we are
+                if (PhoneMode.mode(ctx!!) == "phone" && !ck.contains("lumen_local=")) { Thread.sleep(3000); continue }
+                if (PhoneMode.mode(ctx!!) == "") { Thread.sleep(5000); continue }
                 val c = URL(LumenOrigin.HOME + "/device/next").openConnection() as HttpURLConnection
                 c.setRequestProperty("cookie", ck); c.connectTimeout = 10000; c.readTimeout = 35000
                 when (c.responseCode) {
@@ -33,7 +35,7 @@ object DeviceRelay {
                         val job = JSONObject(c.inputStream.bufferedReader().use { it.readText() })
                         val b = bridge; val id = job.getString("id"); val m = job.getString("method"); val args = job.optJSONObject("args") ?: JSONObject()
                         if (m !in RELAY_OK) { answer(id, JSONObject().put("ok", false).put("error", "not allowed over the direct line")); continue }
-                        if (b != null && b.alive()) b.invoke("srv:$id", m, args.toString())
+                        if (b != null && b.alive() && m != "localModel") b.invoke("srv:$id", m, args.toString())
                         else Thread { answer(id, ServiceActions.run(ctx!!, m, args)) }.start()
                     }
                     401 -> Thread.sleep(15000)

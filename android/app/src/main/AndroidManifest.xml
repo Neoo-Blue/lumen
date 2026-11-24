@@ -36,6 +36,7 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- Permissions imply hardware features. Keep them optional so a missing sensor does not block install. -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -241,6 +242,13 @@
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
+        </service>
+        <!-- phone mode: Lumen's server runs inside the app and keeps jobs, triggers and calls going -->
+        <service
+            android:name=".LumenCore"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Runs the assistant's own server on this phone (no cloud server)" />
         </service>
         <receiver android:name=".UpdateReceiver" android:exported="false" />
         <receiver android:name=".CarReceiver" android:exported="true" android:permission="android.permission.BLUETOOTH_CONNECT">

@@ -51,12 +51,19 @@ open class MainActivity : AppCompatActivity() {
         private fun onConnectPage(): Boolean = try { runOnUiThreadBlocking { webView.url } == CONNECT } catch (_: Exception) { false }
         @android.webkit.JavascriptInterface fun status(): String {
             if (!onConnectPage()) return "{}"
-            return org.json.JSONObject().put("state", Tailnet.state()).put("login", Tailnet.loginUrl()).put("server", Tailnet.server ?: "")
+            if (PhoneMode.mode(this@MainActivity) == "phone") return org.json.JSONObject().put("mode", "phone").put("ready", PhoneMode.ready()).toString()
+            return org.json.JSONObject().put("mode", PhoneMode.mode(this@MainActivity)).put("state", Tailnet.state()).put("login", Tailnet.loginUrl()).put("server", Tailnet.server ?: "")
                 .put("name", Tailnet.serverName).put("error", Tailnet.lastError).toString()
         }
         @android.webkit.JavascriptInterface fun login() { if (onConnectPage()) Tailnet.loginUrl().takeIf { it.startsWith("https://") }?.let { openInBrowser(this@MainActivity, Uri.parse(it)) } }
         @android.webkit.JavascriptInterface fun find(): Boolean = onConnectPage() && Tailnet.discover(this@MainActivity)
         @android.webkit.JavascriptInterface fun use(url: String): Boolean = onConnectPage() && Tailnet.use(this@MainActivity, url)
+        /** The person picked where Lumen runs: "phone" (everything here) or "server" (their own server over Tailscale). */
+        @android.webkit.JavascriptInterface fun mode(m: String) {
+            if (!onConnectPage() || m !in setOf("phone", "server")) return
+            PhoneMode.choose(this@MainActivity, m)
+            if (m == "phone") LumenCore.ensure(this@MainActivity) else Tailnet.start(this@MainActivity)
+        }
         @android.webkit.JavascriptInterface fun control(url: String) { if (onConnectPage()) Tailnet.setControl(this@MainActivity, url) }
         @android.webkit.JavascriptInterface fun open() { if (onConnectPage()) runOnUiThread { webView.loadUrl(if (overlay) LumenOrigin.HOME + "/?overlay=1" else LumenOrigin.HOME) } }
     }
@@ -195,7 +202,8 @@ open class MainActivity : AppCompatActivity() {
         cleanOldCaptures()
         val restored = savedInstanceState?.let { webView.restoreState(it) }
         webView.addJavascriptInterface(ConnectBridge(), "LumenConnect")
-        if (!Tailnet.ready()) webView.loadUrl(CONNECT) // first the private connection to the person's server
+        val connected = when (PhoneMode.mode(this)) { "phone" -> PhoneMode.up; "server" -> Tailnet.ready(); else -> false }
+        if (!connected) webView.loadUrl(CONNECT) // first: where Lumen runs, and the connection to it
         else if (!handOff(intent) && !incoming(intent) && restored == null) webView.loadUrl(if (overlay) LumenOrigin.HOME + "/?overlay=1" else LumenOrigin.HOME)
         overLockScreen(intent)
         armVoice(intent)

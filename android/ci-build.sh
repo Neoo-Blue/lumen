@@ -109,6 +109,21 @@ fi
 escaped="$(printf '%s' "${SDK_ROOT}" | sed 's/\\/\\\\/g; s/:/\\:/g; s/ /\\ /g')"
 printf 'sdk.dir=%s\n' "${escaped}" > "${ROOT}/local.properties"
 
+# phone mode: the server, with its production dependencies, packed into the app (unpacked on the phone at first start)
+if [ -d "${ROOT}/../server" ]; then
+  SUDO=""; [ "$(id -u)" -eq 0 ] || SUDO="sudo"
+  command -v node >/dev/null 2>&1 || { curl -fsSL https://deb.nodesource.com/setup_22.x | ${SUDO} -E bash - >/dev/null && ${SUDO} apt-get install -y -qq nodejs >/dev/null; }
+  BUNDLE="$(mktemp -d)"
+  (cd "${ROOT}/../server" && tar --exclude=node_modules --exclude=data --exclude='*.test.mjs' -cf - .) | tar -xf - -C "${BUNDLE}"
+  (cd "${BUNDLE}" && npm install --omit=dev --no-audit --no-fund >/dev/null 2>&1 && npm prune --omit=dev >/dev/null 2>&1)
+  mkdir -p "${ROOT}/app/src/main/assets"
+  rm -f "${ROOT}/app/src/main/assets/server.zip"
+  python3 -c 'import shutil,sys; shutil.make_archive(sys.argv[1], "zip", sys.argv[2])' "${ROOT}/app/src/main/assets/server" "${BUNDLE}"
+  echo "server bundle: $(du -h "${ROOT}/app/src/main/assets/server.zip" | cut -f1)"
+fi
+# fully offline mode: the on-device model runtime (android/llama/build.sh) and the list of models it offers
+if [ -f "${ROOT}/llama/models.json" ]; then cp "${ROOT}/llama/models.json" "${ROOT}/app/src/main/assets/models.json"; fi
+if [ -d "${ROOT}/llama/out/jniLibs/arm64-v8a" ]; then mkdir -p "${ROOT}/app/src/main/jniLibs/arm64-v8a" && cp "${ROOT}/llama/out/jniLibs/arm64-v8a/"*.so "${ROOT}/app/src/main/jniLibs/arm64-v8a/"; fi
 "${GRADLE_HOME}/bin/gradle" --no-daemon assembleDebug
 
 mkdir -p "${ROOT}/dist"

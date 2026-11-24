@@ -8,3 +8,5 @@ captures/
 dist/
 *.apk
 *.aab
+app/src/main/assets/server.zip
+app/src/main/assets/models.json

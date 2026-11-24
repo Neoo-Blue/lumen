@@ -85,6 +85,11 @@
         <textarea id="creds" rows="4" style="width:100%;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);padding:10px;font:13px ui-monospace,monospace"></textarea>
         <button class="quiet" id="credsSave" style="margin-left:0">Save for the selected tool</button></details>
     </div>
+    <div id="devBox" hidden>
+      <p class="hint" style="margin-top:14px">A model that runs on this phone, with no internet needed. Smaller and slower than the cloud models, so long tasks like bookings work best with a cloud key. It downloads once.</p>
+      <div class="tools" id="devModels"></div>
+      <div class="status" id="devStatus" role="status"></div>
+    </div>
     <div id="keyBox"><label for="apiKey" id="keyLabel">API key</label><input type="password" id="apiKey" autocomplete="off" spellcheck="false"></div>
     <div id="baseBox"><label for="baseUrl">Address of the model service</label><input type="url" id="baseUrl" spellcheck="false"></div>
     <label for="model">Model</label><input type="text" id="model" spellcheck="false">
@@ -137,6 +142,33 @@
 const $ = s => document.querySelector(s);
 let st = null, provider = 'anthropic';
 const post = (p, b) => fetch(p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(b || {}) }).then(r => r.json());
+let devTimer = null;
+const gb = b => (b / 1e9).toFixed(1) + ' GB';
+async function loadModels() {
+  const r = await (await fetch('/setup/model')).json(), box = $('#devModels'), s = $('#devStatus');
+  clearTimeout(devTimer);
+  if (!r.ok) { s.className = 'status bad'; s.textContent = r.error; devTimer = setTimeout(loadModels, 3000); return; }
+  const d = r.data, dl = d.download || {}; box.innerHTML = '';
+  if (!d.runtime) { s.className = 'status bad'; s.textContent = 'This build of the app has no on-device model runtime.'; return; }
+  for (const m of d.models) {
+    const el = document.createElement('div'); el.className = 'tool'; el.setAttribute('aria-pressed', st.config.model === m.id);
+    el.innerHTML = '<div><b></b><small></small></div><span class="st"></span>';
+    el.querySelector('b').textContent = m.label + (m.id === d.recommended ? ' (best for this phone)' : '');
+    el.querySelector('small').textContent = gb(m.bytes) + (m.fits ? '' : ' · may be too big for this phone\'s memory');
+    const active = dl.active && dl.model === m.id, stt = el.querySelector('.st');
+    stt.textContent = active ? Math.round(100 * dl.done / dl.total) + '%' : m.downloaded ? (d.running === m.id ? 'Running' : 'Downloaded') : ''; stt.classList.toggle('ok', m.downloaded);
+    const btn = document.createElement('button'); btn.type = 'button';
+    btn.textContent = m.downloaded ? (st.config.model === m.id ? 'In use' : 'Use') : active ? 'Downloading…' : 'Download';
+    btn.disabled = active || (m.downloaded && st.config.model === m.id);
+    btn.onclick = async e => { e.stopPropagation();
+      if (!m.downloaded) { if (d.freeBytes < m.bytes * 1.1) return alert('Not enough free space on this phone.'); await post('/setup/model', { action: 'download', model: m.id }); }
+      else { $('#model').value = m.id; await save(); await post('/setup/model', { action: 'start', model: m.id }); }
+      loadModels(); };
+    el.append(btn); box.append(el);
+  }
+  s.className = 'status ' + (dl.error ? 'bad' : ''); s.textContent = dl.error || (dl.active ? (dl.checking ? 'Checking ' + dl.checking + '…' : 'Downloading ' + gb(dl.done) + ' of ' + gb(dl.total)) : '');
+  if (dl.active) devTimer = setTimeout(loadModels, 1500);
+}
 let cli = 'claude', termTimer = null, voiceProvider = 'cartesia';
 function pickVoice(id) {
   voiceProvider = id;
@@ -176,7 +208,9 @@ function pickProvider(id, keepModel) {
   const pr = st.presets[id];
   $('#keyLabel').textContent = KEYS[id];
   $('#baseBox').hidden = !(id === 'ollama' || id === 'custom');
-  $('#keyBox').hidden = id === 'cli'; $('#cliBox').hidden = id !== 'cli'; if (id === 'cli') loadTools();
+  $('#keyBox').hidden = id === 'cli' || id === 'device'; $('#cliBox').hidden = id !== 'cli'; if (id === 'cli') loadTools();
+  $('#devBox').hidden = id !== 'device'; document.querySelector('label[for=model]').hidden = $('#model').hidden = id === 'device'; // the list below picks it
+  if (id === 'device') loadModels();
   if (!keepModel) { $('#model').value = pr.model || ''; $('#baseUrl').value = pr.base || ''; }
 }
 
@@ -184,6 +218,7 @@ function render() {
   const c = st.config, phone = st.mode === 'phone';
   // on the phone itself: no private network, no other people, no desktop tools
   ['#s-net', '#s-phone', '#s-who'].forEach(id => $(id).hidden = phone);
+  if (!phone) delete st.presets.device;
   if (phone) { delete st.presets.cli; document.querySelector('.lead').textContent = 'Everything runs on this phone. Pick its brain and you are done.'; }
   $('#name').value = c.name || 'Lumen';
   $('#title').textContent = c.setupDone ? `${c.name} settings` : phone ? 'Set up Lumen on this phone' : 'Set up your assistant';
@@ -204,7 +239,7 @@ function render() {
   $('#allowAll').checked = c.allowAll !== false; $('#allowed').value = (c.allowed || []).join(', ');
   $('#allowBox').hidden = $('#allowAll').checked;
   $('#s-name').classList.toggle('done', !!c.name);
-  $('#s-brain').classList.toggle('done', !!c.apiKey || provider === 'ollama' || provider === 'cli');
+  $('#s-brain').classList.toggle('done', !!c.apiKey || provider === 'ollama' || provider === 'cli' || (provider === 'device' && !!c.model && c.model !== 'local'));
   $('#s-voice').classList.toggle('done', !!c.voiceKey);
   $('#finish').textContent = c.setupDone ? 'Save' : 'Finish setup';
   net();
