@@ -19,10 +19,10 @@ export function isPrivateIp(ip) {
   if (h.every(x => x === 0) || (h.slice(0, 7).every(x => x === 0) && h[7] === 1)) return true; // :: and ::1
   const v4 = (hi, lo) => `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`;
   // an IPv4 address inside an IPv6 one (mapped ::ffff:a.b.c.d, compatible ::a.b.c.d, 6to4 2002:abcd:...): judge the IPv4 part
-  if (h.slice(0, 5).every(x => x === 0) && (h[5] === 0xffff || h[5] === 0)) return isPrivateIp(v4(h[6], h[7]));
+  if (h.slice(0, 5).every(x => x === 0) && (h[5] === 0xffff || h[5] === 0) || h.slice(0, 4).every(x => x === 0) && h[4] === 0xffff && h[5] === 0) return isPrivateIp(v4(h[6], h[7]));
   if (h[0] === 0x2002) return isPrivateIp(v4(h[1], h[2]));
   const top = h[0];
-  return (top & 0xfe00) === 0xfc00 || (top & 0xffc0) === 0xfe80 || (top & 0xff00) === 0xff00 || // unique local, link local, multicast
+  return (top & 0xfe00) === 0xfc00 || (top & 0xffc0) === 0xfe80 || (top & 0xffc0) === 0xfec0 || (top & 0xff00) === 0xff00 || // unique local, link local, multicast
     (top === 0x64 && h[1] === 0xff9b) || (top === 0x100 && h[1] === 0 && h[2] === 0 && h[3] === 0) || // NAT64, discard
     (top === 0x2001 && (h[1] === 0xdb8 || h[1] < 0x200)); // documentation, Teredo and other special 2001::/23 blocks
 }

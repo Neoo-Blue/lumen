@@ -32,7 +32,7 @@ export function guess(text) {
   if (m && !/my|today|tomorrow|今天|明天|这周|下周/i.test(m[1]) && !/^(the|a|an|this|that|our|your)\s|corner|way|morning|evening|outside|here|there/i.test(m[1].trim())) out.push(['weather', { city: clean(m[1]) }]);
   // people and things: who is X / what happened to X
   // live questions: search the web now, while the model reads the request (saves a whole step and most of the wait)
-  if (!out.length && /\b(news|headlines?|top stories|latest|breaking|today'?s|this week|what happened|what'?s happening|what'?s going on|update on|why (?:did|was|is|are|were)|did .{2,30} (?:win|lose|die|resign|announce)|score|results? of|election|announced|released|just happened)\b|新闻|最新|头条|发生了什么|怎么了|为什么/i.test(t))
+  if (!out.length && !/\b(my|our|mine|weather|forecast|calendar|emails?|inbox|texts?|messages?|photos?|pictures?|reminders?|alarm|schedule)\b|我的|天气|日历|短信|照片/i.test(t) && /\b(news|headlines?|top stories|latest|breaking|today'?s|this week|what happened|what'?s happening|what'?s going on|update on|why (?:did|was|is|are|were)|did .{2,30} (?:win|lose|die|resign|announce)|score|results? of|election|announced|released|just happened)\b|新闻|最新|头条|发生了什么|怎么了|为什么/i.test(t))
     out.push(['news', { query: clean(t).replace(/^(what(?:'s| is| are)? (?:the )?(?:latest|news|happening|going on)(?: news)?(?: on| with| about| in)?|what happened (?:to|with|in)|latest (?:news )?(?:on|about)|any news (?:on|about)|news (?:on|about)|tell me the news (?:on|about)|read me)\s+/i, '').replace(GENERIC_NEWS, ' ').replace(/\s+/g, ' ').trim(), lang: /[一-鿿]/.test(t) ? 'zh' : 'en' }]); // headlines in half a second; the model can still search the web
   m = out.some(([n]) => n === 'news') ? null : /^(?:who(?:'s| is| was)|tell me about)\s+(.{2,50})$/i.exec(clean(t)) || /^(.{2,20}?)(?:是谁|是什么人|怎么了|发生了什么|最近怎么样)$/u.exec(clean(t));
   if (m && !out.length && !needsJudgment(t)) out.push(['person', { name: clean(m[1]), lang: /[一-鿿]/.test(t) ? 'zh' : 'en' }]);
@@ -102,19 +102,24 @@ export function phoneCommand(text, caps) {
 // navigation counts (open, tap by label, scroll, back/home, toggles): typing, taps by item number, and anything that
 // sends, calls or needs a confirmation stay with the model, so a replay never repeats someone's words or a risky act.
 export function skillFrom(text, acts) {
-  const steps = [], ok = /^(openApp|screenTap|screenScroll|press|toggle|screenDo|screenRead|screenshot|wait)$/;
+  // questions are answered by reading the screen, which a replay cannot do: those stay with the model
+  if (/\?\s*$|^(what|how|is|are|does|do|did|check|when|where|who|which|why|can|could|tell|find out)\b|吗|什么|多少|怎么|哪/i.test(String(text).trim())) return null;
+  const steps = [], ok = /^(openApp|screenTap|screenScroll|press|toggle|screenDo|wait)$/;
+  const plain = s => s && typeof s === 'object' && Object.keys(s).length === 1 && (
+    typeof s.tap === 'string' && s.tap || s.scroll === 'down' || s.scroll === 'up' || s.press === 'back' || s.press === 'home' ||
+    Number.isFinite(s.wait) || typeof s.expect === 'string' || s.open && typeof s.open === 'object' && !s.open.link && (s.open.name || s.open.pkg)) || (s && typeof s.toggle === 'string' && Object.keys(s).every(k => k === 'toggle' || k === 'on'));
   let app = '';
   for (const { action, args = {}, ok: done } of acts) {
     if (!done || !ok.test(action) || /^skill/.test(action)) return null;
-    if (action === 'openApp') { if (!args.name && !args.pkg) return null; app = app || String(args.name || args.pkg); steps.push({ open: Object.fromEntries(['name', 'pkg', 'link', 'screen'].filter(k => args[k]).map(k => [k, args[k]])) }); }
+    if (action === 'openApp') { if ((!args.name && !args.pkg) || args.link) return null; app = app || String(args.name || args.pkg); steps.push({ open: Object.fromEntries(['name', 'pkg', 'screen'].filter(k => args[k]).map(k => [k, args[k]])) }); } // a link can carry a recipient or words
     else if (action === 'screenTap') { if (typeof args.text !== 'string' || !args.text) return null; steps.push({ tap: args.text }); }
     else if (action === 'screenScroll') steps.push({ scroll: args.direction === 'up' ? 'up' : 'down' });
     else if (action === 'press') { if (!/^(back|home)$/.test(args.key)) return null; steps.push({ press: args.key }); }
     else if (action === 'toggle') steps.push({ toggle: args.name, on: args.on });
-    else if (action === 'screenDo') { if (Object.keys(args.params || {}).length || !Array.isArray(args.steps) || args.steps.some(s => !s || typeof s !== 'object' || s.type || s.setting)) return null; steps.push(...args.steps); }
+    else if (action === 'screenDo') { if (Object.keys(args.params || {}).length || !Array.isArray(args.steps) || !args.steps.every(plain)) return null; steps.push(...args.steps); }
   }
   const name = String(text).trim().replace(/[?.!。！？]+$/, '').toLowerCase().slice(0, 60);
-  if (steps.length < 2 || steps.length > 40 || !name) return null;
+  if (steps.length < 2 || steps.length > 40 || !name || !steps[0].open) return null; // a skill starts by opening its app
   return { name, when: String(text).trim().slice(0, 200), app, params: [], steps, examples: [String(text).trim().slice(0, 160)] };
 }
 
@@ -148,5 +153,15 @@ if (globalThis.process?.argv?.[1]?.endsWith("prefetch.mjs")) {
   assert.equal(skillFrom('x', [{ action: 'openApp', args: { name: 'A' }, ok: true }, { action: 'smsSend', args: {}, ok: true }]), null);
   assert.equal(skillFrom('open spotify', [{ action: 'openApp', args: { name: 'Spotify' }, ok: true }]), null); // one step: nothing to learn
   assert.equal(skillFrom('x', [{ action: 'openApp', args: { name: 'A' }, ok: true }, { action: 'screenTap', args: { text: 'B' }, ok: false }]), null);
+  const A = (st) => skillFrom('go there', [{ action: 'openApp', args: { name: 'A' }, ok: true }, { action: 'screenDo', args: { steps: st }, ok: true }]);
+  assert.equal(A([{ tap: { i: 4 } }]), null); // item numbers change
+  assert.equal(A([{ press: 'lock' }]), null);
+  assert.equal(A([{ tap: 'A', type: 'x' }]), null);
+  assert.ok(A([{ tap: 'Library' }, { scroll: 'down' }, { wait: 300 }]));
+  assert.equal(skillFrom('x', [{ action: 'openApp', args: { name: 'WhatsApp', link: 'https://wa.me/1555?text=hi' }, ok: true }, { action: 'screenTap', args: { text: 'Send' }, ok: true }]), null);
+  assert.equal(skillFrom('check my balance in Chase', [{ action: 'openApp', args: { name: 'Chase' }, ok: true }, { action: 'screenTap', args: { text: 'Accounts' }, ok: true }]), null);
+  assert.equal(skillFrom('go', [{ action: 'screenTap', args: { text: 'A' }, ok: true }, { action: 'screenTap', args: { text: 'B' }, ok: true }]), null); // must open its app first
+  assert.equal(skillFrom('go', [{ action: 'openApp', args: { name: 'A' }, ok: true }, { action: 'screenRead', args: {}, ok: true }, { action: 'screenTap', args: { text: 'B' }, ok: true }]), null);
+  for (const q of ['Read my latest emails', 'Show my latest photos', 'What is on my calendar this week?', "What's today's weather?"]) assert.ok(!guess(q).some(([n]) => n === 'news'), q);
   console.log('phone commands ok');
 }

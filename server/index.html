@@ -804,7 +804,7 @@ const R = {
     const fl = d.flights || [], min = Math.min(...fl.map(f => +f.price || Infinity));
     return `<div class="k flights"><div class="route"><b>${esc(d.from)}</b><div class="arc"></div><b>${esc(d.to)}</b></div><div class="lbl">${esc(d.date)} · ${t('one_way')} · ${fl.length === 1 ? t('option_1') : t('options_n', { n: fl.length })}</div><div class="fls stagger">${fl.map(f => `<div class="fl ${+f.price === min ? 'best' : ''}"><div class="tm">${f.depart ? `${esc(f.depart)} → ${esc(f.arrive || '')}${f.plus_days ? `<small>+${f.plus_days}</small>` : ''}` : esc(f.airline)}</div><div class="pr">${f.price ? money(f.price, d.currency) : ''}</div><div class="al">${f.depart ? esc(f.airline) : t('time_on_booking')}${+f.price === min ? ` <span class="tag">${t('cheapest')}</span>` : ''}</div><div class="st">${[f.duration, f.stops == null ? '' : f.stops === 1 ? t('stop_1') : f.stops ? t('stops_n', { n: f.stops }) : t('nonstop')].filter(Boolean).join(' · ')}</div></div>`).join('')}</div></div>`;
   },
-  sources: d => `<div class="sources stagger">${(d.items||[]).filter((s, i, a) => a.findIndex(x => host(x.url) === host(s.url)) === i).slice(0, 4).map(s => `<a class="src" href="${esc(safeUrl(s.url) || '#')}" target="_blank" rel="noopener noreferrer"><img alt="" src="https://icons.duckduckgo.com/ip3/${esc(host(safeUrl(s.url)))}.ico"><span>${esc(/logo|^image|untitled|^\W*$/i.test(s.title || '') || (s.title || '').length < 4 ? host(s.url) : s.title)}</span></a>`).join('')}</div>`,
+  sources: d => `<div class="sources stagger">${(d.items||[]).filter((s, i, a) => a.findIndex(x => (host(x.url) === 'news.google.com' ? x.url : host(x.url)) === (host(s.url) === 'news.google.com' ? s.url : host(s.url))) === i).slice(0, 4).map(s => `<a class="src" href="${esc(safeUrl(s.url) || '#')}" target="_blank" rel="noopener noreferrer"><img alt="" src="https://icons.duckduckgo.com/ip3/${esc(host(safeUrl(s.url)))}.ico"><span>${esc(/logo|^image|untitled|^\W*$/i.test(s.title || '') || (s.title || '').length < 4 ? host(s.url) : s.title)}</span></a>`).join('')}</div>`,
   compose: d => `<div class="k compose"><div class="lbl">${t('draft')}</div><label>${t('to')}</label><input name="to" value="${esc(d.to)}"><label>${t('subject')}</label><input name="subject" value="${esc(d.subject)}"><label>${t('body')}</label><textarea name="body">${esc(d.body)}</textarea><div class="actions" style="margin-top:12px"><button class="btn p" data-send ${/@/.test(d.to || '') ? '' : 'disabled'}>${t('send')}</button></div></div>`,
   actions: d => `<div class="actions stagger">${(d.items||[]).map(a => `<button class="btn ${a.primary ? 'p' : ''}" data-do="${esc(a.do)}">${esc(a.label)}</button>`).join('')}</div>`,
   done: d => `<div class="k done"><svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="15"/><path d="M10 17.5l4.5 4.5L24 12.5"/></svg><b>${esc(d.text)}</b></div>`,
@@ -1018,6 +1018,11 @@ function matchSkill(text, skills) {
   }
   return score >= 0.8 ? best : null;
 }
+function skillLine(d) { // learned on the first try; and the words that ran a skill run it at once next time
+  if (!NATIVE || !quickLearn()) return;
+  if (d.c === '_skilllearn' && DEVICE.includes('skillSave')) { const { c, ...sk } = d; nativeCall('skillSave', { ...sk, auto: true }).catch(() => {}); }
+  if (d.c === '_skillused' && DEVICE.includes('skillExample')) nativeCall('skillExample', { name: d.name, text: d.said }).catch(() => {});
+}
 const quickLearn = () => localStorage.lumenQuickLearn !== 'off'; // on unless the person turns it off in Settings
 const mySkills = async () => { if (!DEVICE.includes('skillList')) return []; try { const r = await Promise.race([nativeCall('skillList', {}), new Promise(r => setTimeout(() => r({}), 800))]); return r.ok ? r.data : []; } catch { return []; } };
 function afterTurn(canvas) {
@@ -1110,13 +1115,12 @@ const inert = v => typeof v === 'string' ? v.replace(/[<>"'`]/g, ch => ({ '<': '
 const safeImg = u => /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(String(u || '')) ? u : safeUrl(u);
 const safeUrl = u => { try { const x = new URL(String(u).replace(/[‹›”’]/g, '')); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch { return ''; } };
 function mount(canvas, d) {
+  if (d.c === '_skilllearn' || d.c === '_skillused') return skillLine(d);
   d = inert(d);
   const wait = canvas.querySelector('.wait');
   if (d.c === '_status') { if (wait) wait.querySelector('p').textContent = toolLabel(d.text.split(',')[0]) + '…'; return; }
   if (d.c === 'say') { voice.say(d.text); if (wait && !canvas.dataset.said) { canvas.dataset.said = 1; wait.querySelector('p').textContent = d.text; } return; }
   if (d.c === '_device') { runDevice(d, canvas); return; }
-  if (d.c === '_skilllearn') { if (NATIVE && DEVICE.includes('skillSave') && quickLearn()) { const { c, ...sk } = d; nativeCall('skillSave', { ...sk, auto: true }).catch(() => {}); } return; } // learned on the first try
-  if (d.c === '_skillused') { if (NATIVE) nativeCall('skillExample', { name: d.name, text: d.said }).catch(() => {}); return; } // next time these words run it at once
   if (d.c === 'profile' && ['personal', 'business'].includes(d.to) && d.to !== PROFILE) { PROFILE = d.to; localStorage.setItem('lumen.profile', PROFILE); paintProfile(); toast(t(d.to)); return; }
   if (d.c === 'theme') return applyTheme(d, true);
   if (d.c === 'remember') { toast(t('remembered', { t: d.text })); return; }
@@ -1157,6 +1161,7 @@ function fitScreen(turn) {
   turn.querySelectorAll('.canvas > .sources').forEach((x, i) => { if (i) x.remove(); });
 }
 async function ask(text, opts = {}) {
+  const said = text; // the person's own words, kept for learning even when a note is added below
   const kind = opts.kind || (opts.voice ? 'voice' : 'typed'), askT0 = performance.now();
   text = String(text || '').replace(/^\s*(hey|hi|ok(ay)?)[\s,]+lumen\b[\s,.!?]*/i, ''); // the wake phrase is not the question
   if (busy || !text.trim()) return;
@@ -1197,12 +1202,12 @@ async function ask(text, opts = {}) {
         busy = false; document.body.classList.remove('busy'); panel('busy', { on: false }); voice.turnDone(); if (OVERLAY) afterTurn(canvas);
         return;
       }
-      text = `${text}\n(The learned skill "${sk.name}" stopped: ${r.error}. Carry on from the current screen, then save the fixed version.)`; // Lumen takes over from where it stopped
+      text = `${text}\n(The learned skill "${sk.name}" stopped: ${r.error}. Do the task again from the start, opening the app first; the phone learns the new way by itself.)`; // Lumen takes over from where it stopped
     }
   }
   if (NATIVE && !navigator.onLine && !(await fetch('/health', { cache: 'no-store' }).then(r => r.ok, () => false))) { canvas.querySelector('.wait')?.remove(); mount(canvas, { c: 'note', text: t('offline_note') }); busy = false; document.body.classList.remove('busy'); voice.turnDone(); return; }
   try {
-    const res = await api('/ask', { method: 'POST', body: JSON.stringify({ text, kind, lang: LANG, device: DEVICE, native: NATIVE, image: lookFrame(), here: HERE, skills: await mySkills(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone }) });
+    const res = await api('/ask', { method: 'POST', body: JSON.stringify({ text, kind, lang: LANG, device: DEVICE, native: NATIVE, noInstant: NATIVE && kind !== 'tap', said,  image: lookFrame(), here: HERE, skills: await mySkills(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone }) });
     if (res.status === 401 || res.status === 403) { location.reload(); return; }
     if (!res.ok) tel('warn', 'ask_http', `HTTP ${res.status}`, { kind });
     if (res.status === 429) throw new Error(t('rate_limited'));
@@ -1630,7 +1635,7 @@ const openIn = qIn.get('open'); if (openIn) history.replaceState(null, '', '/');
 const prefillIn = qIn.get('prefill'); if (prefillIn) { history.replaceState(null, '', '/'); setTimeout(() => { q.value = prefillIn.slice(0, 1500); q.focus(); }, 700); }
 async function openReceipt(id) { await openSettings(); setTimeout(() => { const el2 = document.getElementById('rc-' + id); if (el2) { el2.classList.add('open'); el2.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }, 700); }
 const sharedIn = askIn || (shareRaw && (shareRaw.startsWith('(shared)') ? shareRaw : '(shared) ' + shareRaw)); if (shareRaw || askIn) history.replaceState(null, '', '/');
-(async () => { paintProfile(); if (!I18N.strings[LANG] && !localStorage.getItem('lumen.str.' + LANG + '.' + Object.keys(I18N.strings.en).length)) { try { await useLang(LANG); } catch {} } applyStatic(); await boot(); if (openIn?.startsWith('receipt:')) openReceipt(openIn.slice(8)); if (NATIVE) phoneCmds(); if (NATIVE) nativeCall('health', {}).then(r => { if (r.ok) document.body.classList.toggle('driving', !!r.data.driving); }); if (sharedIn) setTimeout(() => { if (askIn && !shareRaw) ask(sharedIn.slice(0, 1500), { kind: 'typed' }); else { q.value = sharedIn.slice(0, 1500); q.focus(); } }, 600); })();
+(async () => { paintProfile(); if (!I18N.strings[LANG] && !localStorage.getItem('lumen.str.' + LANG + '.' + Object.keys(I18N.strings.en).length)) { try { await useLang(LANG); } catch {} } applyStatic(); await boot(); if (openIn?.startsWith('receipt:')) openReceipt(openIn.slice(8)); if (NATIVE) phoneCmds(); if (NATIVE) nativeCall('health', {}).then(r => { if (r.ok) document.body.classList.toggle('driving', !!r.data.driving); }); if (sharedIn) setTimeout(() => { if (askIn && !shareRaw && NATIVE) ask(sharedIn.slice(0, 1500), { kind: 'typed' }); else { q.value = sharedIn.slice(0, 1500); q.focus(); } }, 600); })();
 $('#connBtn').onclick = () => { loadConn(); document.body.classList.add('sheet-open'); };
 let findT;
 $('#findForm').onsubmit = e => { e.preventDefault(); findNow(); };

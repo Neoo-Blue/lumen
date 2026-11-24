@@ -397,7 +397,7 @@ async function news({ query, lang = 'en' }) {
   const text = v => v.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
   const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 8).map(([, it]) => {
     const source = text(tag(it, 'source')), title = text(tag(it, 'title')).replace(new RegExp(`\\s+-\\s+${source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`), '');
-    return { title, source, date: new Date(text(tag(it, 'pubDate'))).toISOString().slice(0, 10), url: text(tag(it, 'link')) };
+    return { title, source, date: (d => isNaN(d) ? '' : d.toISOString().slice(0, 10))(new Date(text(tag(it, 'pubDate')))), url: text(tag(it, 'link')) };
   }).filter(x => x.title);
   if (q) items.sort((a, b) => b.date.localeCompare(a.date)); // top stories keep the editors' order
   if (!items.length) return { data: { query: q, items: [], note: 'no recent news found' } };
