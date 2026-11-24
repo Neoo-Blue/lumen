@@ -1,0 +1,5 @@
+# Release zip downloaded by fetch.sh. Not part of the app sources.
+.cache/
+
+# Node headers extracted by fetch.sh. Regenerated on each CI machine.
+include/

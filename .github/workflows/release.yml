@@ -12,6 +12,8 @@ jobs:
       # build.sh and ci-build.sh install their own Go, NDK, JDK 17 and Android SDK
       - name: Tailscale bridge
         run: cd android/tsbridge && bash build.sh
+      - name: On-device model runtime (llama.cpp)
+        run: cd android/llama && bash build.sh
       - name: Signing key
         env: { KS: "${{ secrets.LUMEN_KEYSTORE_B64 }}" }
         run: mkdir -p android/signing && echo "$KS" | base64 -d > android/signing/lumen.keystore

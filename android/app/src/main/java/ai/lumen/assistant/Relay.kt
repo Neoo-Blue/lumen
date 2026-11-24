@@ -39,6 +39,8 @@ object DeviceRelay {
                         else Thread { answer(id, ServiceActions.run(ctx!!, m, args)) }.start()
                     }
                     401 -> Thread.sleep(15000)
+                    204 -> {}
+                    else -> Thread.sleep(3000) // not ready yet (setup, a restart): never spin
                 }
                 c.disconnect()
             } catch (_: Exception) {

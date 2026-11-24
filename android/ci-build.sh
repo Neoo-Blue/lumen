@@ -121,9 +121,12 @@ if [ -d "${ROOT}/../server" ]; then
   python3 -c 'import shutil,sys; shutil.make_archive(sys.argv[1], "zip", sys.argv[2])' "${ROOT}/app/src/main/assets/server" "${BUNDLE}"
   echo "server bundle: $(du -h "${ROOT}/app/src/main/assets/server.zip" | cut -f1)"
 fi
-# fully offline mode: the on-device model runtime (android/llama/build.sh) and the list of models it offers
+# fully offline mode: the on-device model runtime (android/llama/build.sh) and the list of models it offers;
+# its C++ runtime is left out because the app build provides the same one
 if [ -f "${ROOT}/llama/models.json" ]; then cp "${ROOT}/llama/models.json" "${ROOT}/app/src/main/assets/models.json"; fi
-if [ -d "${ROOT}/llama/out/jniLibs/arm64-v8a" ]; then mkdir -p "${ROOT}/app/src/main/jniLibs/arm64-v8a" && cp "${ROOT}/llama/out/jniLibs/arm64-v8a/"*.so "${ROOT}/app/src/main/jniLibs/arm64-v8a/"; fi
+if [ -d "${ROOT}/llama/out/jniLibs/arm64-v8a" ]; then mkdir -p "${ROOT}/app/src/main/jniLibs/arm64-v8a" && for f in "${ROOT}/llama/out/jniLibs/arm64-v8a/"*.so; do [ "$(basename "$f")" = libc++_shared.so ] || cp "$f" "${ROOT}/app/src/main/jniLibs/arm64-v8a/"; done; fi
+# phone mode: Node 24 inside the app (pinned, hash-checked download)
+bash "${ROOT}/nodejs/fetch.sh"
 "${GRADLE_HOME}/bin/gradle" --no-daemon assembleDebug
 
 mkdir -p "${ROOT}/dist"

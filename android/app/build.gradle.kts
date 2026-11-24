@@ -6,6 +6,7 @@ plugins {
 android {
     namespace = "ai.lumen.assistant"
     compileSdk = 35
+    ndkVersion = "29.0.14206865" // the same NDK as llama.cpp (android/llama), so one C++ runtime serves both
 
     defaultConfig {
         applicationId = "ai.lumen.assistant"
@@ -14,6 +15,18 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         ndk { abiFilters += listOf("arm64-v8a") }
+        externalNativeBuild {
+            cmake {
+                arguments += listOf("-DANDROID_STL=c++_shared")
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 
     // your own key, so each new build installs over the last one: put it at signing/lumen.keystore and set
@@ -44,6 +57,9 @@ android {
     }
 
     packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }

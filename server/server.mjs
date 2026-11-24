@@ -812,7 +812,7 @@ const server = http.createServer(async (req, res) => {
       if (!okSite || !String(req.headers['content-type'] || '').startsWith('application/json')) return json(res, 403, { error: 'forbidden' });
     }
     if (url.pathname === '/' || url.pathname === '/index.html') {
-      if (!config().setupDone) { res.writeHead(302, { location: '/setup' }); return res.end(); }
+      if (!config().setupDone && !url.pathname.startsWith('/device')) { res.writeHead(302, { location: '/setup' }); return res.end(); } // the app's direct line works during setup (the model on the phone)
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-cache' });
       const html = await readFile(new URL('./index.html', import.meta.url), 'utf8');
       return res.end(html.replace('/*__I18N__*/', `window.LUMEN_I18N=${JSON.stringify({ langs: LANGS, rtl: RTL, strings: STRINGS })};`));
@@ -904,7 +904,7 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'POST' && url.pathname === '/setup/finish') { saveConfig({ setupDone: true, owner: cf.owner || from.login || '' }); return json(res, 200, { ok: true }); }
       return json(res, 404, {});
     }
-    if (!config().setupDone) { res.writeHead(302, { location: '/setup' }); return res.end(); }
+    if (!config().setupDone && !url.pathname.startsWith('/device')) { res.writeHead(302, { location: '/setup' }); return res.end(); } // the app's direct line works during setup (the model on the phone)
 
     if (url.pathname === '/i18n') { const who = await person(req); const lang = cleanLang(url.searchParams.get('lang'));
       const may = !!who && (Object.hasOwn(STRINGS, lang) || (limit('tr:' + who.who.uid, 4, 864e5) && limit('tr:all', 40, 864e5)));

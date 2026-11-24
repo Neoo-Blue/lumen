@@ -54,7 +54,9 @@ object LocalModel {
     private fun ok(d: JSONObject) = JSONObject().put("ok", true).put("data", d)
 
     fun status(ctx: Context): JSONObject {
-        val c = catalog(ctx), ram = ramGb(ctx), free = StatFs(ctx.filesDir.path).availableBytes
+        val c = catalog(ctx)
+        val ram = ramGb(ctx)
+        val free = StatFs(ctx.filesDir.path).availableBytes
         val list = JSONArray()
         for (i in 0 until c.length()) { val m = c.getJSONObject(i)
             list.put(JSONObject().put("id", m.optString("id")).put("label", m.optString("label")).put("bytes", files(m).sumOf { it.getLong("bytes") })
@@ -113,7 +115,7 @@ object LocalModel {
         if (!bin.exists()) throw IllegalStateException("this build of Lumen has no on-device model runtime")
         val fs = files(m); val main = fs.first { !it.getString("name").startsWith("mmproj") }; val proj = fs.firstOrNull { it.getString("name").startsWith("mmproj") }
         val threads = Runtime.getRuntime().availableProcessors().coerceIn(2, 6)
-        val cmd = mutableListOf(bin.absolutePath, "--host", "127.0.0.1", "--port", PORT.toString(), "--api-key", key(ctx), "--jinja",
+        val cmd = mutableListOf(bin.absolutePath, "--host", "127.0.0.1", "--port", PORT.toString(), "--api-key", key(ctx), "--jinja", "--reasoning", "off",
             "-m", File(dir(ctx), main.getString("name")).absolutePath, "-c", "8192", "-ctk", "q8_0", "-ctv", "q8_0", "-fa", "on", "--threads", threads.toString(), "--no-webui")
         if (proj != null) cmd += listOf("--mmproj", File(dir(ctx), proj.getString("name")).absolutePath)
         val pb = ProcessBuilder(cmd).redirectErrorStream(true).directory(ctx.cacheDir)
