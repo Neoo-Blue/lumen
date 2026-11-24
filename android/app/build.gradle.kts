@@ -12,8 +12,8 @@ android {
         applicationId = "ai.lumen.assistant"
         minSdk = 30
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.1"
+        versionCode = 3
+        versionName = "1.2.0"
         ndk { abiFilters += listOf("arm64-v8a") }
         externalNativeBuild {
             cmake {

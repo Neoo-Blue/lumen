@@ -32,7 +32,7 @@ export const tools = [
   { name: 'place', description: 'Find a place, address or landmark and show it on a map. Renders a map automatically.', input_schema: S({ query: str }) },
   { name: 'route', description: 'Real directions between two places: drive, walk or bike time and distance, drawn on a map. Use it for any "how do I get to" or "how long to" question; never guess travel times. Renders automatically.', input_schema: S({ from: str, to: str, mode: { type: 'string', enum: ['driving', 'walking', 'cycling'] } }, ['from', 'to', 'mode']) },
   { name: 'quote', description: 'Live stock, ETF, index or crypto price with a 1-month chart. Symbol in Yahoo format (AAPL, ^GSPC, BTC-USD, 0700.HK). Renders automatically.', input_schema: S({ symbol: str }) },
-  { name: 'news', description: 'Latest news headlines for a topic, person, company or place: title, outlet, date and a short summary, newest first. Fast (well under a second). Use it first for anything in the news; use web_search only when headlines are not enough.', input_schema: S({ query: str, lang: str }, ['query']) },
+  { name: 'news', description: 'Latest news headlines for a topic, person, company or place: title, outlet, date and a short summary, newest first. Fast (well under a second). Use it first for anything in the news; use web_search only when headlines are not enough.', input_schema: S({ query: str, lang: str }) },
   { name: 'fx', description: 'Live currency conversion (ISO codes, e.g. USD CNY).', input_schema: S({ from: str, to: str, amount: { type: 'number' } }) },
   { name: 'flights', description: 'Live flight options and prices for a one-way trip. IATA airport codes, date YYYY-MM-DD. Renders flight cards automatically.', input_schema: S({ from: str, to: str, date: str }) },
   { name: 'reminders', description: 'List, add or complete reminders. action: list | add | done. Renders the reminder list automatically.', input_schema: S({ action: { type: 'string', enum: ['list', 'add', 'done'] }, text: str, due: str, id: { type: 'integer' } }, ['action']) },
@@ -387,9 +387,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 /** Headlines from Google News' public RSS feed: no key, a fraction of a second. */
 async function news({ query, lang = 'en' }) {
   const q = String(query || '').trim().slice(0, 200);
-  if (!q) return { data: { error: 'no topic' } };
   const zh = /^zh/.test(lang) || /[\u4e00-\u9fff]/.test(q);
-  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(q + ' when:30d')}&${zh ? 'hl=zh-CN&gl=CN&ceid=CN:zh-Hans' : 'hl=en-US&gl=US&ceid=US:en'}`;
+  const loc = zh ? 'hl=zh-CN&gl=CN&ceid=CN:zh-Hans' : 'hl=en-US&gl=US&ceid=US:en';
+  const url = q ? `https://news.google.com/rss/search?q=${encodeURIComponent(q + ' when:30d')}&${loc}` : `https://news.google.com/rss?${loc}`; // no topic: today's top stories
   const r = await fetch(url, { signal: AbortSignal.timeout(6000), headers: { 'user-agent': 'Mozilla/5.0 Lumen' } }).catch(() => null);
   if (!r?.ok) return { data: { error: 'news unavailable' } };
   const xml = await r.text();
@@ -398,7 +398,8 @@ async function news({ query, lang = 'en' }) {
   const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 8).map(([, it]) => {
     const source = text(tag(it, 'source')), title = text(tag(it, 'title')).replace(new RegExp(`\\s+-\\s+${source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`), '');
     return { title, source, date: new Date(text(tag(it, 'pubDate'))).toISOString().slice(0, 10), url: text(tag(it, 'link')) };
-  }).filter(x => x.title).sort((a, b) => b.date.localeCompare(a.date));
+  }).filter(x => x.title);
+  if (q) items.sort((a, b) => b.date.localeCompare(a.date)); // top stories keep the editors' order
   if (!items.length) return { data: { query: q, items: [], note: 'no recent news found' } };
   return { data: { query: q, items }, ui: [{ c: 'sources', items: items.slice(0, 4).map(x => ({ title: `${x.source}: ${x.title}`, url: x.url })) }] };
 }

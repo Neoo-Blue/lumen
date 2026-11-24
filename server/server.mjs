@@ -627,7 +627,7 @@ async function turn(p, text, kind, tz, lang, write, device = [], here = null, sk
           if (SENSITIVE.test(c.name)) readPrivate = true;
           if (/^(web_search|api_get|find_connector)$|__/.test(c.name)) tainted = true;
           // money, mail, bookings and writes wait for a tap on a confirmation card
-          const gate = gated(c);
+          const gate = gated(c, p);
           if (gate) {
             const id = randomBytes(9).toString('base64url');
             p.pending.set(id, { name: c.name, input: c.input, exp: Date.now() + 15 * 60e3 });
@@ -723,13 +723,14 @@ async function turn(p, text, kind, tz, lang, write, device = [], here = null, sk
 
 // Which tool calls need the person's tap first, and what the card says.
 const WRITE_WORDS = /(create|delete|remove|send|update|edit|write|post|buy|sell|pay|book|transfer|cancel|archive|move|invite|publish|merge|charge|refund)/i;
-function gated(c) {
+function gated(c, p) {
   const i = c.input || {};
   if (c.name === 'phone' && ['call', 'sms', 'smsSend', 'contactSave', 'browserAct', 'installApp', 'calendarAdd', 'skillDelete'].includes(i.action)) return { kind: 'phone', device: true, title: { call: 'Call', sms: 'Text', smsSend: 'Send text', contactSave: 'Save contact', browserAct: 'Do this on ' + (String(i.args?.url || '').split('/')[2] || 'the site'), installApp: 'Install', calendarAdd: 'Add to calendar', skillSave: 'Learn: ' + String(i.args?.name || 'this skill').slice(0, 60), skillDelete: 'Forget: ' + String(i.args?.name || '').slice(0, 60) }[i.action], rows: Object.entries(i.args || {}).slice(0, 4).map(([k, v]) => [k, String(v).slice(0, 160)]) };
   if (c.name === 'call_business') { for (const k of ['goal', 'details', 'business']) if (typeof i[k] === 'string') i[k] = i[k].replace(/\s+/g, ' ').trim().slice(0, k === 'details' ? 800 : 600); }
   if (c.name === 'call_business') return { kind: 'call', title: `Call ${String(i.business || '').slice(0, 60)}`, rows: [['Number', String(i.phone || '')], ['Goal', String(i.goal || '')], ['Shares', String(i.details || 'nothing else')], ['How', 'An AI assistant calls for you, says so, and the call is recorded']] };
   if (c.name === 'api_call' && String(i.method || 'GET').toUpperCase() !== 'GET') return { kind: 'api', title: `${i.service}`, rows: [['Request', `${String(i.method).toUpperCase()} ${i.path}`], ['Data', JSON.stringify(i.body ?? '').slice(0, 220)]] };
-  if (c.name.includes('__') && WRITE_WORDS.test(c.name.split('__')[1])) return { kind: 'mcp', title: c.name.split('__')[1].replace(/[_-]+/g, ' '), rows: Object.entries(i).slice(0, 5).map(([k, v]) => [k, (typeof v === 'string' ? v : JSON.stringify(v)).slice(0, 120)]) };
+  // a connected service's tool asks first unless it only reads (the server says so, or its name says so)
+  if (c.name.includes('__') && !(p?.mcp.owns(c.name) ? p.mcp : shared.owns(c.name) ? shared : null)?.readOnly(c.name)) return { kind: 'mcp', title: c.name.split('__')[1].replace(/[_-]+/g, ' '), rows: Object.entries(i).slice(0, 5).map(([k, v]) => [k, (typeof v === 'string' ? v : JSON.stringify(v)).slice(0, 120)]) };
   return null;
 }
 

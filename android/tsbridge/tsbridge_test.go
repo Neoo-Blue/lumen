@@ -672,6 +672,280 @@ func TestProxySwapKeepsListener(t *testing.T) {
 	}
 }
 
+const (
+	testBridgeSecret = "0123456789abcdef0123456789abcdef" // 32 chars, not a real secret
+	testBridgeWrong  = "fedcba9876543210fedcba9876543210"
+	testBridgeShort  = "0123456789abcdef0123456789abcde" // 31 chars
+)
+
+func TestProxyBridgeSecret(t *testing.T) {
+	setBridgeSecretForTest(t, "")
+	p := startRecordingProxy(t)
+
+	t.Run("unset", func(t *testing.T) {
+		before := p.snapshot().hits
+		resp := p.get(t,
+			&http.Cookie{Name: "session", Value: "keepme"},
+			&http.Cookie{Name: bridgeCookieName, Value: testBridgeSecret},
+		)
+		assertProxyOK(t, resp)
+		snap := p.snapshot()
+		if snap.hits != before+1 {
+			t.Fatal("unset proxy did not forward")
+		}
+		if snap.bridgeSeen || strings.Contains(snap.cookieHeader, bridgeCookieName) || strings.Contains(snap.headerDump, testBridgeSecret) {
+			t.Fatal("lumen_bridge cookie reached upstream with no secret set")
+		}
+		if snap.session != "keepme" {
+			t.Fatalf("session cookie %q", snap.session)
+		}
+	})
+
+	t.Run("short_secret", func(t *testing.T) {
+		SetSecret(testBridgeShort)
+		before := p.snapshot().hits
+		resp := p.get(t)
+		assertProxyOK(t, resp)
+		if p.snapshot().hits != before+1 {
+			t.Fatal("short secret locked the proxy")
+		}
+	})
+
+	SetSecret(testBridgeSecret)
+
+	t.Run("missing_cookie", func(t *testing.T) {
+		before := p.snapshot().hits
+		resp := p.get(t)
+		assertProxyForbidden(t, resp)
+		if p.snapshot().hits != before {
+			t.Fatal("missing cookie was proxied")
+		}
+	})
+
+	t.Run("wrong_cookie", func(t *testing.T) {
+		before := p.snapshot().hits
+		resp := p.get(t, &http.Cookie{Name: bridgeCookieName, Value: testBridgeWrong})
+		assertProxyForbidden(t, resp)
+		if p.snapshot().hits != before {
+			t.Fatal("wrong cookie was proxied")
+		}
+	})
+
+	t.Run("right_cookie", func(t *testing.T) {
+		resp := p.get(t,
+			&http.Cookie{Name: "session", Value: "keepme"},
+			&http.Cookie{Name: bridgeCookieName, Value: testBridgeSecret},
+			&http.Cookie{Name: "theme", Value: "dark"},
+		)
+		assertProxyOK(t, resp)
+		snap := p.snapshot()
+		if snap.bridgeSeen || strings.Contains(snap.cookieHeader, bridgeCookieName) || strings.Contains(snap.headerDump, testBridgeSecret) {
+			t.Fatal("lumen_bridge cookie reached upstream")
+		}
+		if !snap.cookiePresent {
+			t.Fatal("Cookie header was dropped while other cookies remained")
+		}
+		if snap.session != "keepme" || snap.theme != "dark" {
+			t.Fatalf("cookies session=%q theme=%q header=%q", snap.session, snap.theme, snap.cookieHeader)
+		}
+		if snap.cookieHeader != "session=keepme; theme=dark" {
+			t.Fatalf("Cookie %q", snap.cookieHeader)
+		}
+	})
+
+	t.Run("only_bridge_cookie", func(t *testing.T) {
+		resp := p.get(t, &http.Cookie{Name: bridgeCookieName, Value: testBridgeSecret})
+		assertProxyOK(t, resp)
+		snap := p.snapshot()
+		if snap.cookiePresent || snap.bridgeSeen || snap.cookieHeader != "" || strings.Contains(snap.headerDump, testBridgeSecret) {
+			t.Fatal("bridge-only cookie was not removed from the outbound request")
+		}
+	})
+}
+
+func TestProxyBridgeSecretWebSocket(t *testing.T) {
+	setBridgeSecretForTest(t, testBridgeSecret)
+
+	type seen struct {
+		cookieHeader string
+		bridgeSeen   bool
+		session      string
+		upgrade      string
+		leaked       bool
+	}
+	saw := make(chan seen, 4)
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, bridgeErr := r.Cookie(bridgeCookieName)
+		session := ""
+		if c, err := r.Cookie("session"); err == nil {
+			session = c.Value
+		}
+		leaked := false
+		for _, vals := range r.Header {
+			for _, v := range vals {
+				if strings.Contains(v, testBridgeSecret) {
+					leaked = true
+				}
+			}
+		}
+		saw <- seen{
+			cookieHeader: r.Header.Get("Cookie"),
+			bridgeSeen:   bridgeErr == nil,
+			session:      session,
+			upgrade:      r.Header.Get("Upgrade"),
+			leaked:       leaked,
+		}
+		if !strings.EqualFold(r.Header.Get("Upgrade"), "websocket") ||
+			!headerHasToken(r.Header.Get("Connection"), "Upgrade") {
+			http.Error(w, "upgrade headers were not forwarded", http.StatusBadRequest)
+			return
+		}
+		hj, ok := w.(http.Hijacker)
+		if !ok {
+			http.Error(w, "no hijack", http.StatusInternalServerError)
+			return
+		}
+		conn, bufrw, err := hj.Hijack()
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		if _, err := bufrw.WriteString("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n\r\n"); err != nil {
+			return
+		}
+		if err := bufrw.Flush(); err != nil {
+			return
+		}
+		buf := make([]byte, 4)
+		if _, err := io.ReadFull(bufrw, buf); err != nil {
+			return
+		}
+		if string(buf) != "ping" {
+			return
+		}
+		_, _ = bufrw.WriteString("pong")
+		_ = bufrw.Flush()
+	}))
+	defer backend.Close()
+
+	port, srv, err := startProxy(backend.URL, 0, (&net.Dialer{}).DialContext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Close()
+
+	reject := func(cookieLine string) {
+		t.Helper()
+		conn := dialProxy(t, port)
+		defer conn.Close()
+		writeWS(t, conn, port, cookieLine)
+		resp := readRawResponse(t, conn)
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+		if resp.StatusCode != http.StatusForbidden {
+			t.Fatalf("status %d, want 403, body %q", resp.StatusCode, body)
+		}
+		if strings.TrimSpace(string(body)) != "forbidden" {
+			t.Fatalf("body %q", body)
+		}
+		select {
+		case <-saw:
+			t.Fatal("backend saw a rejected upgrade")
+		default:
+		}
+	}
+	reject("")
+	reject("Cookie: lumen_bridge=" + testBridgeWrong)
+
+	conn := dialProxy(t, port)
+	defer conn.Close()
+	writeWS(t, conn, port, "Cookie: session=keepme; lumen_bridge="+testBridgeSecret)
+	br := bufio.NewReader(conn)
+	resp, err := http.ReadResponse(br, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusSwitchingProtocols {
+		b, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		t.Fatalf("status %d body %s", resp.StatusCode, b)
+	}
+	defer resp.Body.Close()
+	if _, err := io.WriteString(conn, "ping"); err != nil {
+		t.Fatal(err)
+	}
+	pong := make([]byte, 4)
+	if _, err := io.ReadFull(br, pong); err != nil {
+		t.Fatal(err)
+	}
+	if string(pong) != "pong" {
+		t.Fatalf("payload %q", pong)
+	}
+
+	select {
+	case s := <-saw:
+		if s.bridgeSeen || strings.Contains(s.cookieHeader, bridgeCookieName) || s.leaked {
+			t.Fatal("lumen_bridge cookie reached upstream on upgrade")
+		}
+		if s.session != "keepme" {
+			t.Fatalf("session %q header %q", s.session, s.cookieHeader)
+		}
+		if !strings.EqualFold(s.upgrade, "websocket") {
+			t.Fatalf("Upgrade %q", s.upgrade)
+		}
+	default:
+		t.Fatal("backend did not record the upgrade")
+	}
+}
+
+func TestStripBridgeCookie(t *testing.T) {
+	t.Run("middle", func(t *testing.T) {
+		h := http.Header{"Cookie": {"session=keepme; lumen_bridge=sekrit; theme=dark"}}
+		stripBridgeCookie(h)
+		if got := h.Get("Cookie"); got != "session=keepme; theme=dark" {
+			t.Fatalf("Cookie %q", got)
+		}
+	})
+	t.Run("only", func(t *testing.T) {
+		h := http.Header{"Cookie": {"lumen_bridge=sekrit"}}
+		stripBridgeCookie(h)
+		if _, ok := h["Cookie"]; ok {
+			t.Fatalf("header still set: %#v", h["Cookie"])
+		}
+	})
+	t.Run("multi_header", func(t *testing.T) {
+		h := http.Header{"Cookie": {"session=keepme", "lumen_bridge=sekrit", "theme=dark"}}
+		stripBridgeCookie(h)
+		if got := h.Get("Cookie"); got != "session=keepme; theme=dark" {
+			t.Fatalf("Cookie %q", got)
+		}
+		if len(h.Values("Cookie")) != 1 {
+			t.Fatalf("values %#v", h.Values("Cookie"))
+		}
+	})
+	t.Run("prefix_name", func(t *testing.T) {
+		h := http.Header{"Cookie": {"lumen_bridge_extra=1; lumen_bridge=sekrit"}}
+		stripBridgeCookie(h)
+		if got := h.Get("Cookie"); got != "lumen_bridge_extra=1" {
+			t.Fatalf("Cookie %q", got)
+		}
+	})
+	t.Run("spaced_name", func(t *testing.T) {
+		h := http.Header{"Cookie": {"session=keepme; lumen_bridge =sekrit"}}
+		stripBridgeCookie(h)
+		if got := h.Get("Cookie"); got != "session=keepme" {
+			t.Fatalf("Cookie %q", got)
+		}
+	})
+	t.Run("absent", func(t *testing.T) {
+		h := http.Header{}
+		stripBridgeCookie(h)
+		if _, ok := h["Cookie"]; ok {
+			t.Fatal("added a Cookie header")
+		}
+	})
+}
+
 func TestRejectsBadTarget(t *testing.T) {
 	dial := (&net.Dialer{}).DialContext
 	if _, _, err := startProxy("ftp://example.com", 0, dial); err == nil {
@@ -754,4 +1028,160 @@ func headerHasToken(value, token string) bool {
 		}
 	}
 	return false
+}
+
+func setBridgeSecretForTest(t *testing.T, secret string) {
+	t.Helper()
+	mu.Lock()
+	prev := bridgeSecret
+	mu.Unlock()
+	SetSecret(secret)
+	t.Cleanup(func() { SetSecret(prev) })
+}
+
+type upstreamSnap struct {
+	hits          int
+	cookieHeader  string
+	cookiePresent bool
+	bridgeSeen    bool
+	session       string
+	theme         string
+	headerDump    string
+}
+
+type recordingProxy struct {
+	port    int
+	srv     *http.Server
+	backend *httptest.Server
+	client  *http.Client
+	mu      sync.Mutex
+	snap    upstreamSnap
+}
+
+func startRecordingProxy(t *testing.T) *recordingProxy {
+	t.Helper()
+	p := &recordingProxy{}
+	p.backend = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p.mu.Lock()
+		p.snap.hits++
+		_, p.snap.cookiePresent = r.Header["Cookie"]
+		p.snap.cookieHeader = r.Header.Get("Cookie")
+		_, err := r.Cookie(bridgeCookieName)
+		p.snap.bridgeSeen = err == nil
+		p.snap.session = ""
+		p.snap.theme = ""
+		if c, err := r.Cookie("session"); err == nil {
+			p.snap.session = c.Value
+		}
+		if c, err := r.Cookie("theme"); err == nil {
+			p.snap.theme = c.Value
+		}
+		var b strings.Builder
+		for k, vals := range r.Header {
+			for _, v := range vals {
+				b.WriteString(k)
+				b.WriteByte(':')
+				b.WriteString(v)
+				b.WriteByte('\n')
+			}
+		}
+		p.snap.headerDump = b.String()
+		p.mu.Unlock()
+		_, _ = io.WriteString(w, "ok")
+	}))
+	t.Cleanup(p.backend.Close)
+
+	var err error
+	p.port, p.srv, err = startProxy(p.backend.URL, 0, (&net.Dialer{}).DialContext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = p.srv.Close() })
+	p.client = &http.Client{Timeout: 5 * time.Second}
+	return p
+}
+
+func (p *recordingProxy) snapshot() upstreamSnap {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.snap
+}
+
+func (p *recordingProxy) get(t *testing.T, cookies ...*http.Cookie) *http.Response {
+	t.Helper()
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://127.0.0.1:%d/hello", p.port), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
+	resp, err := p.client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return resp
+}
+
+func assertProxyOK(t *testing.T, resp *http.Response) {
+	t.Helper()
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusOK || string(body) != "ok" {
+		t.Fatalf("status %d body %q", resp.StatusCode, body)
+	}
+}
+
+func assertProxyForbidden(t *testing.T, resp *http.Response) {
+	t.Helper()
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("status %d, want 403, body %q", resp.StatusCode, body)
+	}
+	if strings.TrimSpace(string(body)) != "forbidden" {
+		t.Fatalf("body %q", body)
+	}
+	if ct := resp.Header.Get("Content-Type"); !strings.HasPrefix(ct, "text/plain") {
+		t.Fatalf("Content-Type %q", ct)
+	}
+}
+
+func dialProxy(t *testing.T, port int) net.Conn {
+	t.Helper()
+	conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = conn.SetDeadline(time.Now().Add(5 * time.Second))
+	return conn
+}
+
+func writeWS(t *testing.T, conn net.Conn, port int, cookieLine string) {
+	t.Helper()
+	if cookieLine != "" {
+		cookieLine += "\r\n"
+	}
+	raw := fmt.Sprintf(
+		"GET /listen HTTP/1.1\r\nHost: 127.0.0.1:%d\r\nX-Demo: ws\r\n%sConnection: keep-alive, Upgrade\r\nKeep-Alive: timeout=5\r\nUpgrade: websocket\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n",
+		port, cookieLine,
+	)
+	if _, err := io.WriteString(conn, raw); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func readRawResponse(t *testing.T, conn net.Conn) *http.Response {
+	t.Helper()
+	resp, err := http.ReadResponse(bufio.NewReader(conn), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return resp
 }

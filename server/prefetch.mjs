@@ -10,6 +10,8 @@ const day = (offset = 0) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.se
 const clean = s => s.replace(/[?？!！.。,，]+$/g, '').replace(/\s+(lately|recently|now|today|these days|this week|right now)$/i, '').replace(/(最近|现在|今天)$/, '').trim();
 
 // Questions that need judgment always go to the model, even when a card is prefetched.
+// words that only say "news": with nothing else left, it is a request for today's top stories, not a topic search
+const GENERIC_NEWS = /\b(?:can|could|would|will) you\b|\b(?:please|read|tell|give|show|me|us|what(?:'s| is| are)?|the|today'?s|today|this (?:morning|evening|week)|tonight|latest|top|stories|story|news|headlines?|breaking|any|some|in|on|about|for|world|happening|going on|right now|now|new|is|are)\b|新闻|头条|今天|最新|的|[?？.!,]/gi;
 export const needsJudgment = text => /\b(buy|sell|trade|order|book|reserve|send|email|reply|remind|schedule|add|create|cancel|move|connect|check ?in|pay|transfer)\b|买|卖|下单|订|预订|发送|回复|提醒|安排|添加|取消|改到|连接|值机|付款|转账|\b(should|why|what does|mean|analy|compare|recommend|advice|versus|vs\.?|better|worth|predict|forecast|news|happened|going on|latest)\b|建议|要不要|为什么|分析|比较|怎么看|值得|预测|新闻|发生|怎么了/i.test(text);
 
 // Several asks in one message, or anything asking Lumen to do something, goes straight to the model.
@@ -30,8 +32,8 @@ export function guess(text) {
   if (m && !/my|today|tomorrow|今天|明天|这周|下周/i.test(m[1]) && !/^(the|a|an|this|that|our|your)\s|corner|way|morning|evening|outside|here|there/i.test(m[1].trim())) out.push(['weather', { city: clean(m[1]) }]);
   // people and things: who is X / what happened to X
   // live questions: search the web now, while the model reads the request (saves a whole step and most of the wait)
-  if (!out.length && /\b(news|headlines?|latest|breaking|today'?s|this week|what happened|what'?s happening|what'?s going on|update on|why (?:did|was|is|are|were)|did .{2,30} (?:win|lose|die|resign|announce)|score|results? of|election|announced|released|just happened)\b|新闻|最新|头条|发生了什么|怎么了|为什么/i.test(t))
-    out.push(['news', { query: clean(t).replace(/^(what(?:'s| is| are)? (?:the )?(?:latest|news|happening|going on)(?: news)?(?: on| with| about| in)?|what happened (?:to|with|in)|latest (?:news )?(?:on|about)|any news (?:on|about)|news (?:on|about)|tell me the news (?:on|about)|read me)\s+/i, '') || clean(t), lang: /[一-鿿]/.test(t) ? 'zh' : 'en' }]); // headlines in half a second; the model can still search the web
+  if (!out.length && /\b(news|headlines?|top stories|latest|breaking|today'?s|this week|what happened|what'?s happening|what'?s going on|update on|why (?:did|was|is|are|were)|did .{2,30} (?:win|lose|die|resign|announce)|score|results? of|election|announced|released|just happened)\b|新闻|最新|头条|发生了什么|怎么了|为什么/i.test(t))
+    out.push(['news', { query: clean(t).replace(/^(what(?:'s| is| are)? (?:the )?(?:latest|news|happening|going on)(?: news)?(?: on| with| about| in)?|what happened (?:to|with|in)|latest (?:news )?(?:on|about)|any news (?:on|about)|news (?:on|about)|tell me the news (?:on|about)|read me)\s+/i, '').replace(GENERIC_NEWS, ' ').replace(/\s+/g, ' ').trim(), lang: /[一-鿿]/.test(t) ? 'zh' : 'en' }]); // headlines in half a second; the model can still search the web
   m = out.some(([n]) => n === 'news') ? null : /^(?:who(?:'s| is| was)|tell me about)\s+(.{2,50})$/i.exec(clean(t)) || /^(.{2,20}?)(?:是谁|是什么人|怎么了|发生了什么|最近怎么样)$/u.exec(clean(t));
   if (m && !out.length && !needsJudgment(t)) out.push(['person', { name: clean(m[1]), lang: /[一-鿿]/.test(t) ? 'zh' : 'en' }]);
   // personal demo account
@@ -48,7 +50,11 @@ if (globalThis.process?.argv && import.meta.url === `file://${process.argv[1]}`)
   assert.equal(name('东京天气怎么样'), 'weather:东京');
   assert.equal(name('Who is Satya Nadella?'), 'person:Satya Nadella');
   assert.equal(name('What happened to Jensen Huang?'), 'news:Jensen Huang');
-  assert.equal(name("Read me today's headlines"), "news:today's headlines");
+  assert.equal(name("Read me today's headlines"), 'news:');
+  assert.equal(name("Can you read me today's headline?"), 'news:');
+  assert.equal(name('top stories today'), 'news:');
+  assert.equal(name('headlines in tech'), 'news:tech');
+  assert.equal(name('any news on the election'), 'news:election');
   assert.equal(name('黄仁勋是谁？'), 'person:黄仁勋');
   assert.equal(name('Book me a flight to Boston'), '');
   assert.equal(name('build me a packing board for the tokyo trip, arrival-day weather in the corner'), '');

@@ -6,6 +6,7 @@ package tsbridge
 
 import (
 	"context"
+	"crypto/subtle"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -55,6 +56,19 @@ var (
 	state     = "stopped"
 	loginURL  string
 	tailnetIP string
+
+	// bridgeSecret authenticates loopback clients when it is long enough.
+	// Stop does not clear it: the secret belongs to the install, not to one
+	// tailnet session.
+	bridgeSecret   string
+	bridgeWarnOnce sync.Once
+)
+
+// bridgeCookieName is the cookie a trusted WebView must send once SetSecret
+// has armed the proxy. It is stripped again before the request is forwarded.
+const (
+	bridgeCookieName   = "lumen_bridge"
+	bridgeSecretMinLen = 32
 )
 
 var loginURLRe = regexp.MustCompile(`https://[^\s"'<>]+`)
@@ -284,9 +298,38 @@ func peersJSON(st *ipnstate.Status) string {
 	return string(b)
 }
 
+// SetSecret installs the per-install proxy secret. A secret of at least 32
+// characters makes the loopback proxy reject every request, including
+// WebSocket upgrades, unless the request carries a cookie named lumen_bridge
+// whose value equals secret. The comparison is constant-time. The cookie is
+// removed before the request is forwarded, so the Lumen server never sees it.
+// The value has to be a valid cookie token: no spaces or semicolons.
+//
+// An empty string, or a secret shorter than 32 characters, turns the check
+// off so an older app build keeps working. Stop does not clear the secret.
+func SetSecret(secret string) {
+	if secret != "" && len(secret) < bridgeSecretMinLen {
+		log.Printf("tsbridge: proxy secret is too short; the proxy is not authenticating clients")
+	}
+	mu.Lock()
+	bridgeSecret = secret
+	mu.Unlock()
+}
+
+func currentBridgeSecret() string {
+	mu.Lock()
+	defer mu.Unlock()
+	return bridgeSecret
+}
+
 // Proxy listens on 127.0.0.1 and reverse-proxies every request to target,
 // dialing through the tsnet node. target is an absolute URL such as
 // "https://lumen.tail1234.ts.net" or "http://100.x.y.z:8080".
+//
+// When SetSecret has installed a secret of at least 32 characters, every
+// request must include a lumen_bridge cookie equal to that secret. The cookie
+// is stripped before the request is forwarded. With no such secret, any
+// loopback client is accepted so older app builds keep working.
 //
 // port 0 asks the kernel for an ephemeral port. Any other port listens on
 // exactly 127.0.0.1:port, and an error is returned if that port is already
@@ -446,7 +489,7 @@ func proxyHandlerFor(target string, dial dialFunc) (http.Handler, error) {
 	if err != nil {
 		return nil, err
 	}
-	return loopbackOnly(rp), nil
+	return loopbackOnly(requireBridgeSecret(rp)), nil
 }
 
 // listenProxy binds 127.0.0.1:port. A non-zero port is used exactly; if it
@@ -533,6 +576,10 @@ func newReverseProxy(target string, dial dialFunc) (*httputil.ReverseProxy, erro
 			// SetURL clears Host. Put the target host back so the Lumen server
 			// sees its own name, not 127.0.0.1.
 			pr.Out.Host = host
+			// The inbound handler already drops lumen_bridge. Drop it again on
+			// the outbound request so a later change to that handler cannot
+			// forward the per-install secret.
+			stripBridgeCookie(pr.Out.Header)
 		},
 		Transport: transport,
 		// Negative means flush every write. httputil.ReverseProxy also
@@ -554,6 +601,68 @@ func loopbackOnly(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// requireBridgeSecret rejects every request when a long enough secret is
+// installed and the lumen_bridge cookie does not match. A missing secret
+// keeps the previous open behavior and logs that once.
+func requireBridgeSecret(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		secret := currentBridgeSecret()
+		if len(secret) < bridgeSecretMinLen {
+			bridgeWarnOnce.Do(func() {
+				log.Printf("tsbridge: proxy secret is unset; loopback clients are not authenticated")
+			})
+			stripBridgeCookie(r.Header)
+			next.ServeHTTP(w, r)
+			return
+		}
+		if subtle.ConstantTimeCompare([]byte(bridgeCookieValue(r)), []byte(secret)) != 1 {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+		stripBridgeCookie(r.Header)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func bridgeCookieValue(r *http.Request) string {
+	c, err := r.Cookie(bridgeCookieName)
+	if err != nil {
+		return ""
+	}
+	return c.Value
+}
+
+// stripBridgeCookie rebuilds Cookie without lumen_bridge. An empty result
+// drops the header so the upstream request does not carry a blank Cookie line.
+func stripBridgeCookie(h http.Header) {
+	if len(h) == 0 {
+		return
+	}
+	vals := h.Values("Cookie")
+	if len(vals) == 0 {
+		return
+	}
+	kept := make([]string, 0, len(vals))
+	for _, v := range vals {
+		for _, part := range strings.Split(v, ";") {
+			trimmed := strings.TrimSpace(part)
+			if trimmed == "" {
+				continue
+			}
+			name, _, ok := strings.Cut(trimmed, "=")
+			if ok && strings.TrimSpace(name) == bridgeCookieName {
+				continue
+			}
+			kept = append(kept, trimmed)
+		}
+	}
+	if len(kept) == 0 {
+		h.Del("Cookie")
+		return
+	}
+	h.Set("Cookie", strings.Join(kept, "; "))
 }
 
 func fromLoopback(remoteAddr string) bool {

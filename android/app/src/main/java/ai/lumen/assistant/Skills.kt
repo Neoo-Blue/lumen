@@ -33,10 +33,27 @@ object Skills {
         o.put(name, JSONObject().put("when", args.optString("when").take(200)).put("app", args.optString("app").take(80))
             .put("params", args.optJSONArray("params") ?: JSONArray()).put("steps", steps)
             .put("uses", old?.optInt("uses") ?: 0).put("learned", java.time.Instant.now().toString())
-            .put("examples", mergeExamples(old?.optJSONArray("examples"), args.optJSONArray("examples"))))
+            .put("examples", mergeExamples(old?.optJSONArray("examples"), args.optJSONArray("examples")))
+            .put("auto", args.optBoolean("auto") && (old == null || old.optBoolean("auto")))) // a skill saved on purpose stays on purpose
+        prune(o, name)
         write(ctx, o)
         Telemetry.info("skill", "learned: $name (${steps.length()} steps)")
         return JSONObject().put("ok", true).put("data", JSONObject().put("saved", name).put("steps", steps.length()))
+    }
+
+    /**
+     * Quick learning saves every task, so the list is kept useful: a skill learned on its own and used at most once
+     * goes after 45 days without use, and past MAX the least useful go first (learned on their own, fewest uses,
+     * longest unused). The skill just saved always stays.
+     */
+    private const val MAX = 60
+    private fun prune(o: JSONObject, keep: String) {
+        val now = System.currentTimeMillis()
+        fun last(s: JSONObject) = try { java.time.Instant.parse(s.optString("lastUsed").ifEmpty { s.optString("learned") }).toEpochMilli() } catch (_: Exception) { 0L }
+        val names = o.keys().asSequence().filter { it != keep }.toMutableList()
+        names.filter { val s = o.getJSONObject(it); s.optBoolean("auto") && s.optInt("uses") <= 1 && now - last(s) > 45L * 86_400_000 }.forEach { o.remove(it); names.remove(it) }
+        names.sortWith(compareBy<String>({ if (o.getJSONObject(it).optBoolean("auto")) 0 else 1 }, { o.getJSONObject(it).optInt("uses") }, { last(o.getJSONObject(it)) }))
+        while (o.length() > MAX && names.isNotEmpty()) o.remove(names.removeAt(0))
     }
 
     /** The person's own words for a skill, so the next time those words run it at once (no model). At most 12, newest kept. */

@@ -71,6 +71,7 @@ object Telemetry {
             c.connectTimeout = 8000; c.readTimeout = 8000
             c.doOutput = true
             c.setRequestProperty("content-type", "application/json")
+            c.setRequestProperty("cookie", android.webkit.CookieManager.getInstance().getCookie(LumenOrigin.HOME) ?: "")
             c.outputStream.use { it.write(body.toString().toByteArray()) }
             c.responseCode
             c.disconnect()

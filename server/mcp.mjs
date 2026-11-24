@@ -91,6 +91,16 @@ export class McpSet {
     return defs;
   }
 
+  /** True when the server marks the tool read-only, or its name only reads (get, list, search...): those run without asking. */
+  readOnly(toolName) {
+    const s = this.servers.get(toolName.split('__')[0]);
+    const tool = s?.tools.find(t => `${toolName.split('__')[0]}__${t.name.replace(/[^a-zA-Z0-9_-]/g, '_')}`.slice(0, 64) === toolName);
+    if (!tool) return false;
+    if (tool.annotations?.readOnlyHint === true) return true;
+    if (tool.annotations?.readOnlyHint === false || tool.annotations?.destructiveHint === true) return false;
+    return /^(get|list|search|read|fetch|find|query|describe|show|lookup|resolve|ask|view|count|check)([_-]|[A-Z]|$)/.test(tool.name) && !/(create|delete|remove|send|update|edit|write|post|buy|sell|pay|book|transfer|cancel|archive|move|invite|publish|merge|charge|refund|set)/i.test(tool.name);
+  }
+
   owns(toolName) { return toolName.includes('__') && this.servers.get(toolName.split('__')[0])?.tools.length > 0; }
 
   async call(toolName, input) {

@@ -29,6 +29,12 @@ object Tailnet {
             try {
                 val dir = File(app.filesDir, "tailscale").apply { mkdirs(); setReadable(false, false); setReadable(true, true) }
                 val host = "lumen-" + Build.MODEL.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').take(20)
+                // every app on a phone can reach 127.0.0.1: the bridge only carries requests holding this install's secret,
+                // which lives in Lumen's own cookie store (the page and Lumen's own requests send it; other apps cannot)
+                val secret = prefs(app).getString("bridge", null) ?: ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
+                    .joinToString("") { "%02x".format(it) }.also { prefs(app).edit().putString("bridge", it).apply() }
+                tsbridge.Tsbridge.setSecret(secret)
+                android.webkit.CookieManager.getInstance().apply { setCookie(LumenOrigin.HOME, "lumen_bridge=$secret; Path=/; HttpOnly; SameSite=Strict"); flush() }
                 tsbridge.Tsbridge.start(dir.absolutePath, host, "", prefs(app).getString("control", "") ?: "")
                 prefs(app).getString("server", null)?.let { use(app, it, prefs(app).getString("name", "") ?: "") }
             } catch (e: Throwable) { lastError = e.message ?: "could not start the private connection"; started = false }
@@ -70,6 +76,7 @@ object Tailnet {
     private fun health(): JSONObject? = try {
         val c = URL(LumenOrigin.HOME + "/health").openConnection() as HttpURLConnection
         c.connectTimeout = 6000; c.readTimeout = 8000
+        c.setRequestProperty("cookie", android.webkit.CookieManager.getInstance().getCookie(LumenOrigin.HOME) ?: "")
         val j = JSONObject(c.inputStream.bufferedReader().readText()); c.disconnect()
         if (j.optBoolean("lumen")) j else null
     } catch (_: Exception) { null }

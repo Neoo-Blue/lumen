@@ -1018,6 +1018,7 @@ function matchSkill(text, skills) {
   }
   return score >= 0.8 ? best : null;
 }
+const quickLearn = () => localStorage.lumenQuickLearn !== 'off'; // on unless the person turns it off in Settings
 const mySkills = async () => { if (!DEVICE.includes('skillList')) return []; try { const r = await Promise.race([nativeCall('skillList', {}), new Promise(r => setTimeout(() => r({}), 800))]); return r.ok ? r.data : []; } catch { return []; } };
 function afterTurn(canvas) {
   const cards = canvas.querySelector('.k:not(.done), .deck, .photos, .seatm');
@@ -1114,7 +1115,7 @@ function mount(canvas, d) {
   if (d.c === '_status') { if (wait) wait.querySelector('p').textContent = toolLabel(d.text.split(',')[0]) + '…'; return; }
   if (d.c === 'say') { voice.say(d.text); if (wait && !canvas.dataset.said) { canvas.dataset.said = 1; wait.querySelector('p').textContent = d.text; } return; }
   if (d.c === '_device') { runDevice(d, canvas); return; }
-  if (d.c === '_skilllearn') { if (NATIVE && DEVICE.includes('skillSave')) { const { c, ...sk } = d; nativeCall('skillSave', sk).catch(() => {}); } return; } // learned on the first try
+  if (d.c === '_skilllearn') { if (NATIVE && DEVICE.includes('skillSave') && quickLearn()) { const { c, ...sk } = d; nativeCall('skillSave', { ...sk, auto: true }).catch(() => {}); } return; } // learned on the first try
   if (d.c === '_skillused') { if (NATIVE) nativeCall('skillExample', { name: d.name, text: d.said }).catch(() => {}); return; } // next time these words run it at once
   if (d.c === 'profile' && ['personal', 'business'].includes(d.to) && d.to !== PROFILE) { PROFILE = d.to; localStorage.setItem('lumen.profile', PROFILE); paintProfile(); toast(t(d.to)); return; }
   if (d.c === 'theme') return applyTheme(d, true);
@@ -1579,7 +1580,7 @@ async function loadJobs() {
 async function loadSkills() {
   const box = $('#setSkills'); if (!NATIVE) { box.innerHTML = ''; return; }
   const r = await nativeCall('skillList', {}); if (!r.ok) return;
-  box.innerHTML = `<div class="sgroup"><h3>${esc(t('set_skills'))}</h3>${r.data.map(k => srow(null, k.name, `${k.when || ''}${k.when ? ' · ' : ''}${t('steps_n', { n: k.steps })}${k.uses ? ' · ' + t('used_n', { n: k.uses }) : ''}`, '', `data-skill="${esc(k.name)}" class="srow click"`) + `<div class="sk-steps" data-skillbox="${esc(k.name)}"></div>`).join('') || srow(null, t('skills_none'), t('skills_hint'))}</div>`;
+  box.innerHTML = `<div class="sgroup"><h3>${esc(t('set_skills'))}</h3>${srow(null, t('h_quick'), t('h_quick_sub'), swb(quickLearn(), 'data-quick'))}${r.data.map(k => srow(null, k.name, `${k.when || ''}${k.when ? ' · ' : ''}${t('steps_n', { n: k.steps })}${k.uses ? ' · ' + t('used_n', { n: k.uses }) : ''}`, '', `data-skill="${esc(k.name)}" class="srow click"`) + `<div class="sk-steps" data-skillbox="${esc(k.name)}"></div>`).join('') || srow(null, t('skills_none'), t('skills_hint'))}</div>`;
 }
 const STEP_KINDS = ['open', 'tap', 'type', 'scroll', 'press', 'wait', 'expect', 'toggle'];
 const stepText = s => { const k = STEP_KINDS.find(k => k in s) || 'tap'; const v = s[k]; return [k, k === 'open' ? (v?.name || v?.link || v?.pkg || v) : k === 'type' ? (v?.text ?? v) + (v?.into?.text ? ' → ' + v.into.text : '') : v]; };
@@ -1588,6 +1589,7 @@ $('#setSheet').addEventListener('click', async e => {
   const q = s => e.target.closest(s);
   let b;
   if ((b = q('[data-fix]'))) { await nativeCall('fix', { what: b.dataset.fix }); return; }
+  if ((b = q('[data-quick]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); localStorage.lumenQuickLearn = on ? 'on' : 'off'; return; }
   if ((b = q('[data-wake]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); await nativeCall('wakeWord', { on }); setTimeout(loadHealth, 1500); return; }
   if ((b = q('[data-pref]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); await nativeCall('prefs', { [b.dataset.pref]: on }); if (b.dataset.pref === 'driving') document.body.classList.toggle('driving', on); return; }
   if ((b = q('[data-update]'))) { b.textContent = t('update_getting'); const r = await nativeCall('appUpdate', {}); b.textContent = r.ok ? (r.data.upToDate ? t('update_latest') : t('update_installing')) : t('update_now'); if (!r.ok) toast(/allow_installs/.test(r.error) ? t('update_allow') : r.error); return; }
