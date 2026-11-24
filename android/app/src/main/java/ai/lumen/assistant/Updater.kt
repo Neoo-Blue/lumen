@@ -31,9 +31,15 @@ object Updater {
     } catch (_: Exception) { null }
 
     /** Tell the page when a newer build is out, so it can offer it. */
+    private fun selfInstalled(ctx: Context): Boolean = Build.VERSION.SDK_INT >= 31 && try {
+        ctx.packageManager.getInstallSourceInfo(ctx.packageName).installingPackageName == ctx.packageName
+    } catch (_: Exception) { false }
+
     fun check(activity: MainActivity) = Thread {
         val v = latest() ?: return@Thread
         if (v.optLong("code") <= installed(activity)) return@Thread
+        // installed by Lumen itself before (an earlier in-app update): update quietly, no banner to tap
+        if (selfInstalled(activity) && activity.packageManager.canRequestPackageInstalls()) { Telemetry.info("update", "updating to ${v.optString("version")} by itself"); install(activity); return@Thread }
         val info = JSONObject().put("version", v.optString("version")).put("notes", v.optString("notes")).put("current", installed(activity))
         activity.runOnUiThread { activity.page("window.__lumenUpdate && window.__lumenUpdate(" + info + ")") }
     }.start()
@@ -61,7 +67,9 @@ object Updater {
             } }
             if (md.digest().joinToString("") { "%02x".format(it) } != v.optString("sha256")) { file.delete(); return LumenAccess.err("the download did not match its fingerprint; nothing was installed") }
             val pi = activity.packageManager.packageInstaller
-            val id = pi.createSession(PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply { setAppPackageName(activity.packageName) })
+            val id = pi.createSession(PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply { setAppPackageName(activity.packageName)
+                // once Lumen installed itself, Android lets later updates go in without asking
+                if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED) })
             pi.openSession(id).use { s ->
                 s.openWrite("lumen.apk", 0, file.length()).use { out -> file.inputStream().use { it.copyTo(out) }; s.fsync(out) }
                 val status = PendingIntent.getBroadcast(activity, 7, Intent(activity, UpdateReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0))
