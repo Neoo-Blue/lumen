@@ -29,7 +29,10 @@ export function guess(text) {
   let m = /weather (?:in|for|at) ([\p{L} .'-]{2,40})/iu.exec(t) || /([\p{L} .'-]{2,30}?)(?:'s)? weather/iu.exec(t) || /(?:^|在|去)?([\p{Script=Han}]{2,8}?)(?:的)?(?:天气|气温)/u.exec(t);
   if (m && !/my|today|tomorrow|今天|明天|这周|下周/i.test(m[1]) && !/^(the|a|an|this|that|our|your)\s|corner|way|morning|evening|outside|here|there/i.test(m[1].trim())) out.push(['weather', { city: clean(m[1]) }]);
   // people and things: who is X / what happened to X
-  m = /^(?:who(?:'s| is| was)|tell me about|what happened to|what's going on with|latest (?:news )?(?:on|about))\s+(.{2,50})$/i.exec(clean(t)) || /^(.{2,20}?)(?:是谁|是什么人|怎么了|发生了什么|最近怎么样)$/u.exec(clean(t));
+  // live questions: search the web now, while the model reads the request (saves a whole step and most of the wait)
+  if (!out.length && /\b(news|headlines?|latest|breaking|today'?s|this week|what happened|what'?s happening|what'?s going on|update on|why (?:did|was|is|are|were)|did .{2,30} (?:win|lose|die|resign|announce)|score|results? of|election|announced|released|just happened)\b|新闻|最新|头条|发生了什么|怎么了|为什么/i.test(t))
+    out.push(['news', { query: clean(t).replace(/^(what(?:'s| is| are)? (?:the )?(?:latest|news|happening|going on)(?: news)?(?: on| with| about| in)?|what happened (?:to|with|in)|latest (?:news )?(?:on|about)|any news (?:on|about)|news (?:on|about)|tell me the news (?:on|about)|read me)\s+/i, '') || clean(t), lang: /[一-鿿]/.test(t) ? 'zh' : 'en' }]); // headlines in half a second; the model can still search the web
+  m = out.some(([n]) => n === 'news') ? null : /^(?:who(?:'s| is| was)|tell me about)\s+(.{2,50})$/i.exec(clean(t)) || /^(.{2,20}?)(?:是谁|是什么人|怎么了|发生了什么|最近怎么样)$/u.exec(clean(t));
   if (m && !out.length && !needsJudgment(t)) out.push(['person', { name: clean(m[1]), lang: /[一-鿿]/.test(t) ? 'zh' : 'en' }]);
   // personal demo account
   return out.slice(0, 3);
@@ -44,13 +47,15 @@ if (globalThis.process?.argv && import.meta.url === `file://${process.argv[1]}`)
   assert.equal(name("What's the weather in Tokyo?"), 'weather:Tokyo');
   assert.equal(name('东京天气怎么样'), 'weather:东京');
   assert.equal(name('Who is Satya Nadella?'), 'person:Satya Nadella');
+  assert.equal(name('What happened to Jensen Huang?'), 'news:Jensen Huang');
+  assert.equal(name("Read me today's headlines"), "news:today's headlines");
   assert.equal(name('黄仁勋是谁？'), 'person:黄仁勋');
   assert.equal(name('Book me a flight to Boston'), '');
   assert.equal(name('build me a packing board for the tokyo trip, arrival-day weather in the corner'), '');
   assert.equal(name('How are AAPL, NVDA, and Bitcoin doing?'), '');
   assert.equal(name('Switch me to my work profile and show my unread emails'), '');
   assert.ok(needsJudgment('Buy 2 more shares of NVDA') && needsJudgment('帮我买两股英伟达') && !needsJudgment('How is Nvidia stock doing?'));
-  assert.equal(name('What happened to Jensen Huang lately?'), '');
+  assert.equal(name('What happened to Jensen Huang lately?'), 'news:Jensen Huang'); // news goes to a live search, not the encyclopedia
   assert.equal(name('Who is Jensen Huang now?'), 'person:Jensen Huang');
   console.log('prefetch ok');
 }
@@ -83,8 +88,28 @@ export function phoneCommand(text, caps) {
     const key = m[1] ? m[1].toLowerCase() : m[2] ? (/notif/i.test(m[2]) ? 'notifications' : 'recents') : m[3] ? 'screenshot' : /lock/i.test(t) ? 'lock' : 'home';
     return { method: 'press', args: { key }, say: '' };
   }
-  if (has('openApp') && (m = t.match(/^(?:open|launch|start|go to|打开|启动)\s*(?:the\s+)?(.{2,30}?)(?:\s+app)?$/i)) && !/https?:|\.com|settings? for|tab|page|screen/i.test(m[1])) return { method: 'openApp', args: { name: m[1] }, say: `Opening ${m[1]}.` };
+  if (has('openApp') && (m = t.match(/^(?:open|launch|start|go to|打开|启动)\s*(?:the\s+)?(.{2,30}?)(?:\s+app)?$/i)) && !/https?:|\.com|settings? for|tab|page|screen|\s(?:on|in|inside|within|from)\s|'s\s|\bmy\s/i.test(m[1]) && m[1].trim().split(/\s+/).length <= 3) return { method: 'openApp', args: { name: m[1] }, say: `Opening ${m[1]}.` };
   return null;
+}
+
+// A phone task that worked, turned into a skill the phone can replay without the model next time. Only plain
+// navigation counts (open, tap by label, scroll, back/home, toggles): typing, taps by item number, and anything that
+// sends, calls or needs a confirmation stay with the model, so a replay never repeats someone's words or a risky act.
+export function skillFrom(text, acts) {
+  const steps = [], ok = /^(openApp|screenTap|screenScroll|press|toggle|screenDo|screenRead|screenshot|wait)$/;
+  let app = '';
+  for (const { action, args = {}, ok: done } of acts) {
+    if (!done || !ok.test(action) || /^skill/.test(action)) return null;
+    if (action === 'openApp') { if (!args.name && !args.pkg) return null; app = app || String(args.name || args.pkg); steps.push({ open: Object.fromEntries(['name', 'pkg', 'link', 'screen'].filter(k => args[k]).map(k => [k, args[k]])) }); }
+    else if (action === 'screenTap') { if (typeof args.text !== 'string' || !args.text) return null; steps.push({ tap: args.text }); }
+    else if (action === 'screenScroll') steps.push({ scroll: args.direction === 'up' ? 'up' : 'down' });
+    else if (action === 'press') { if (!/^(back|home)$/.test(args.key)) return null; steps.push({ press: args.key }); }
+    else if (action === 'toggle') steps.push({ toggle: args.name, on: args.on });
+    else if (action === 'screenDo') { if (Object.keys(args.params || {}).length || !Array.isArray(args.steps) || args.steps.some(s => !s || typeof s !== 'object' || s.type || s.setting)) return null; steps.push(...args.steps); }
+  }
+  const name = String(text).trim().replace(/[?.!。！？]+$/, '').toLowerCase().slice(0, 60);
+  if (steps.length < 2 || steps.length > 40 || !name) return null;
+  return { name, when: String(text).trim().slice(0, 200), app, params: [], steps, examples: [String(text).trim().slice(0, 160)] };
 }
 
 if (globalThis.process?.argv?.[1]?.endsWith("prefetch.mjs")) {
@@ -92,6 +117,8 @@ if (globalThis.process?.argv?.[1]?.endsWith("prefetch.mjs")) {
   const all = ['openApp', 'flashlight', 'toggle', 'setting', 'screenScroll', 'press'];
   const pc = s => { const r = phoneCommand(s, all); return r ? r.method + ' ' + JSON.stringify(r.args) : null; };
   assert.equal(pc('Open WeChat'), 'openApp {"name":"WeChat"}');
+  assert.equal(pc('Open Moments on WeChat'), null); // a place inside an app: the model or a learned skill
+  assert.equal(pc('open my WeChat moments'), null);
   assert.equal(pc('open wechat scan'), 'openApp {"screen":"wechat.scan"}');
   assert.equal(pc('turn on wifi'), 'toggle {"name":"Wi-Fi","on":true}');
   assert.equal(pc('Bluetooth off'), 'toggle {"name":"Bluetooth","on":false}');
@@ -106,5 +133,14 @@ if (globalThis.process?.argv?.[1]?.endsWith("prefetch.mjs")) {
   assert.equal(pc('what is the weather'), null);
   assert.match(phoneCommand("What's on my calendar today?", ['calendarEvents']).method, /calendarEvents/);
   assert.match(phoneCommand('How does my day look?', ['calendarEvents']).method, /calendarEvents/);
+
+  const sk = skillFrom('Open my liked songs on Spotify.', [{ action: 'openApp', args: { name: 'Spotify' }, ok: true }, { action: 'screenDo', args: { steps: [{ tap: 'Your Library' }, { tap: 'Liked Songs' }] }, ok: true }]);
+  assert.deepEqual(sk.steps, [{ open: { name: 'Spotify' } }, { tap: 'Your Library' }, { tap: 'Liked Songs' }]);
+  assert.equal(sk.name, 'open my liked songs on spotify');
+  assert.equal(skillFrom('text mom hi', [{ action: 'openApp', args: { name: 'Messages' }, ok: true }, { action: 'screenDo', args: { steps: [{ type: { text: 'hi' } }] }, ok: true }]), null); // typed words never replay
+  assert.equal(skillFrom('x', [{ action: 'openApp', args: { name: 'A' }, ok: true }, { action: 'screenTap', args: { i: 4 }, ok: true }]), null); // item numbers change
+  assert.equal(skillFrom('x', [{ action: 'openApp', args: { name: 'A' }, ok: true }, { action: 'smsSend', args: {}, ok: true }]), null);
+  assert.equal(skillFrom('open spotify', [{ action: 'openApp', args: { name: 'Spotify' }, ok: true }]), null); // one step: nothing to learn
+  assert.equal(skillFrom('x', [{ action: 'openApp', args: { name: 'A' }, ok: true }, { action: 'screenTap', args: { text: 'B' }, ok: false }]), null);
   console.log('phone commands ok');
 }

@@ -142,7 +142,7 @@ is in [deploy/README.md](deploy/README.md).
   with a receipt of what it did.
 - **Triggers**: "when my pharmacy texts that it's ready, add it to my list". Started by a notification from an app you
   name, matched on the phone.
-- **Learned skills**: after a new task of three or more steps in an app, it offers to save the steps on your phone.
+- **Learned skills**: the first time it does a task in an app ("open my liked songs on Spotify"), it keeps the steps on your phone. The next time you say it, the phone replays them by itself with no AI call, in a few seconds. Steps that type your words or send anything are never replayed on their own.
   Next time it replays them natively, about a second per step, with no AI call. You can view and edit them.
 - **Receipts**: every action taken on your behalf is written down: what, when, which apps, what was held for your OK,
   and anything it refused.
@@ -257,6 +257,7 @@ Planned, roughly in order. Nothing here is promised by a date.
 - Testing and fixes across more phones (Pixel, other Samsung models, Xiaomi, OnePlus).
 
 **Later**
+- Skill library: share the skills your phone learned and add other people's, like a shortcuts gallery. Each skill shows its steps before you add it, and sending, paying or posting still asks you first.
 - Teach mode: show it a task once by doing it yourself while it watches, and it saves the skill.
 - Purchase guardian: before any payment, a clear summary of exactly what you are buying and the total.
 - Live progress in the status bar for long tasks.

@@ -1002,6 +1002,22 @@ window.__lumenControlLost = () => {
 };
 window.__lumenUpdateProgress = pct => { const bar = document.querySelector('.upd-bar'); if (bar) bar.style.width = pct + '%'; };
 // skills learned on this phone travel with each question so Lumen knows what it can replay
+// a request matches a learned skill when it says the same as words used for it before (ignoring filler words)
+const skillWords = s => String(s || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\b(hey|lumen|please|can you|could you|would you|will you|for me|just|now|the|a|an|my|go|then)\b/g, ' ').replace(/\s+/g, ' ').trim();
+function matchSkill(text, skills) {
+  const said = skillWords(text); if (!said) return null;
+  const sw = new Set(said.split(' ')); let best = null, score = 0;
+  for (const k of skills || []) {
+    if ((k.params || []).length) continue; // skills with parts that change go through the model, which fills them in
+    for (const ex of [k.name, ...(k.examples || [])]) {
+      const e = skillWords(ex); if (!e) continue;
+      if (e === said) return k;
+      const ew = new Set(e.split(' ')), both = [...sw].filter(w => ew.has(w)).length, j = both / new Set([...sw, ...ew]).size;
+      if (j > score) { score = j; best = k; }
+    }
+  }
+  return score >= 0.8 ? best : null;
+}
 const mySkills = async () => { if (!DEVICE.includes('skillList')) return []; try { const r = await Promise.race([nativeCall('skillList', {}), new Promise(r => setTimeout(() => r({}), 800))]); return r.ok ? r.data : []; } catch { return []; } };
 function afterTurn(canvas) {
   const cards = canvas.querySelector('.k:not(.done), .deck, .photos, .seatm');
@@ -1078,7 +1094,8 @@ async function runDevice(d, canvas) {
     if (d.method === 'media' && r.data) show({ c: 'media', ...r.data });
     if (d.method === 'contacts' && Array.isArray(r.data)) show({ c: 'people', items: r.data.slice(0, 6) });
   }
-  api('/device', { method: 'POST', body: JSON.stringify({ id: d.id, result: forModel(r) }) });
+  if (d.id) api('/device', { method: 'POST', body: JSON.stringify({ id: d.id, result: forModel(r) }) });
+  return r;
 }
 window.__lumenVoice = () => document.querySelector('#orb')?.click();
 
@@ -1097,6 +1114,8 @@ function mount(canvas, d) {
   if (d.c === '_status') { if (wait) wait.querySelector('p').textContent = toolLabel(d.text.split(',')[0]) + '…'; return; }
   if (d.c === 'say') { voice.say(d.text); if (wait && !canvas.dataset.said) { canvas.dataset.said = 1; wait.querySelector('p').textContent = d.text; } return; }
   if (d.c === '_device') { runDevice(d, canvas); return; }
+  if (d.c === '_skilllearn') { if (NATIVE && DEVICE.includes('skillSave')) { const { c, ...sk } = d; nativeCall('skillSave', sk).catch(() => {}); } return; } // learned on the first try
+  if (d.c === '_skillused') { if (NATIVE) nativeCall('skillExample', { name: d.name, text: d.said }).catch(() => {}); return; } // next time these words run it at once
   if (d.c === 'profile' && ['personal', 'business'].includes(d.to) && d.to !== PROFILE) { PROFILE = d.to; localStorage.setItem('lumen.profile', PROFILE); paintProfile(); toast(t(d.to)); return; }
   if (d.c === 'theme') return applyTheme(d, true);
   if (d.c === 'remember') { toast(t('remembered', { t: d.text })); return; }
@@ -1154,12 +1173,30 @@ async function ask(text, opts = {}) {
     const pc = await phoneCmds();
     const q = pc && pc.phoneCommand(text, DEVICE);
     if (q) {
-      canvas.querySelector('.wait')?.remove();
-      if (q.say) { mount(canvas, { c: 'hero', title: q.say }); voice.say(q.say); }
-      await runDevice({ method: q.method, args: q.args }, canvas);
+      const done = await runDevice({ method: q.method, args: q.args }, canvas);
+      if (!done?.ok) q.failed = true; // e.g. "open X" where X is not an app: let Lumen work it out below
+      else { canvas.querySelector('.wait')?.remove(); if (q.say) { mount(canvas, { c: 'hero', title: q.say }); voice.say(q.say); } }
+    }
+    if (q && !q.failed) {
       api('/log', { method: 'POST', body: JSON.stringify({ what: 'instant', detail: `${q.method} ${JSON.stringify(q.args)} <- ${text}` }) }).catch(() => {});
       busy = false; document.body.classList.remove('busy'); panel('busy', { on: false }); voice.turnDone(); if (OVERLAY) afterTurn(canvas);
       return;
+    }
+  }
+  // a learned skill runs at once when the request matches words the person used for it before (no model at all)
+  if (NATIVE && kind !== 'tap' && DEVICE.includes('skillRun')) {
+    const sk = matchSkill(text, await mySkills());
+    if (sk) {
+      const t1 = performance.now(); canvas.querySelector('.wait')?.remove();
+      mount(canvas, { c: 'hero', title: sk.name, subtitle: t('skill_running') });
+      const r = await nativeCall('skillRun', { name: sk.name, params: {} }, canvas);
+      api('/log', { method: 'POST', body: JSON.stringify({ what: 'skill', detail: `${sk.name} ${r.ok ? 'done' : 'stopped: ' + r.error} <- ${text}` }) }).catch(() => {});
+      if (r.ok) {
+        mount(canvas, { c: 'done', text: t('skill_done', { s: ((performance.now() - t1) / 1000).toFixed(1) }) });
+        busy = false; document.body.classList.remove('busy'); panel('busy', { on: false }); voice.turnDone(); if (OVERLAY) afterTurn(canvas);
+        return;
+      }
+      text = `${text}\n(The learned skill "${sk.name}" stopped: ${r.error}. Carry on from the current screen, then save the fixed version.)`; // Lumen takes over from where it stopped
     }
   }
   if (NATIVE && !navigator.onLine && !(await fetch('/health', { cache: 'no-store' }).then(r => r.ok, () => false))) { canvas.querySelector('.wait')?.remove(); mount(canvas, { c: 'note', text: t('offline_note') }); busy = false; document.body.classList.remove('busy'); voice.turnDone(); return; }

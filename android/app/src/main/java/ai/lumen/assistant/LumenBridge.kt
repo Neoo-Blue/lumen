@@ -269,6 +269,7 @@ class LumenBridge(private val activity: MainActivity) {
             "skillList" -> work(requestId) { deliver(requestId, ok(Skills.list(activity))) }
             "skillGet" -> work(requestId) { val k = Skills.all(activity).optJSONObject(stringArg(args, "name")); deliver(requestId, if (k == null) error("no such skill") else ok(k.put("name", stringArg(args, "name")))) }
             "skillSave" -> work(requestId) { deliver(requestId, Skills.save(activity, args)) }
+            "skillExample" -> work(requestId) { deliver(requestId, Skills.addExample(activity, stringArg(args, "name"), stringArg(args, "text"))) }
             "skillDelete" -> work(requestId) { deliver(requestId, Skills.delete(activity, stringArg(args, "name"))) }
             // many steps in one go, run on the phone, the screen after comes back with the result
             "screenDo" -> work(requestId) { deliver(requestId, Skills.runSteps(activity, args.optJSONArray("steps") ?: JSONArray(), args.optJSONObject("params") ?: JSONObject(), "batch") { launchNow(it) }) }
@@ -1375,7 +1376,7 @@ class LumenBridge(private val activity: MainActivity) {
             "smsInbox", "smsSend", "contactSave", "music", "videos", "playLocal", "bluetooth", "steps", "phoneInfo", "endCall",
             "browserSessions", "browserOpen", "browserRead", "browserAct", "browserForget", "assistantStatus", "assistantSetup", "wakeWord",
             "screenRead", "screenshot", "lifeSearch", "screenTap", "screenType", "screenScroll", "press", "toggle", "setting", "settings",
-            "skillList", "skillGet", "skillSave", "skillRun", "skillDelete", "screenDo", "appUpdate", "formReview", "health", "fix", "prefs", "notify"
+            "skillList", "skillGet", "skillSave", "skillExample", "skillRun", "skillDelete", "screenDo", "appUpdate", "formReview", "health", "fix", "prefs", "notify"
         )
 
         private val MEDIA_ACTIONS = setOf("now", "play", "pause", "toggle", "next", "previous")

@@ -19,7 +19,8 @@ object Skills {
     fun list(ctx: Context): JSONArray {
         val o = all(ctx); val out = JSONArray()
         o.keys().forEach { k -> val s = o.getJSONObject(k); out.put(JSONObject().put("name", k).put("when", s.optString("when")).put("app", s.optString("app"))
-            .put("params", s.optJSONArray("params") ?: JSONArray()).put("steps", s.optJSONArray("steps")?.length() ?: 0).put("uses", s.optInt("uses")).put("lastUsed", s.optString("lastUsed"))) }
+            .put("params", s.optJSONArray("params") ?: JSONArray()).put("steps", s.optJSONArray("steps")?.length() ?: 0).put("uses", s.optInt("uses")).put("lastUsed", s.optString("lastUsed"))
+            .put("examples", s.optJSONArray("examples") ?: JSONArray())) }
         return out
     }
 
@@ -31,10 +32,24 @@ object Skills {
         val old = o.optJSONObject(name)
         o.put(name, JSONObject().put("when", args.optString("when").take(200)).put("app", args.optString("app").take(80))
             .put("params", args.optJSONArray("params") ?: JSONArray()).put("steps", steps)
-            .put("uses", old?.optInt("uses") ?: 0).put("learned", java.time.Instant.now().toString()))
+            .put("uses", old?.optInt("uses") ?: 0).put("learned", java.time.Instant.now().toString())
+            .put("examples", mergeExamples(old?.optJSONArray("examples"), args.optJSONArray("examples"))))
         write(ctx, o)
         Telemetry.info("skill", "learned: $name (${steps.length()} steps)")
         return JSONObject().put("ok", true).put("data", JSONObject().put("saved", name).put("steps", steps.length()))
+    }
+
+    /** The person's own words for a skill, so the next time those words run it at once (no model). At most 12, newest kept. */
+    private fun mergeExamples(old: JSONArray?, add: JSONArray?): JSONArray {
+        val seen = LinkedHashSet<String>()
+        for (a in listOf(old, add)) if (a != null) for (i in 0 until a.length()) a.optString(i).trim().take(160).takeIf { it.isNotEmpty() }?.let { seen.remove(it); seen.add(it) }
+        return JSONArray(seen.toList().takeLast(12))
+    }
+
+    @Synchronized fun addExample(ctx: Context, name: String, text: String): JSONObject {
+        val o = all(ctx); val s = o.optJSONObject(name) ?: return LumenAccess.err("no skill called \"$name\"")
+        s.put("examples", mergeExamples(s.optJSONArray("examples"), JSONArray().put(text))); write(ctx, o)
+        return JSONObject().put("ok", true).put("data", JSONObject().put("name", name))
     }
 
     fun delete(ctx: Context, name: String): JSONObject {
