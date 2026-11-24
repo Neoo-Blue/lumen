@@ -286,7 +286,16 @@ YOU ARE THE OPERATING SYSTEM.
 // any tailnet connection to 127.0.0.1:<port>, so 127.0.0.1 proves nothing. Only `tailscale serve` is pointed at
 // 127.0.0.2 (deploy/tailscale/serve.json), and only it sets the login headers there.
 const TRUSTED = new Set((process.env.LUMEN_TRUSTED_ADDR || '127.0.0.2').split(',').flatMap(a => [a.trim(), '::ffff:' + a.trim()]));
+// Phone mode (the server runs inside the app): 127.0.0.1 on a phone is shared by every installed app, so only requests
+// carrying this install's secret (a cookie the app sets in its own WebView, and sends from its own code) count.
+const PHONE = process.env.LUMEN_MODE === 'phone', LOCAL_TOKEN = process.env.LUMEN_LOCAL_TOKEN || '';
+if (PHONE && LOCAL_TOKEN.length < 32) throw new Error('phone mode needs LUMEN_LOCAL_TOKEN');
+function phoneCaller(req) {
+  const got = Buffer.from(/(?:^|;\s*)lumen_local=([\w-]+)/.exec(req.headers.cookie || '')?.[1] || ''), want = Buffer.from(LOCAL_TOKEN);
+  return got.length === want.length && timingSafeEqual(got, want);
+}
 function caller(req) {
+  if (PHONE) return { local: phoneCaller(req), login: '', name: '' };
   const local = TRUSTED.has(req.socket.localAddress) && /^(::ffff:)?127\./.test(req.socket.remoteAddress || '');
   const login = local ? String(req.headers['tailscale-user-login'] || '').toLowerCase().slice(0, 200) : '';
   return { local, login, name: local ? String(req.headers['tailscale-user-name'] || '').slice(0, 100) : '' };
@@ -450,7 +459,17 @@ setInterval(async () => { // the scheduler: every 30 s, run whatever is due
   }
 }, 30e3).unref();
 // ---------- calls on the person's behalf (see calls.mjs) ----------
-const calls = makeCalls({ DATA, get KEY() { return config().callKey || (vcfg().provider === 'cartesia' ? config().voiceKey : ''); }, get PUBLIC() { return process.env.LUMEN_PUBLIC_URL || ''; } });
+async function reportCall(c) { // a finished call: a receipt, a notification and a line in the conversation
+  if (!c?.owner || !(c.status === 'done' || c.status === 'failed' || c.summary)) return;
+  const pr = await loadPerson(c.who || { uid: c.owner.split('|')[0] }, c.profile || 'personal').catch(() => null);
+  if (!pr || c.reported || !(c.summary || c.status === 'failed')) return;
+  c.reported = true; calls.mark();
+  const rc = receiptOf(pr, { kind: 'call', title: `Call: ${c.business}`, ms: (c.secs || 0) * 1000, ok: c.status === 'done', result: c.summary || (c.status === 'failed' ? 'The call did not connect' : 'Done'), transcript: c.transcript || [] });
+  saveWorld(pr); notifyPhone(pr, `Call to ${c.business}`, rc.result, 'receipt:' + rc.id);
+  pr.u.history.push({ role: 'user', content: `(call to ${c.business} finished: ${rc.result})` }, { role: 'assistant', content: [{ type: 'text', text: '(noted)' }] });
+}
+setInterval(async () => { for (const c of await calls.poll().catch(() => [])) await reportCall(c); }, 20000).unref();
+const calls = makeCalls({ DATA, get NUMBER() { return config().callNumber; }, get POLL() { return !process.env.LUMEN_CALLS_WEBHOOK; }, get KEY() { return config().callKey || (vcfg().provider === 'cartesia' ? config().voiceKey : ''); }, get PUBLIC() { return process.env.LUMEN_PUBLIC_URL || ''; } });
 const CALL_TOOL = { name: 'call_business', description: 'Phone a business for the person and handle the call: book or change a reservation or appointment, ask a question, check an order, wait on hold. A voice assistant makes the call, says it is an AI calling for them and that it is recorded, and reports back with a summary and the transcript. Only businesses the person named, never personal contacts. The person confirms on a card first.', input_schema: { type: 'object', properties: { business: { type: 'string' }, phone: { type: 'string', description: 'the business number, from a search or what they said' }, goal: { type: 'string', description: 'what to get done, in one or two sentences' }, details: { type: 'string', description: 'only what the business needs: name, party size, dates, order number. Never card numbers or passwords.' } }, required: ['business', 'phone', 'goal'], additionalProperties: false } };
 const JOBS_TOOL = { name: 'jobs', description: 'Work that keeps going after this conversation: scheduled or repeating tasks ("every weekday at 7, brief me"), tasks started by a notification ("when the pharmacy texts, remind me tonight"), and learned skills on a schedule. action add | list | remove | pause | resume | run. For add: title, task (what to do, written as an instruction to yourself), and either when {at: ISO time} or when {every: daily|weekdays|weekly|hourly, time: "HH:MM", day: for weekly}, or trigger {app: app name or package, contains: words}. Optional skill (a learned skill name to replay without thinking, with params) and mode: background (default; quiet, prefers the hidden browser) or screen. Each run leaves a receipt and notifies the phone.', input_schema: { type: 'object', properties: { action: { type: 'string', enum: ['add', 'list', 'remove', 'pause', 'resume', 'run'] }, id: { type: 'string' }, title: { type: 'string' }, task: { type: 'string' }, when: { type: 'object' }, trigger: { type: 'object' }, skill: { type: 'string' }, params: { type: 'object' }, mode: { type: 'string', enum: ['background', 'screen'] } }, required: ['action'], additionalProperties: false } };
 async function jobsTool(p, i, tz) {
@@ -770,7 +789,7 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('x-content-type-options', 'nosniff'); res.setHeader('referrer-policy', 'strict-origin-when-cross-origin'); res.setHeader('x-frame-options', 'DENY');
     // the home network sees the first-run setup and nothing else; after setup, only the tailnet (through tailscale serve)
     const from = caller(req), setup = url.pathname === '/setup' || url.pathname.startsWith('/setup/');
-    if (!from.local && url.pathname !== '/health' && !(setup && !config().setupDone)) { res.writeHead(403, { 'content-type': 'text/plain' }); return res.end('Lumen is only reachable on your private network (Tailscale).'); }
+    if (!from.local && url.pathname !== '/health' && !(setup && !config().setupDone && !PHONE)) { res.writeHead(403, { 'content-type': 'text/plain' }); return res.end('Lumen is only reachable on your private network (Tailscale).'); }
     if (req.method === 'POST') { // only this page may post: JSON, same site
       const site = req.headers['sec-fetch-site'], origin = req.headers.origin, mine = process.env.LUMEN_PUBLIC_URL ? new URL(process.env.LUMEN_PUBLIC_URL).origin : null;
       const okSite = site ? site === 'same-origin' : (!origin || !mine || origin === mine);
@@ -786,15 +805,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && url.pathname === '/calls/hook') { // the calling service reports on a call (checked with its secret)
       let b; try { b = await readBody(req); } catch { return json(res, 400, {}); }
       const r = await calls.hook(req.headers, b);
-      if (r.news && r.news.owner && (r.news.status === 'done' || r.news.status === 'failed' || r.news.summary)) {
-        const c = r.news; const pr = await loadPerson(c.who || { uid: c.owner.split('|')[0] }, c.profile || 'personal').catch(() => null);
-        if (pr && !c.reported && (c.summary || c.status === 'failed')) {
-          c.reported = true; calls.mark();
-          const rc = receiptOf(pr, { kind: 'call', title: `Call: ${c.business}`, ms: (c.secs || 0) * 1000, ok: c.status === 'done', result: c.summary || (c.status === 'failed' ? `The call did not connect (${c.ended})` : 'Call finished'), lines: (c.transcript || []).slice(0, 30).map(t => ({ c: 'note', text: `${t.who}: ${t.text}` })) });
-          saveWorld(pr); notifyPhone(pr, `Call to ${c.business}`, rc.result, 'receipt:' + rc.id);
-          pr.u.history.push({ role: 'user', content: `(call to ${c.business} finished: ${rc.result})` }, { role: 'assistant', content: [{ type: 'text', text: '(noted)' }] });
-        }
-      }
+      if (r.news) await reportCall(r.news);
       return json(res, r.status, {});
     }
     if (url.pathname === '/phone-commands.mjs') { // the instant phone commands, run in the app itself (faster, and offline)
@@ -838,13 +849,14 @@ const server = http.createServer(async (req, res) => {
       const me = whoOf(req), cf = config();
       if (cf.setupDone && !(me && (me.uid === 'local' || me.email === cf.owner))) return json(res, 403, { error: 'only the owner can change settings' });
       if (url.pathname === '/setup') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); return res.end(await readFile(new URL('./setup.html', import.meta.url))); }
-      if (url.pathname === '/setup/state') return json(res, 200, { config: publicConfig(), presets: PRESETS, voices: VOICE_PROVIDERS, tailscale: await tailscale(), you: from.login || null });
+      if (url.pathname === '/setup/state') return json(res, 200, { config: publicConfig(), presets: PRESETS, voices: VOICE_PROVIDERS, mode: PHONE ? 'phone' : 'server', tailscale: PHONE ? { state: 'phone' } : await tailscale(), you: from.login || null });
       if (req.method === 'POST' && url.pathname === '/setup/save') {
         const b = await readBody(req), patch = {};
         if (typeof b.cli === 'string' && CLIS[b.cli]) patch.cli = b.cli;
         for (const k of ['name', 'provider', 'baseUrl', 'model', 'voiceId', 'voiceUrl']) if (typeof b[k] === 'string') patch[k] = b[k].trim().slice(0, 300);
         if (typeof b.voiceProvider === 'string' && VOICE_PROVIDERS[b.voiceProvider]) patch.voiceProvider = b.voiceProvider;
-        for (const k of ['apiKey', 'voiceKey', 'voiceSecret']) if (typeof b[k] === 'string' && b[k] && !b[k].startsWith('••••')) patch[k] = b[k].trim().slice(0, 500);
+        if (typeof b.callNumber === 'string') patch.callNumber = b.callNumber.trim().slice(0, 80);
+        for (const k of ['apiKey', 'voiceKey', 'voiceSecret', 'callKey']) if (typeof b[k] === 'string' && b[k] && !b[k].startsWith('••••')) patch[k] = b[k].trim().slice(0, 500);
         if (typeof b.allowAll === 'boolean') patch.allowAll = b.allowAll;
         if (Array.isArray(b.allowed)) patch.allowed = b.allowed.map(x => String(x).trim().toLowerCase()).filter(Boolean).slice(0, 50);
         if (patch.name !== undefined && !patch.name) patch.name = 'Lumen';
@@ -1031,9 +1043,9 @@ const server = http.createServer(async (req, res) => {
     }
     res.writeHead(404).end();
   } catch (e) { console.error(e); if (!res.headersSent) json(res, 500, {}); else res.end(); }
-}).listen(PORT, process.env.LUMEN_LISTEN || '0.0.0.0', async () => {
+}).listen(PORT, process.env.LUMEN_LISTEN || (PHONE ? '127.0.0.1' : '0.0.0.0'), async () => {
   await shared.loadFile(new URL('./mcp.json', import.meta.url));
-  const learn = async () => { const t = await tailscale(); if (t.url) process.env.LUMEN_PUBLIC_URL ||= t.url; }; learn(); setInterval(learn, 60000).unref();
+  const learn = async () => { if (PHONE) return; const t = await tailscale(); if (t.url) process.env.LUMEN_PUBLIC_URL ||= t.url; }; learn(); setInterval(learn, 60000).unref();
   handleUpgrade(server, () => vcfg(), req => !!whoOf(req) && config().setupDone); // live speech, signed-in people only
   console.log(`${config().name} on port ${PORT}, shared MCP:`, JSON.stringify(shared.status()));
 });

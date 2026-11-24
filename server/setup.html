@@ -101,6 +101,13 @@
     <label for="voiceId">Voice (optional)</label><input type="text" id="voiceId" spellcheck="false" placeholder="the provider's default">
   </section>
 
+  <section id="s-calls">
+    <h2><span class="n">&#9743;</span> Phone calls for you <span class="hint" style="margin:0;font-weight:400">(optional)</span></h2>
+    <p class="hint">Lumen can call a restaurant, office or shop for you: book, ask, or wait on hold, then tell you how it went. It always says it is an AI assistant calling for you, and never pays or agrees to costs. Needs a Cartesia account with a phone number.</p>
+    <label for="callKey">Cartesia API key (leave empty to use the voice key above)</label><input type="password" id="callKey" autocomplete="off" spellcheck="false">
+    <label for="callNumber">Phone number ID (from Cartesia, starts with ap_)</label><input type="text" id="callNumber" spellcheck="false" placeholder="ap_...">
+  </section>
+
   <section id="s-net">
     <h2><span class="n">4</span> Private connection</h2>
     <p class="hint">Your phone reaches this server through Tailscale, a private network only your devices are on. The phone app has it built in.</p>
@@ -174,9 +181,12 @@ function pickProvider(id, keepModel) {
 }
 
 function render() {
-  const c = st.config;
+  const c = st.config, phone = st.mode === 'phone';
+  // on the phone itself: no private network, no other people, no desktop tools
+  ['#s-net', '#s-phone', '#s-who'].forEach(id => $(id).hidden = phone);
+  if (phone) { delete st.presets.cli; document.querySelector('.lead').textContent = 'Everything runs on this phone. Pick its brain and you are done.'; }
   $('#name').value = c.name || 'Lumen';
-  $('#title').textContent = c.setupDone ? `${c.name} settings` : 'Set up your assistant';
+  $('#title').textContent = c.setupDone ? `${c.name} settings` : phone ? 'Set up Lumen on this phone' : 'Set up your assistant';
   $('#providers').innerHTML = '';
   for (const [id, pr] of Object.entries(st.presets)) {
     const b = document.createElement('button'); b.className = 'choice'; b.dataset.id = id; b.textContent = pr.label; b.type = 'button';
@@ -189,7 +199,8 @@ function render() {
   pickVoice(c.voiceProvider || 'cartesia'); $('#voiceId').value = c.voiceId || ''; $('#voiceSecret').value = c.voiceSecret || '';
   $('#model').value = c.model || st.presets[provider].model || '';
   $('#baseUrl').value = c.baseUrl || st.presets[provider].base || '';
-  $('#apiKey').value = c.apiKey || ''; $('#voiceKey').value = c.voiceKey || '';
+  $('#apiKey').value = c.apiKey || ''; $('#voiceKey').value = c.voiceKey || ''; $('#callKey').value = c.callKey || ''; $('#callNumber').value = c.callNumber || '';
+  $('#s-calls').classList.toggle('done', !!c.callNumber);
   $('#allowAll').checked = c.allowAll !== false; $('#allowed').value = (c.allowed || []).join(', ');
   $('#allowBox').hidden = $('#allowAll').checked;
   $('#s-name').classList.toggle('done', !!c.name);
@@ -212,7 +223,7 @@ function net() {
 }
 
 async function save() {
-  const b = { name: $('#name').value, provider, cli, apiKey: $('#apiKey').value, baseUrl: $('#baseUrl').value, model: $('#model').value, voiceKey: $('#voiceKey').value, voiceSecret: $('#voiceSecret').value, voiceProvider, voiceId: $('#voiceId').value,
+  const b = { name: $('#name').value, provider, cli, apiKey: $('#apiKey').value, baseUrl: $('#baseUrl').value, model: $('#model').value, voiceKey: $('#voiceKey').value, voiceSecret: $('#voiceSecret').value, callKey: $('#callKey').value, callNumber: $('#callNumber').value, voiceProvider, voiceId: $('#voiceId').value,
     allowAll: $('#allowAll').checked, allowed: $('#allowed').value.split(',').map(x => x.trim()).filter(Boolean) };
   const r = await post('/setup/save', b); if (r.ok) st.config = r.config; return r;
 }
@@ -228,13 +239,14 @@ $('#allowAll').onchange = () => { $('#allowBox').hidden = $('#allowAll').checked
 $('#finish').onclick = async () => {
   const f = $('#finishStatus'); await save();
   if (!st.config.setupDone) { const r = await post('/setup/finish'); if (!r.ok) { f.className = 'status bad'; f.textContent = 'Could not finish.'; return; } }
-  f.className = 'status ok'; f.textContent = st.tailscale.state === 'Running' ? 'All set. Open the app on your phone.' : 'Saved. Connect Tailscale (step 4) to use it from your phone.';
+  f.className = 'status ok'; f.textContent = st.mode === 'phone' ? 'All set.' : st.tailscale.state === 'Running' ? 'All set. Open the app on your phone.' : 'Saved. Connect Tailscale (step 4) to use it from your phone.';
+  if (st.mode === 'phone' && !st.config.setupDone) { setTimeout(() => location.href = '/', 700); return; }
   setTimeout(load, 600);
 };
 
 async function load() { st = await (await fetch('/setup/state')).json(); render(); }
 load();
-setInterval(async () => { if (!st || st.tailscale.state === 'Running') return; st.tailscale = (await (await fetch('/setup/state')).json()).tailscale; net(); }, 4000);
+setInterval(async () => { if (!st || st.mode === 'phone' || st.tailscale.state === 'Running') return; st.tailscale = (await (await fetch('/setup/state')).json()).tailscale; net(); }, 4000);
 </script>
 </body>
 </html>

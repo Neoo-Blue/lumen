@@ -37,7 +37,7 @@ export function makeCalls(opts) {
     await load();
     if (!opts.KEY) throw new Error('calling is not set up on this server');
     st.secret ||= randomBytes(24).toString('base64url');
-    if (!st.hook) {
+    if (!st.hook && opts.PUBLIC && !opts.POLL) {
       const old = ((await cart('GET', '/agents/webhooks?limit=100'))?.data || []).find(w => w.url === `${opts.PUBLIC}/calls/hook`);
       if (old) await cart('PATCH', `/agents/webhooks/${old.id}`, { display_name: 'Lumen calls', url: `${opts.PUBLIC}/calls/hook`, secret: st.secret });
       st.hook = old?.id || (await cart('POST', '/agents/webhooks', { display_name: 'Lumen calls', url: `${opts.PUBLIC}/calls/hook`, secret: st.secret }))?.id;
@@ -46,12 +46,12 @@ export function makeCalls(opts) {
       instructions: INSTRUCTIONS, initial_message: '{{opening}}', timezone: 'America/Los_Angeles', language: { primary: 'en-US' },
       system_tools: { end_call: { description: 'End the call once the goal is done or clearly cannot be done, after repeating the result back.', pre_tool_speech: 'force' }, skip_turn: {}, voicemail_detection: { message: '{{voicemail}}' } },
       turn: { inactivity_check_in_secs: 60, inactivity_end_call_secs: 240 }, // the service's longest waits: hold music keeps the line alive; 4 silent minutes end it
-      event_webhook_id: st.hook,
+      ...(st.hook ? { event_webhook_id: st.hook } : {}),
     };
     if (!st.agent) {
       st.agent = (await cart('POST', '/v1/agents', { name: 'Lumen caller', description: 'Lumen calls businesses for its people: bookings, questions, waiting on hold. Made by the Lumen server.', config: { ...config, model: { id: MODEL }, audio: { input: { noise_suppression: 'auto' }, output: { voice_id: st.voice || undefined } } } }))?.id;
     } else await cart('PATCH', `/v1/agents/${st.agent}`, { config }).catch(() => {});
-    st.number = process.env.LUMEN_CALL_NUMBER_ID || st.number || null;
+    st.number = opts.NUMBER || process.env.LUMEN_CALL_NUMBER_ID || st.number || null;
     await save();
     return st;
   }
@@ -93,5 +93,24 @@ export function makeCalls(opts) {
   async function mark() { await save();
   }
 
-  return { setup, place, hook, mark, get: async id => (await load()).calls[id] };
+  /** Without a public address (a home server, a phone) the calling service cannot reach us: ask it about open calls. */
+  async function poll() {
+    const s = await load(), news = [];
+    for (const [id, c] of Object.entries(s.calls || {})) {
+      if (c.reported || c.status === 'done' || c.status === 'failed' || Date.now() - c.at > 3 * 3600e3) continue;
+      let call; try { call = await cart('GET', `/agents/calls/${id}`); } catch { continue; }
+      if (call?.status === 'in_progress' || call?.status === 'live') c.status = 'live';
+      if (/^(completed|failed|ended|error)$/.test(call?.status || '')) {
+        c.status = call.status === 'completed' || call.status === 'ended' ? 'done' : 'failed'; c.ended = call.end_reason || call.status;
+        c.secs = call.start_time && call.end_time ? Math.round((Date.parse(call.end_time) - Date.parse(call.start_time)) / 1000) : null;
+        c.transcript = (call.transcript || []).filter(x => x?.text).map(x => ({ who: x.role === 'agent' || x.role === 'assistant' ? 'Lumen' : 'Them', text: String(x.text).slice(0, 600) })).slice(-80);
+        c.summary = String(call.summary || call.analysis?.summary || '').slice(0, 1200);
+        news.push(Object.assign(c, { id }));
+      }
+    }
+    if (news.length) await save();
+    return news;
+  }
+
+  return { setup, place, hook, mark, poll, get: async id => (await load()).calls[id] };
 }

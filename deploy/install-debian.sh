@@ -10,7 +10,9 @@ export DEBIAN_FRONTEND=noninteractive
 
 say "Installing what Lumen needs"
 apt-get update -qq
-apt-get install -y -qq curl ca-certificates git python3 >/dev/null
+apt-get install -y -qq curl ca-certificates git python3 python3-venv >/dev/null
+# live flight prices use a small Python package, kept in its own folder
+[ -x /opt/flights/bin/python ] || { python3 -m venv /opt/flights && /opt/flights/bin/pip install -q fast-flights typing_extensions; }
 if ! command -v node >/dev/null || [ "$(node -p 'process.versions.node.split(".")[0]')" -lt 22 ]; then
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash - >/dev/null
   apt-get install -y -qq nodejs >/dev/null
@@ -43,7 +45,7 @@ Wants=network-online.target
 [Service]
 User=lumen
 WorkingDirectory=/opt/lumen/server
-Environment=PORT=8080 LUMEN_DATA=/var/lib/lumen NODE_ENV=production
+Environment=PORT=8080 LUMEN_DATA=/var/lib/lumen NODE_ENV=production LUMEN_FLIGHTS_PY=/opt/flights/bin/python
 EnvironmentFile=-/etc/lumen.env
 ExecStart=/usr/bin/node server.mjs
 Restart=always
