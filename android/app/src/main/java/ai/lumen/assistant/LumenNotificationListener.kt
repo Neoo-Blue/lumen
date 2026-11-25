@@ -16,19 +16,36 @@ class LumenNotificationListener : NotificationListenerService() {
         super.onListenerConnected()
         connected = this
         try {
-            NotificationStore.replace(this, activeNotifications)
+            val active = activeNotifications
+            NotificationStore.replace(this, active)
+            ReplyCache.seed(this, active)
         } catch (_: Exception) {
         }
+        NotifTriage.scheduleNext(this)
+        CallCard.register(this)
     }
 
     override fun onListenerDisconnected() {
+        CallCard.unregister(this)
         if (connected === this) connected = null
         super.onListenerDisconnected()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        NotificationStore.add(this, sbn)
-        Triggers.posted(this, sbn)
+        if (sbn.packageName == packageName) return
+        CallCard.onCallNotification(this, sbn)
+        val p = NotifHygiene.parse(this, sbn)
+        NotificationStore.add(this, sbn, p)
+        ReplyCache.capture(this, sbn, p)
+        if (NotifHygiene.isNoise(sbn)) return
+        OtpGuard.handle(this, p.appLabel, p.title, p.rawText)
+        val held = NotifTriage.shouldHold(this, p.app, p.who, p.title)
+        if (held) {
+            try { cancelNotification(sbn.key) } catch (_: Exception) {}
+        } else {
+            DrivingAnnouncer.onMessage(this, sbn, p)
+        }
+        Triggers.posted(this, sbn, p, held)
     }
 
     companion object {
@@ -56,8 +73,8 @@ object NotificationStore {
 
     private class Item(val key: String, val json: JSONObject)
 
-    fun add(context: Context, sbn: StatusBarNotification) {
-        val item = Item(keyOf(sbn), toJson(context, sbn))
+    fun add(context: Context, sbn: StatusBarNotification, parsed: NotifHygiene.Parsed? = null) {
+        val item = Item(keyOf(sbn), toJson(context, sbn, parsed))
         synchronized(lock) {
             val iterator = items.iterator()
             while (iterator.hasNext()) {
@@ -73,6 +90,7 @@ object NotificationStore {
         synchronized(lock) {
             items.clear()
             for (sbn in sorted) {
+                if (sbn.packageName == context.packageName) continue
                 items.addFirst(Item(keyOf(sbn), toJson(context, sbn)))
                 while (items.size > CAPACITY) items.removeLast()
             }
@@ -96,18 +114,14 @@ object NotificationStore {
         return sbn.packageName + ":" + sbn.id + ":" + (sbn.tag ?: "")
     }
 
-    private fun toJson(context: Context, sbn: StatusBarNotification): JSONObject {
-        val extras = sbn.notification.extras
-        val title = extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
-        val text = extras?.getCharSequence(Notification.EXTRA_TEXT)?.toString()
-            ?: extras?.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()
-            ?: ""
+    private fun toJson(context: Context, sbn: StatusBarNotification, parsed: NotifHygiene.Parsed? = null): JSONObject {
+        val p = parsed ?: NotifHygiene.parse(context, sbn)
         return JSONObject()
-            .put("app", appLabel(context, sbn.packageName))
-            .put("pkg", sbn.packageName)
-            .put("title", title)
-            .put("text", text)
-            .put("time", Instant.ofEpochMilli(sbn.postTime).toString())
+            .put("app", p.appLabel)
+            .put("pkg", p.app)
+            .put("title", p.redactedTitle)
+            .put("text", p.redactedText)
+            .put("time", Instant.ofEpochMilli(p.postTime).toString())
     }
 }
 

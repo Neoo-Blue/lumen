@@ -61,6 +61,17 @@ html,body{background:transparent;color:var(--ink);font:15px/1.4 system-ui,-apple
 .kv{margin:10px 16px 0;border-radius:18px;border:1px solid var(--line);background:var(--glass);padding:4px 16px}
 .kv div{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
 .kv div:last-child{border:0}.kv span{color:var(--mute)}.kv b{font-weight:600;text-align:right}
+/* passive top call card */
+.card-lines{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.card-line{font-size:12.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-act{margin-top:10px;display:flex;justify-content:flex-end;gap:8px}
+.card-btn{appearance:none;border:0;border-radius:14px;padding:7px 14px;font:620 13px/1 inherit;color:#0b0c14;background:linear-gradient(135deg,#a597ff,#5fe3d4);cursor:pointer}
+.card-x{appearance:none;border:0;background:rgba(255,255,255,.08);color:var(--mute);width:26px;height:26px;border-radius:50%;font:600 14px/1 inherit;cursor:pointer}
+.teach{position:absolute;inset:6px 10px;border-radius:18px;display:flex;align-items:center;gap:10px;padding:0 10px 0 12px;
+  background:rgba(12,13,22,.94);border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.teach .orb{width:22px;height:22px;flex:none}
+.teach b{flex:1;font-size:12.5px;font-weight:620;line-height:1.25}
+.teach .stop{appearance:none;border:0;border-radius:999px;padding:8px 14px;font:700 13px/1 inherit;color:#0b0c14;background:#5fe3d4}
 </style></head>
 <body>
 <script>
@@ -113,6 +124,14 @@ function progress(d) {
   pill.querySelector('.bar i').style.width = (steps.length ? Math.round(100 * at / steps.length) : 0) + '%';
   if (d.done) { pill.querySelector('b').textContent = d.done; pill.querySelector('.bar i').style.width = '100%'; }
 }
+function teach(d) {
+  const bar = h('div', 'teach');
+  bar.append(h('div', 'orb'), h('b', '', d.title || 'Lumen is watching: tap Stop when done'));
+  const stop = h('button', 'stop', 'Stop');
+  stop.onclick = () => send({ ok: true, stop: true });
+  bar.append(stop);
+  document.body.append(bar);
+}
 function confirmIt(d) {
   document.body.append(h('div', 'veil'));
   const sheet = h('div', 'sheet'); sheet.append(h('div', 'grab'));
@@ -125,9 +144,24 @@ function confirmIt(d) {
   go.onclick = () => send({ ok: true }); no.onclick = () => send({ ok: false });
   document.querySelector('.veil').onclick = () => send({ ok: false });
 }
+function card(d) {
+  const p = h('div', 'pill');
+  const top = h('div', 'top');
+  const x = h('button', 'card-x', '\u00d7');
+  x.onclick = () => send({ ok: false });
+  top.append(h('div', 'orb'), h('b', '', d.title || 'Caller'), x);
+  const lines = h('div', 'card-lines');
+  (d.lines || []).slice(0, 3).forEach(t => lines.append(h('div', 'card-line', String(t))));
+  const act = h('div', 'card-act');
+  const btn = h('button', 'card-btn', 'Brief me');
+  btn.onclick = () => { try { LumenOverlay.open(String(d.open || '')); } catch (e) {} };
+  act.append(btn);
+  p.append(top, lines, act);
+  document.body.append(p);
+}
 window.show = (mode, d) => {
   if (mode !== 'progress') { document.body.textContent = ''; pill = null; }
-  ({ review, progress, confirm: confirmIt })[mode](d || {});
+  ({ review, progress, confirm: confirmIt, card, teach })[mode](d || {});
   requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add('on')));
 };
 </script>

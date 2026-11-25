@@ -10,7 +10,8 @@ import { DATA } from './config.mjs';
 const keyFile = `${DATA}/vault.key`;
 const master = process.env.LUMEN_VAULT_KEY || (() => { try { return readFileSync(keyFile, 'utf8').trim(); } catch { const k = randomBytes(32).toString('hex'); writeFileSync(keyFile, k, { mode: 0o600 }); return k; } })();
 const KEY = Buffer.from(hkdfSync('sha256', master, 'lumen', 'vault-v1', 32));
-const seal = text => { const iv = randomBytes(12), c = createCipheriv('aes-256-gcm', KEY, iv); const enc = Buffer.concat([c.update(text, 'utf8'), c.final()]); return [iv, c.getAuthTag(), enc].map(b => b.toString('base64')).join('.'); };
+export const seal = text => { const iv = randomBytes(12), c = createCipheriv('aes-256-gcm', KEY, iv); const enc = Buffer.concat([c.update(text, 'utf8'), c.final()]); return [iv, c.getAuthTag(), enc].map(b => b.toString('base64')).join('.'); };
+export const unseal = blob => open(blob);
 const open = blob => { const [iv, tag, enc] = blob.split('.').map(b => Buffer.from(b, 'base64')); const d = createDecipheriv('aes-256-gcm', KEY, iv); d.setAuthTag(tag); return Buffer.concat([d.update(enc), d.final()]).toString('utf8'); };
 
 const file = dir => `${dir}/apis.json`;

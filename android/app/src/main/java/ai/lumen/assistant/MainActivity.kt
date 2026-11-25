@@ -25,6 +25,8 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.health.connect.client.HealthConnectClient
+import androidx.health.connect.client.PermissionController
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -167,6 +169,26 @@ open class MainActivity : AppCompatActivity() {
         finishPick(uris)
     }
 
+    private val healthPermLauncher = registerForActivityResult(
+        PermissionController.createRequestPermissionResultContract()
+    ) { granted ->
+        Telemetry.info("health", "health permissions granted: ${granted.size}")
+    }
+
+    fun requestHealthPermissions() {
+        runOnUiThread {
+            try {
+                if (HealthConnectClient.getSdkStatus(this) == HealthConnectClient.SDK_AVAILABLE) {
+                    healthPermLauncher.launch(HealthData.PERMISSIONS)
+                    return@runOnUiThread
+                }
+            } catch (_: Exception) {}
+            if (!startExternal(this, Intent(HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS))) {
+                startExternal(this, Intent("android.health.connect.action.HEALTH_HOME_SETTINGS"))
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Telemetry.init(applicationContext)
@@ -207,7 +229,7 @@ open class MainActivity : AppCompatActivity() {
         else if (!handOff(intent) && !incoming(intent) && restored == null) webView.loadUrl(if (overlay) LumenOrigin.HOME + "/?overlay=1" else LumenOrigin.HOME)
         overLockScreen(intent)
         armVoice(intent)
-        if (!overlay) askEverythingOnce()
+        if (!overlay) { askEverythingOnce(); NotifTriage.scheduleNext(this) }
         if (WakeService.enabled(this) && WakeService.instance == null) try { WakeService.setEnabled(this, true) } catch (e: Exception) { Telemetry.warn("wake", "could not restart: ${e.message}") }
         ViewCompat.requestApplyInsets(webView)
     }

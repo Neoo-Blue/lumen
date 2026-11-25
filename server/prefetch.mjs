@@ -72,8 +72,41 @@ const SWITCHES = { 'wi-?fi': 'Wi-Fi', 'bluetooth': 'Bluetooth', 'airplane mode|f
   'do not disturb|dnd': 'Do not disturb', '无线网|wifi': 'Wi-Fi', '蓝牙': 'Bluetooth', '飞行模式': 'Airplane mode', '深色模式|暗黑模式': 'Dark mode', '手电筒': 'Flashlight' };
 export function phoneCommand(text, caps) {
   const t = String(text).trim().replace(/[.!?。！？]+$/, '').replace(/^(please |can you |could you |hey lumen,? )/i, '');
-  if (/\b(and|then|after|before|but|if)\b|然后|并且|再/i.test(t) || t.length > 60) return null; // more than one thing: the model plans it
   const has = m => caps.includes(m);
+  // alarms, timers and music keys: instant (checked before the "more than one thing" rule, since "1 hour and 30 minutes" is one thing)
+  { const c = String(text).trim().toLowerCase().replace(/[.!?。！？]+$/, '').replace(/^(please |can you |could you |hey lumen,? )/, '');
+    const n = s => ({ a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, ten: 10, fifteen: 15, twenty: 20, thirty: 30, half: 0.5, 一: 1, 两: 2, 二: 2, 三: 3, 五: 5, 十: 10, 半: 0.5 })[s] ?? parseFloat(s);
+    const unit = u => /^(h|小时|钟头)/.test(u) ? 3600 : /^(m|分)/.test(u) ? 60 : 1;
+    let t;
+    if (has('timer') && ((t = c.match(/^(?:set |start )?(?:a |an )?(?:timer|countdown)(?: for)? (\d+(?:\.\d+)?|a|an|one|two|three|five|ten|fifteen|twenty|thirty|half an?) ?(hours?|hrs?|minutes?|mins?|seconds?|secs?)(?:(?: and)? (\d+) ?(minutes?|mins?|seconds?|secs?))?$/)) ||
+        (t = c.match(/^(\d+(?:\.\d+)?|a|an|one|two|three|five|ten|fifteen|twenty|thirty)[ -]?(hours?|hrs?|minutes?|mins?|seconds?|secs?)[ -]timer$/)) ||
+        (t = c.match(/^(?:设|定|设置)?(?:一个)?(?:计时器?|倒计时)?(\d+|一|两|二|三|五|十|半)(?:个)?(小时|钟头|分钟|分|秒钟?|秒)(?:的)?(?:计时器?|倒计时|计时)?$/)) && /计时|倒计时/.test(c))) {
+      const secs = Math.round(n(t[1].replace(/ an?$/, '')) * unit(t[2]) + (t[3] ? +t[3] * unit(t[4]) : 0));
+      if (secs > 0 && secs <= 86400) return { method: 'timer', args: { seconds: secs, label: '' }, say: `Timer for ${secs >= 3600 ? +(secs / 3600).toFixed(2) + ' h' : secs >= 60 ? +(secs / 60).toFixed(1) + ' min' : secs + ' s'}.` };
+    }
+    if (has('alarm') && ((t = c.match(/^(?:set |make )?(?:an |a |my )?alarm (?:for |at )?(?:tomorrow )?(?:at )?(\d{1,2})(?::(\d{2}))? ?(am|pm|a\.m|p\.m)?(?: tomorrow)?$/)) ||
+        (t = c.match(/^wake me(?: up)? (?:tomorrow )?(?:at )?(\d{1,2})(?::(\d{2}))? ?(am|pm|a\.m|p\.m)?(?: tomorrow)?$/)) ||
+        (t = c.match(/^(\d{1,2})(?::(\d{2}))? ?(am|pm) alarm$/)))) {
+      let h = +t[1]; const mi = +(t[2] || 0), ap = (t[3] || '')[0];
+      if (ap === 'p' && h < 12) h += 12; if (ap === 'a' && h === 12) h = 0;
+      if (h < 24 && mi < 60) return { method: 'alarm', args: { hour: h, minute: mi, label: '' }, say: `Alarm set for ${((h + 11) % 12) + 1}:${String(mi).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}.` };
+    }
+    if (has('alarm') && (t = c.match(/^(?:明天|今天)?(早上|上午|中午|下午|晚上)?(\d{1,2}|一|两|三|四|五|六|七|八|九|十|十一|十二)点(半|(\d{1,2})分?)?(?:的)?(?:闹钟|叫我(?:起床)?)$|^(?:定|设|设置)(?:一个)?(早上|上午|中午|下午|晚上)?(\d{1,2})点(半|(\d{1,2})分?)?的闹钟$/))) {
+      const zh = { 一: 1, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10, 十一: 11, 十二: 12 };
+      const part = t[1] || t[5], hh = t[2] || t[6], half = t[3] || t[7], mm = t[4] || t[8];
+      let h = zh[hh] ?? +hh; const mi = half === '半' ? 30 : +(mm || 0);
+      if (/下午|晚上/.test(part || '') && h < 12) h += 12; if (part === '中午' && h < 6) h += 12;
+      if (h < 24 && mi < 60) return { method: 'alarm', args: { hour: h, minute: mi, label: '' }, say: `闹钟定在 ${h}:${String(mi).padStart(2, '0')}。` };
+    }
+    if (has('media')) {
+      const act = /^(?:pause|pause (?:the |my )?(?:music|song|video|podcast)|stop (?:the |my )?(?:music|song|playing)|暂停|暂停音乐|停止播放)$/.test(c) ? 'pause'
+        : /^(?:resume|resume (?:the )?(?:music|song)|continue playing|unpause|keep playing|继续播放|继续)$/.test(c) ? 'play'
+        : /^(?:next|next (?:song|track)|skip|skip (?:this )?(?:song|track)|play the next song|下一首|下一曲|切歌)$/.test(c) ? 'next'
+        : /^(?:previous|previous (?:song|track)|last song|go back a song|play the previous song|上一首|上一曲)$/.test(c) ? 'previous' : '';
+      if (act) return { method: 'media', args: { action: act }, say: '' };
+    }
+  }
+  if (/\b(and|then|after|before|but|if)\b|然后|并且|再/i.test(t) || t.length > 60) return null; // more than one thing: the model plans it
   let m;
   if (has('calendarEvents') && /^(?:what'?s|what is|show(?: me)?)?\s*(?:on )?(?:my )?(?:calendar|schedule|agenda|day)(?: for)?(?: today)?$|^how does my day look$|^what do i have today$|^(?:我)?今天(?:的)?(?:安排|日程)(?:是什么)?$/i.test(t)) {
     const d0 = new Date(); d0.setHours(0, 0, 0, 0); const d1 = new Date(d0.getTime() + 864e5 - 1);
@@ -123,6 +156,73 @@ export function skillFrom(text, acts) {
   return { name, when: String(text).trim().slice(0, 200), app, params: [], steps, examples: [String(text).trim().slice(0, 160)] };
 }
 
+// Starter skills (skills-pack.json): everyday requests that open the right app screen at once, no model.
+// A phrase is the person's words with at most one {q} (a search term, place, song...); only skills whose app is
+// installed (pkg) are tried. Returns { skill, q } or null.
+const FILLER = /^(?:hey lumen[,\s]*|please\s+|can you\s+|could you\s+|would you\s+|i want to\s+|i'd like to\s+|let's\s+|请|帮我|给我)+|(?:\s+please|\s+for me|\s+now|一下|吧)+$/gi;
+const norm = s => String(s).replace(/[’']/g, "'").replace(/[.!?。！？,，]+$/g, '').replace(/\s+/g, ' ').trim().replace(FILLER, '').trim();
+// people say the same thing many ways: one verb for opening, and no "my", "the" or a trailing "settings"/"page"/"screen"
+const canon = s => s.replace(/^(?:open up|open|show me|show|check|bring up|pull up|view|see|launch|display|打开|显示|查看)\s*/i, 'open ')
+  .replace(/\b(?:my|the|me)\s+/gi, '').replace(/\s+(?:settings?|page|screen|menu|app)$/i, '').replace(/\s+/g, ' ').trim();
+const packRx = new Map();
+export function packMatch(text, pack, installed) {
+  const said = canon(norm(text)); if (!said || said.length > 120) return null;
+  const has = installed && new Set(installed);
+  let best = null, lit = -1; // a phrase with no {q} wins outright; otherwise the pattern with the most fixed words
+  for (const skill of pack?.skills || []) {
+    if (skill.pkg && has && !has.has(skill.pkg)) continue;
+    for (const ph of skill.phrases || []) {
+      let rx = packRx.get(ph);
+      if (!rx) { const c = canon(norm(ph)), body = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\{q\\\}/, '(.+?)'); rx = new RegExp(`^${body}$`, 'i'); rx.lit = c.replace('{q}', '').length; packRx.set(ph, rx); }
+      const m = rx.exec(said); if (!m) continue;
+      if (m[1] === undefined) return { skill, q: null };
+      const q = m[1].trim(), l = rx.lit;
+      if (q && q.length <= 80 && l > lit) { best = { skill, q }; lit = l; }
+    }
+  }
+  return best;
+}
+// the steps to run: {q} goes into links URL-encoded, and as typed text elsewhere
+export const packSteps = (skill, q) => JSON.parse(JSON.stringify(skill.steps), (k, v) => typeof v === 'string' && q != null ? v.replace(/\{q\}/g, k === 'link' ? encodeURIComponent(q) : q) : v);
+
+// Voice shortcuts: the person's own phrase runs a saved list of steps on the phone, no model in between. Only these
+// step kinds exist; anything that sends, pays or calls is left out (a text opens prefilled for the person to send), and
+// a part that needs judgment is an "ask" step, run as an ordinary request when the steps are done.
+export const SHORTCUT_STEPS = { openApp: ['name', 'pkg', 'link'], navigate: ['destination', 'mode'], playSearch: ['q', 'pkg'], media: ['action'], toggle: ['name', 'on'],
+  setting: ['name', 'value'], flashlight: ['on'], alarm: ['hour', 'minute', 'label'], timer: ['seconds', 'label'], systemScreen: ['action', 'category', 'pkg'],
+  share: ['pkg', 'text'], sms: ['number', 'text'], skillRun: ['name'], press: ['key'] };
+export function cleanShortcut(sc) {
+  const name = String(sc?.name || '').trim().slice(0, 60);
+  const phrases = [...new Set([name, ...(Array.isArray(sc?.phrases) ? sc.phrases : [])].map(p => String(p || '').trim().slice(0, 80)).filter(p => p.length > 1))].slice(0, 8);
+  if (!name || !phrases.length) return { error: 'a shortcut needs a name and the words that start it' };
+  const steps = [];
+  for (const s of Array.isArray(sc.steps) ? sc.steps.slice(0, 20) : []) {
+    if (s && typeof s.say === 'string') steps.push({ say: s.say.slice(0, 200) });
+    else if (s && Number.isFinite(+s.wait)) steps.push({ wait: Math.min(Math.max(+s.wait, 100), 10000) });
+    else if (s && typeof s.ask === 'string' && s.ask.trim()) steps.push({ ask: s.ask.trim().slice(0, 400) });
+    else if (s && SHORTCUT_STEPS[s.do]) {
+      const args = Object.fromEntries(SHORTCUT_STEPS[s.do].filter(k => s.args?.[k] !== undefined && s.args[k] !== '').map(k => [k, typeof s.args[k] === 'string' ? s.args[k].slice(0, 300) : s.args[k]]));
+      if (s.do === 'share' && args.pkg !== 'com.teslamotors.tesla') return { error: 'sharing goes only to the car' };
+      if (s.do === 'press' && !/^(home|back)$/.test(args.key)) return { error: 'only home or back' };
+      if (s.do === 'openApp' && args.link && !/^(https:|tel:|smsto:|mailto:|geo:|google\.navigation:|spotify:|[a-z][\w+.-]*:\/\/)/i.test(args.link)) return { error: 'that link cannot be opened' };
+      steps.push({ do: s.do, args });
+    } else return { error: `unknown step: ${JSON.stringify(s).slice(0, 80)}` };
+  }
+  if (!steps.length) return { error: 'a shortcut needs at least one step' };
+  return { name, phrases, steps };
+}
+export const describeStep = s => s.say ? `Say "${s.say}"` : s.wait ? `Wait ${Math.round(s.wait / 100) / 10} s` : s.ask ? `Ask Lumen: ${s.ask}`
+  : ({ openApp: a => `Open ${a.name || a.pkg || a.link}`, navigate: a => `Directions to ${a.destination}`, playSearch: a => `Play ${a.q}`, media: a => `Music: ${a.action}`,
+    toggle: a => `Turn ${a.on === false ? 'off' : 'on'} ${a.name}`, setting: a => ({ dnd: `Do Not Disturb ${a.value}`, silent: `Silent ${a.value}`, vibrate: `Vibrate ${a.value}`, autoRotate: `Auto rotate ${a.value}` })[a.name] || `${({ volume: 'Volume', ringVolume: 'Ring volume', alarmVolume: 'Alarm volume', brightness: 'Brightness', screenTimeout: 'Screen timeout' })[a.name] || a.name} to ${a.value}${/olume|brightness/i.test(a.name) ? '%' : ''}`, flashlight: a => `Flashlight ${a.on === false ? 'off' : 'on'}`,
+    alarm: a => `Alarm at ${a.hour}:${String(a.minute ?? 0).padStart(2, '0')}`, timer: a => `Timer for ${Math.round(a.seconds / 60)} min`, systemScreen: a => `Open ${(a.action || a.category || '').split('.').pop().toLowerCase().replace(/_/g, ' ')}`,
+    share: a => `Send "${a.text}" to the car`, sms: a => `Write a text to ${a.number}: "${a.text}" (you send it)`, skillRun: a => `Run the skill "${a.name}"`, press: a => `Go ${a.key}` })[s.do](s.args || {});
+/** The person's shortcut for these words, if any: the same words, or the same once filler is set aside. */
+export function shortcutMatch(text, list) {
+  const said = canon(norm(text)).toLowerCase(); if (!said) return null;
+  for (const sc of list || []) for (const ph of sc.phrases || []) if (canon(norm(ph)).toLowerCase() === said) return sc;
+  return null;
+}
+
 if (globalThis.process?.argv?.[1]?.endsWith("prefetch.mjs")) {
   const assert = await import('node:assert/strict');
   const all = ['openApp', 'flashlight', 'toggle', 'setting', 'screenScroll', 'press'];
@@ -163,5 +263,44 @@ if (globalThis.process?.argv?.[1]?.endsWith("prefetch.mjs")) {
   assert.equal(skillFrom('go', [{ action: 'screenTap', args: { text: 'A' }, ok: true }, { action: 'screenTap', args: { text: 'B' }, ok: true }]), null); // must open its app first
   assert.equal(skillFrom('go', [{ action: 'openApp', args: { name: 'A' }, ok: true }, { action: 'screenRead', args: {}, ok: true }, { action: 'screenTap', args: { text: 'B' }, ok: true }]), null);
   for (const q of ['Read my latest emails', 'Show my latest photos', 'What is on my calendar this week?', "What's today's weather?"]) assert.ok(!guess(q).some(([n]) => n === 'news'), q);
+  const PK = { skills: [
+    { id: 'yt.search', pkg: 'com.google.android.youtube', phrases: ['search youtube for {q}', '在youtube上搜{q}'], steps: [{ open: { pkg: 'com.google.android.youtube', link: 'https://www.youtube.com/results?search_query={q}' } }] },
+    { id: 'yt.subs', pkg: 'com.google.android.youtube', phrases: ['open my youtube subscriptions'], steps: [{ open: { link: 'https://www.youtube.com/feed/subscriptions' } }] },
+    { id: 'maps.nav', pkg: null, phrases: ['navigate to {q}'], steps: [{ open: { link: 'google.navigation:q={q}' } }] },
+  ] };
+  const pm = (t, inst = ['com.google.android.youtube']) => packMatch(t, PK, inst);
+  assert.equal(pm('Search YouTube for lofi beats please')?.q, 'lofi beats');
+  assert.equal(pm('can you open youtube subscriptions?')?.skill.id, 'yt.subs');
+  assert.equal(pm('在YouTube上搜周杰伦')?.q, '周杰伦');
+  assert.equal(pm('search youtube for cats', [])?.skill.id, undefined); // app not installed
+  assert.equal(pm('navigate to SFO', [])?.q, 'SFO');
+  assert.equal(pm('what is youtube'), null);
+  assert.equal(packSteps(PK.skills[0], 'lofi & chill')[0].open.link, 'https://www.youtube.com/results?search_query=lofi%20%26%20chill');
+  const ck = s => { const r = phoneCommand(s, ['timer', 'alarm', 'media']); return r ? r.method + ' ' + JSON.stringify(r.args) : null; };
+  assert.equal(ck('Set a timer for 10 minutes'), 'timer {"seconds":600,"label":""}');
+  assert.equal(ck('timer for 1 hour and 30 minutes'), 'timer {"seconds":5400,"label":""}');
+  assert.equal(ck('5 minute timer'), 'timer {"seconds":300,"label":""}');
+  assert.equal(ck('set a timer for half an hour'), 'timer {"seconds":1800,"label":""}');
+  assert.equal(ck('计时5分钟'), 'timer {"seconds":300,"label":""}');
+  assert.equal(ck('Set an alarm for 6:30 am'), 'alarm {"hour":6,"minute":30,"label":""}');
+  assert.equal(ck('wake me up at 7pm'), 'alarm {"hour":19,"minute":0,"label":""}');
+  assert.equal(ck('alarm for 12 am'), 'alarm {"hour":0,"minute":0,"label":""}');
+  assert.equal(ck('明天早上7点叫我'), 'alarm {"hour":7,"minute":0,"label":""}');
+  assert.equal(ck('定一个下午3点半的闹钟'), 'alarm {"hour":15,"minute":30,"label":""}');
+  assert.equal(ck('next song'), 'media {"action":"next"}');
+  assert.equal(ck('Pause the music'), 'media {"action":"pause"}');
+  assert.equal(ck('暂停'), 'media {"action":"pause"}');
+  assert.equal(ck('set an alarm to remind me to call mom'), null);
+  assert.equal(pm('show me my youtube subscriptions')?.skill.id, 'yt.subs');
+  assert.equal(pm('open youtube subscriptions page')?.skill.id, 'yt.subs');
+  const sc = cleanShortcut({ name: 'Heading home', phrases: ["I'm heading home"], steps: [{ do: 'navigate', args: { destination: 'home' } }, { do: 'playSearch', args: { q: 'driving mix', pkg: 'com.google.android.apps.youtube.music' } }, { do: 'sms', args: { number: 'Mom', text: 'On my way' } }, { ask: 'anything I should pick up?' }] });
+  assert.equal(sc.steps.length, 4);
+  assert.equal(shortcutMatch('heading home', [sc])?.name, 'Heading home');
+  assert.equal(shortcutMatch("I'm heading home.", [sc])?.name, 'Heading home');
+  assert.equal(shortcutMatch('heading to work', [sc]), null);
+  assert.match(cleanShortcut({ name: 'test me', steps: [{ do: 'call', args: { number: '1' } }] }).error, /unknown step/);
+  assert.match(cleanShortcut({ name: 'test me', steps: [{ do: 'share', args: { pkg: 'com.whatsapp', text: 'hi' } }] }).error, /car/);
+  assert.match(cleanShortcut({ name: 'test me', steps: [{ do: 'openApp', args: { link: 'javascript:alert(1)' } }] }).error, /cannot be opened/);
+  assert.equal(describeStep(sc.steps[2]), 'Write a text to Mom: "On my way" (you send it)');
   console.log('phone commands ok');
 }

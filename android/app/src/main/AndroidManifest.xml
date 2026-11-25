@@ -36,6 +36,12 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
@@ -126,9 +132,11 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="google.navigation" />
         </intent>
+        <package android:name="com.google.android.apps.healthdata" />
     </queries>
 
     <application
+        android:name=".LumenApp"
         android:allowBackup="false"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
@@ -136,7 +144,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Lumen"
-        android:name=".LumenApp"
         android:networkSecurityConfig="@xml/network"
         android:usesCleartextTraffic="false">
 
@@ -258,6 +265,31 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Runs the assistant's own server on this phone (no cloud server)" />
         </service>
         <receiver android:name=".UpdateReceiver" android:exported="false" />
+        <receiver android:name=".DigestReceiver" android:exported="false" />
+        <receiver android:name=".CallReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".LocalRuleReceiver" android:exported="false" />
+        <activity
+            android:name=".HealthPrivacyActivity"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+        <activity-alias
+            android:name=".ViewPermissionUsageActivity"
+            android:exported="true"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE"
+            android:targetActivity=".HealthPrivacyActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
         <receiver android:name=".CarReceiver" android:exported="true" android:permission="android.permission.BLUETOOTH_CONNECT">
             <intent-filter>
                 <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />

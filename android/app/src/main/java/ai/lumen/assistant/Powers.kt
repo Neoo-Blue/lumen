@@ -181,8 +181,12 @@ object Powers {
         return JSONObject().put("available", true).put("on", adapter.isEnabled).put("paired", paired)
     }
 
-    /** Steps counted by the phone's step sensor since it last restarted (the sensor keeps no daily history). */
+    /** Steps today from Health Connect when permitted, falling back to the phone's step sensor. */
     fun steps(ctx: Context): JSONObject {
+        val hc = HealthData.stepsToday(ctx)
+        if (hc != null) {
+            return JSONObject().put("available", true).put("today", hc).put("todaySinceFirstCheck", hc).put("source", "health_connect")
+        }
         val sm = ctx.getSystemService(SensorManager::class.java)
         val sensor = sm?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) ?: return JSONObject().put("available", false)
         var value = -1f

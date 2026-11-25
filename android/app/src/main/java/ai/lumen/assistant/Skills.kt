@@ -93,40 +93,49 @@ object Skills {
 
     /** Runs steps on the phone (a learned skill or a one-off batch); stops at the first failure or confirmation. */
     fun runSteps(activity: Context, raw: JSONArray, params: JSONObject, name: String, launch: (JSONObject) -> Boolean): JSONObject {
-        val a = LumenAccess.instance ?: return LumenAccess.err("screen control is off")
+        val a = LumenAccess.instance // may be off: opening apps, waits, settings and speech still run (on-phone rules)
         if (raw.length() > 40) return LumenAccess.err("at most 40 steps at a time")
         val steps = fillAll(raw, params) as JSONArray
         val log = JSONArray()
         // a progress card over the app while several steps run
         val labels = (0 until steps.length()).map { describe(steps.optJSONObject(it) ?: JSONObject()) }
-        val showing = steps.length() >= 3
+        val showing = a != null && steps.length() >= 3
         val title = if (name == "batch") "Lumen is filling this in" else "Running \u201c$name\u201d"
+        a?.beginWatch()
+        try {
         for (i in 0 until steps.length()) {
             val st = steps.optJSONObject(i) ?: continue
-            if (showing) a.sheet.progress(title, labels, i)
+            if (showing) a?.sheet?.progress(title, labels, i)
             val r: JSONObject = when {
-                st.has("open") -> { val ok = launch(st.optJSONObject("open") ?: JSONObject().put("name", st.optString("open"))); Thread.sleep(1800); if (ok) okStep("opened") else LumenAccess.err("could not open the app") }
-                st.has("tap") -> a.tap(JSONObject().put("text", st.optString("tap")))
-                st.has("type") -> a.type(st.optJSONObject("type") ?: JSONObject().put("text", st.optString("type")))
-                st.has("scroll") -> a.scroll(JSONObject().put("direction", st.optString("scroll")))
-                st.has("press") -> a.press(st.optString("press"))
+                st.has("open") -> {
+                    a?.arm()
+                    val ok = launch(st.optJSONObject("open") ?: JSONObject().put("name", st.optString("open")))
+                    if (a == null) Thread.sleep(1800) else if (ok) a.settle(3500, 400) else a.disarm() // the screen has come up, or a moment without screen control
+                    if (ok) okStep("opened") else LumenAccess.err("could not open the app")
+                }
+                st.has("tap") -> a?.tap(JSONObject().put("text", st.optString("tap"))) ?: LumenAccess.err("screen control is off")
+                st.has("type") -> a?.type(st.optJSONObject("type") ?: JSONObject().put("text", st.optString("type"))) ?: LumenAccess.err("screen control is off")
+                st.has("scroll") -> a?.scroll(JSONObject().put("direction", st.optString("scroll"))) ?: LumenAccess.err("screen control is off")
+                st.has("press") -> a?.press(st.optString("press")) ?: LumenAccess.err("screen control is off")
                 st.has("wait") -> { Thread.sleep(st.optLong("wait", 800).coerceIn(100, 8000)); okStep("waited") }
-                st.has("expect") -> { a.read(); val want = st.optString("expect").lowercase(); if (a.screenText().lowercase().contains(want)) okStep("saw $want") else LumenAccess.err("expected to see \"${st.optString("expect")}\"") }
-                st.has("toggle") -> { val latch = java.util.concurrent.CountDownLatch(1); var res = LumenAccess.err("timeout"); android.os.Handler(android.os.Looper.getMainLooper()).post { a.toggle(st.optString("toggle"), if (st.has("on")) st.optBoolean("on") else null) { res = it; latch.countDown() } }; latch.await(8, java.util.concurrent.TimeUnit.SECONDS); res }
+                st.has("expect") -> if (a == null) LumenAccess.err("screen control is off") else { a.read(); val want = st.optString("expect").lowercase(); if (a.screenText().lowercase().contains(want)) okStep("saw $want") else LumenAccess.err("expected to see \"${st.optString("expect")}\"") }
+                st.has("toggle") -> if (a == null) LumenAccess.err("screen control is off") else { val latch = java.util.concurrent.CountDownLatch(1); var res = LumenAccess.err("timeout"); android.os.Handler(android.os.Looper.getMainLooper()).post { a.toggle(st.optString("toggle"), if (st.has("on")) st.optBoolean("on") else null) { res = it; latch.countDown() } }; latch.await(8, java.util.concurrent.TimeUnit.SECONDS); res }
                 st.has("setting") -> { val s = st.optJSONObject("setting") ?: JSONObject(); Knobs.set(activity, s.optString("name"), s.optString("value")) }
+                st.has("say") -> Speaker.say(activity, st.optString("say"))
                 else -> LumenAccess.err("unknown step")
             }
             log.put(JSONObject().put("step", i + 1).put("did", st.toString().take(120)).put("ok", r.optBoolean("ok")))
             if (!r.optBoolean("ok")) {
                 Telemetry.warn("skill", "$name stopped at step ${i + 1}: ${r.optString("error")}")
-                if (showing) a.sheet.hide()
+                if (showing) a?.sheet?.hide()
                 return JSONObject().put("ok", false).put("error", "step ${i + 1} of ${steps.length()}: ${r.optString("error")}")
-                    .put("text", r.optString("text")).put("pkg", r.optString("pkg")).put("log", log).put("screen", a.view())
+                    .put("text", r.optString("text")).put("pkg", r.optString("pkg")).put("log", log).put("screen", a?.view() ?: "")
             }
-            if (!st.has("wait") && !st.has("open")) Thread.sleep(250)
+            if (!st.has("wait") && !st.has("open") && !st.has("say")) { if (a != null) a.settle(1500, 200) else Thread.sleep(250) }
         }
-        if (showing) { a.sheet.progress(title, labels, labels.size, "All filled in"); Thread.sleep(900); a.sheet.hide() }
-        return JSONObject().put("ok", true).put("data", JSONObject().put("ran", name).put("steps", steps.length()).put("screen", a.view()))
+        if (showing) { a?.sheet?.progress(title, labels, labels.size, "All filled in"); Thread.sleep(900); a?.sheet?.hide() }
+        return JSONObject().put("ok", true).put("data", JSONObject().put("ran", name).put("steps", steps.length()).put("screen", a?.view() ?: ""))
+        } finally { a?.endWatch() }
     }
 
     private fun describe(st: JSONObject): String = when {
@@ -140,6 +149,7 @@ object Skills {
         st.has("expect") -> "Check for " + st.optString("expect").take(30)
         st.has("toggle") -> "Switch " + st.optString("toggle")
         st.has("setting") -> "Set " + (st.optJSONObject("setting")?.optString("name") ?: "")
+        st.has("say") -> "Say " + st.optString("say").take(30)
         else -> "Step"
     }
 

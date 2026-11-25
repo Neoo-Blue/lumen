@@ -15,6 +15,7 @@ import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.Executors
 
 /**
  * Notifications in and out. In: a private log on the phone (for "search my life") and, for jobs started by a
@@ -23,6 +24,7 @@ import java.net.URL
 object Triggers {
     @Volatile private var rules = JSONArray()
     @Volatile private var fetched = 0L
+    private val worker = Executors.newSingleThreadExecutor { r -> Thread(r, "lumen-notif").apply { isDaemon = true } }
 
     private fun cookie() = CookieManager.getInstance().getCookie(LumenOrigin.HOME) ?: ""
 
@@ -37,25 +39,33 @@ object Triggers {
     }
     fun forget() { fetched = 0 }
 
-    fun posted(ctx: Context, sbn: StatusBarNotification) {
+    fun posted(ctx: Context, sbn: StatusBarNotification, parsed: NotifHygiene.Parsed? = null, held: Boolean = false) {
         if (sbn.packageName == ctx.packageName) return
-        val ex = sbn.notification?.extras ?: return
-        val title = ex.getCharSequence(Notification.EXTRA_TITLE)?.toString().orEmpty()
-        val text = (ex.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: ex.getCharSequence(Notification.EXTRA_TEXT))?.toString().orEmpty()
-        if (title.isBlank() && text.isBlank()) return
-        val app = try { ctx.packageManager.getApplicationLabel(ctx.packageManager.getApplicationInfo(sbn.packageName, 0)).toString() } catch (_: Exception) { sbn.packageName }
-        Thread {
-            log(ctx, JSONObject().put("at", java.time.Instant.ofEpochMilli(sbn.postTime).toString()).put("app", app).put("pkg", sbn.packageName).put("title", title.take(200)).put("text", text.take(600)))
+        if (NotifHygiene.isNoise(sbn)) return
+        val p = parsed ?: NotifHygiene.parse(ctx, sbn)
+        if (p.redactedTitle.isBlank() && p.redactedText.isBlank()) return
+        val appCtx = ctx.applicationContext
+        worker.execute {
+            if (held) NotifTriage.recordHeld(appCtx, p)
+            val entry = JSONObject()
+                .put("at", java.time.Instant.ofEpochMilli(p.postTime).toString())
+                .put("app", p.appLabel)
+                .put("pkg", p.app)
+                .put("who", p.who.take(120))
+                .put("title", p.redactedTitle.take(200))
+                .put("text", p.redactedText.take(600))
+            if (held) entry.put("held", true)
+            log(appCtx, entry)
             refresh()
             for (i in 0 until rules.length()) {
                 val r = rules.optJSONObject(i) ?: continue
                 val want = r.optString("app").lowercase(); val words = r.optString("contains").lowercase()
                 if (want.isEmpty()) continue // a rule must name an app
-                val appOk = app.lowercase() == want || sbn.packageName.lowercase() == want || (want.contains('.') && sbn.packageName.lowercase().startsWith(want))
-                val wordsOk = words.isEmpty() || "$title $text".lowercase().contains(words)
-                if (appOk && wordsOk) send(r.optString("id"), app, title, text, sbn.packageName)
+                val appOk = p.appLabel.lowercase() == want || p.app.lowercase() == want || (want.contains('.') && p.app.lowercase().startsWith(want))
+                val wordsOk = words.isEmpty() || "${p.redactedTitle} ${p.redactedText}".lowercase().contains(words)
+                if (appOk && wordsOk) send(r.optString("id"), p.appLabel, p.redactedTitle, p.redactedText, p.app)
             }
-        }.start()
+        }
     }
 
     private fun send(id: String, app: String, title: String, text: String, pkg: String = "") = try {
@@ -83,6 +93,31 @@ object Triggers {
             if (try { java.time.Instant.parse(o.optString("at")).toEpochMilli() < cutoff } catch (_: Exception) { false }) break
             val hay = "${o.optString("app")} ${o.optString("title")} ${o.optString("text")}".lowercase()
             if (words.all { hay.contains(it) }) out.put(o)
+        }
+        return out
+    }
+
+    @Synchronized fun recentNonHeld(ctx: Context, windowMs: Long, limit: Int): JSONArray {
+        val out = JSONArray(); val f = file(ctx); if (!f.exists()) return out
+        val cutoff = System.currentTimeMillis() - windowMs
+        val lines = try { f.readLines() } catch (_: Exception) { return out }
+        for (line in lines.asReversed()) {
+            if (out.length() >= limit) break
+            val o = try { JSONObject(line) } catch (_: Exception) { continue }
+            if (o.optBoolean("held", false)) continue
+            val at = o.optString("at")
+            if (try { java.time.Instant.parse(at).toEpochMilli() < cutoff } catch (_: Exception) { true }) break
+            val pkg = o.optString("pkg")
+            val label = o.optString("app").ifEmpty { pkg }
+            val who = o.optString("who").ifEmpty { o.optString("title") }.ifEmpty { label }
+            out.put(
+                JSONObject()
+                    .put("app", pkg)
+                    .put("appLabel", label)
+                    .put("who", who)
+                    .put("text", o.optString("text").take(200))
+                    .put("at", at)
+            )
         }
         return out
     }

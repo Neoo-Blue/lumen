@@ -53,9 +53,9 @@ export function sane(h, keep = 60) {
   return fixed;
 }
 
-export const save = u => { const history = sane(u.history); return Promise.all([ // a copy: a request still running keeps adding to u.history
+export const save = u => { const history = sane(u.history); return Promise.all([ // a job's private view (u.ephemeral) keeps its history to itself
+  ...(u.ephemeral ? [] : [writeFile(`${u.dir}/history.json`, JSON.stringify(history), { mode: 0o600 })]), // a copy: a request still running keeps adding to u.history
   writeFile(`${u.dir}/memory.json`, JSON.stringify(u.mem, null, 1), { mode: 0o600 }),
-  writeFile(`${u.dir}/history.json`, JSON.stringify(history), { mode: 0o600 }),
 ]); };
 
 // type: said | tapped | lumen | did | connected | look

@@ -40,6 +40,7 @@ class WakeService : Service(), RecognitionListener {
     override fun onCreate() {
         super.onCreate()
         Telemetry.init(applicationContext)
+        LocalRules.ensureMonitors(applicationContext)
         instance = this
     }
 
@@ -76,16 +77,18 @@ class WakeService : Service(), RecognitionListener {
         }
     }
 
-    /** Every two seconds: hand the microphone over when the screen is off, during a call, while another app records, or while audio plays. */
+    /** Every two seconds: hand the microphone over when the screen is off, during a call, or while another app records.
+     *  Music and podcasts count as busy too, except while driving, so Hey Lumen still hears the person over the car speakers. */
     private fun watch() {
         val am = getSystemService(android.media.AudioManager::class.java)
         val pm = getSystemService(android.os.PowerManager::class.java)
         val others = try { am.activeRecordingConfigurations.size - (if (speech != null) 1 else 0) } catch (_: Exception) { 0 }
         // screen off: only while driving, or when the person chose "listen with the screen off" and the phone is charging
         val charging = getSystemService(android.os.BatteryManager::class.java)?.isCharging == true
-        val screenOk = pm.isInteractive || Driving.on(this) || (screenOff(this) && charging)
-        // also while a video, music or podcast plays: speech in it is the main source of false "Hey Lumen"s
-        val busy = !screenOk || am.mode != android.media.AudioManager.MODE_NORMAL || others > 0 || playing(am)
+        val driving = Driving.on(this)
+        val screenOk = pm.isInteractive || driving || (screenOff(this) && charging)
+        // a call (mode other than normal) stays busy. playback does not, while driving
+        val busy = !screenOk || am.mode != android.media.AudioManager.MODE_NORMAL || others > 0 || (!driving && playing(am))
         if (busy && !yielded) { yielded = true; release() }
         else if (!busy && yielded) { yielded = false; if (!paused) listen() }
         main.postDelayed({ watch() }, 2000)
@@ -117,7 +120,9 @@ class WakeService : Service(), RecognitionListener {
         val j = try { JSONObject(json ?: "") } catch (_: Exception) { return }
         val text = j.optString("text").trim()
         val words = j.optJSONArray("result")
-        val clear = words != null && words.length() == 2 && (0 until 2).all { words.getJSONObject(it).optDouble("conf", 0.0) >= MIN_CONF }
+        // car speakers throw off the recognizer, so driving asks for a slightly clearer phrase
+        val need = MIN_CONF + if (Driving.on(this)) 0.03 else 0.0
+        val clear = words != null && words.length() == 2 && (0 until 2).all { words.getJSONObject(it).optDouble("conf", 0.0) >= need }
         if (text == "hey lumen" && !clear) { Telemetry.info("wake", "near miss ignored: ${words}"); return }
         if (text != "hey lumen" || !clear || System.currentTimeMillis() - lastFire < 3000) return
         lastFire = System.currentTimeMillis()

@@ -72,6 +72,27 @@ object ServiceActions {
             "setting" -> Knobs.set(ctx, args.optString("name"), args.optString("value"))
             "settings" -> ok(Knobs.read(ctx))
             "skillList" -> ok(Skills.list(ctx))
+            "calendarEvents" -> Cal.events(ctx, args)
+            "live" -> LiveUpdates.post(ctx, args)
+            "assistContext" -> AssistContext.read()
+            "health" -> {
+                val what = args.optString("what").trim()
+                if (what.isEmpty()) ok(HealthData.overview(ctx)) else HealthData.query(ctx, what)
+            }
+            "stashSearch" -> Stash.search(ctx, args.optString("query"), args.optInt("limit", 10).coerceIn(1, 50))
+            "stashNote" -> Stash.addNote(ctx, args.optString("text"))
+            "stashStats" -> ok(Stash.stats(ctx))
+            "localRules" -> LocalRules.handle(ctx, args)
+            "parked" -> Driving.parked(ctx)
+            "teachStart" -> LumenAccess.instance?.teachStart(args.optString("name")) ?: LumenAccess.err("screen control is off")
+            "teachStop" -> LumenAccess.instance?.teachStop() ?: LumenAccess.err("screen control is off")
+            "battery" -> ctx.getSystemService(android.os.BatteryManager::class.java)?.let { b -> ok(JSONObject().put("level", b.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY).coerceAtLeast(0)).put("charging", b.isCharging)) } ?: LumenAccess.err("unavailable")
+            "location" -> lastFix(ctx)
+            "notifReplyTargets" -> ReplyCache.targets(ctx)
+            // notifReply is never run from here: a reply is sent only from Lumen's own screen, after the person taps Send
+            "triage" -> NotifTriage.handle(ctx, args)
+            "notifDigest" -> NotifTriage.digest(ctx)
+            "calendarAdd" -> Cal.add(ctx, args)
             "localModel" -> LocalModel.handle(ctx, args) // the AI model on this phone: download, start, stop, status
             "refreshTriggers" -> { Triggers.forget(); ok(JSONObject().put("refreshed", true)) }
             "lifeSearch" -> ok(Powers.lifeSearch(ctx, args.optString("query"), args.optString("from"), args.optString("to"), args.optInt("limit", 8).coerceIn(1, 25)))
@@ -95,4 +116,57 @@ object ServiceActions {
             }
         } } catch (e: Exception) { LumenAccess.err("failed: ${e.message}") }
     }
+}
+
+
+/** The phone's calendar without Lumen's screen open (email bookings filed by the server, the routines' agenda). */
+object Cal {
+    private fun time(raw: String): Long? = raw.trim().takeIf { it.isNotEmpty() }?.let { t ->
+        runCatching { java.time.Instant.parse(t).toEpochMilli() }.getOrNull()
+            ?: runCatching { java.time.OffsetDateTime.parse(t).toInstant().toEpochMilli() }.getOrNull()
+            ?: runCatching { java.time.LocalDateTime.parse(t).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() }.getOrNull()
+            ?: runCatching { java.time.LocalDate.parse(t).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() }.getOrNull() }
+    private fun allowed(ctx: Context, perm: String) = ctx.checkSelfPermission(perm) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    fun events(ctx: Context, args: JSONObject): JSONObject {
+        if (!allowed(ctx, android.Manifest.permission.READ_CALENDAR)) return LumenAccess.err("calendar permission is off")
+        val from = time(args.optString("from")) ?: System.currentTimeMillis(); val to = time(args.optString("to")) ?: (from + 86_400_000L)
+        val b = android.provider.CalendarContract.Instances.CONTENT_URI.buildUpon(); android.content.ContentUris.appendId(b, from); android.content.ContentUris.appendId(b, to)
+        val out = JSONArray()
+        ctx.contentResolver.query(b.build(), arrayOf(android.provider.CalendarContract.Instances.TITLE, android.provider.CalendarContract.Instances.BEGIN, android.provider.CalendarContract.Instances.END, android.provider.CalendarContract.Instances.EVENT_LOCATION, android.provider.CalendarContract.Instances.ALL_DAY), null, null, android.provider.CalendarContract.Instances.BEGIN + " ASC")?.use { c ->
+            while (c.moveToNext() && out.length() < 100) out.put(JSONObject().put("title", c.getString(0).orEmpty()).put("start", java.time.Instant.ofEpochMilli(c.getLong(1)).toString())
+                .put("end", java.time.Instant.ofEpochMilli(c.getLong(2)).toString()).put("location", c.getString(3).orEmpty()).put("allDay", c.getInt(4) == 1))
+        }
+        return JSONObject().put("ok", true).put("data", JSONObject().put("events", out))
+    }
+
+    fun add(ctx: Context, args: JSONObject): JSONObject {
+        if (!allowed(ctx, android.Manifest.permission.WRITE_CALENDAR)) return LumenAccess.err("calendar permission is off")
+        val title = args.optString("title").trim().take(200); val start = time(args.optString("start")) ?: return LumenAccess.err("bad start")
+        val end = (time(args.optString("end")) ?: (start + 3_600_000L)).coerceAtLeast(start)
+        val cal = ctx.contentResolver.query(android.provider.CalendarContract.Calendars.CONTENT_URI, arrayOf(android.provider.CalendarContract.Calendars._ID),
+            "${android.provider.CalendarContract.Calendars.VISIBLE} = 1 AND ${android.provider.CalendarContract.Calendars.CALENDAR_ACCESS_LEVEL} >= ?",
+            arrayOf(android.provider.CalendarContract.Calendars.CAL_ACCESS_CONTRIBUTOR.toString()), "${android.provider.CalendarContract.Calendars.IS_PRIMARY} DESC")?.use { if (it.moveToFirst()) it.getLong(0) else null }
+            ?: return LumenAccess.err("no calendar to write to")
+        if (title.isEmpty()) return LumenAccess.err("bad title")
+        val v = android.content.ContentValues().apply {
+            put(android.provider.CalendarContract.Events.CALENDAR_ID, cal); put(android.provider.CalendarContract.Events.TITLE, title)
+            put(android.provider.CalendarContract.Events.DTSTART, start); put(android.provider.CalendarContract.Events.DTEND, end)
+            put(android.provider.CalendarContract.Events.EVENT_TIMEZONE, java.time.ZoneId.systemDefault().id)
+            args.optString("location").takeIf { it.isNotBlank() }?.let { put(android.provider.CalendarContract.Events.EVENT_LOCATION, it.take(200)) }
+            args.optString("notes").takeIf { it.isNotBlank() }?.let { put(android.provider.CalendarContract.Events.DESCRIPTION, it.take(500)) }
+        }
+        val uri = ctx.contentResolver.insert(android.provider.CalendarContract.Events.CONTENT_URI, v) ?: return LumenAccess.err("could not add it")
+        return JSONObject().put("ok", true).put("data", JSONObject().put("id", uri.lastPathSegment))
+    }
+}
+
+/** The phone's last known position without Lumen's screen (time to leave); no new fix is requested from here. */
+@android.annotation.SuppressLint("MissingPermission")
+fun lastFix(ctx: Context): JSONObject {
+    if (ctx.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED &&
+        ctx.checkSelfPermission(android.Manifest.permission.ACCESS_COARSE_LOCATION) != android.content.pm.PackageManager.PERMISSION_GRANTED) return LumenAccess.err("location permission is off")
+    val lm = ctx.getSystemService(android.location.LocationManager::class.java) ?: return LumenAccess.err("unavailable")
+    val best = lm.getProviders(true).mapNotNull { runCatching { lm.getLastKnownLocation(it) }.getOrNull() }.maxByOrNull { it.time } ?: return LumenAccess.err("no recent location")
+    return JSONObject().put("ok", true).put("data", JSONObject().put("lat", best.latitude).put("lon", best.longitude).put("accuracy", best.accuracy.toInt()).put("at", java.time.Instant.ofEpochMilli(best.time).toString()))
 }

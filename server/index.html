@@ -75,7 +75,7 @@ body.looking .feed{background:linear-gradient(to bottom,transparent 45%,rgba(7,8
 .sgroup h3{font-size:11px;letter-spacing:.12em;color:var(--faint);font-weight:600;padding:14px 16px 4px;text-transform:uppercase}
 .srow{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--line);min-height:56px}.sgroup h3+.srow{border-top:0}
 .srow .dot{width:10px;height:10px;border-radius:50%;flex:none;background:#3ad6c6}.srow .dot.off{background:#ff8a6b}.srow .dot.idle{background:rgba(255,255,255,.25)}
-.srow .tx{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}.srow .tx b{font-size:15px;font-weight:560}.srow .tx span{font-size:12.5px;color:var(--mute)}
+#setLife .srow .tx b,#setLife .srow .tx span{white-space:normal;overflow:visible;text-overflow:clip}.rttime{width:auto;min-width:0;font-size:14px}.scsteps{display:grid;gap:6px;padding:12px 16px}.scstep{font-size:14px;color:var(--mute);padding-left:22px;position:relative}.scstep::before{content:'';position:absolute;left:4px;top:6px;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--mute)}.scstep.ok{color:var(--ink)}.scstep.ok::before{background:var(--good);border-color:var(--good)}.scstep.bad{color:var(--bad)}.scstep.bad::before{border-color:var(--bad)}.lifeform{gap:8px;flex-wrap:wrap}.lifeform input,.rtcity{flex:1;min-width:140px;padding:10px 12px;border-radius:12px;border:1px solid var(--line,#2a2e3a);background:transparent;color:inherit;font:inherit}.rttime{padding:6px 8px;border-radius:10px;border:1px solid var(--line,#2a2e3a);background:transparent;color:inherit;font:inherit}.rtparts{gap:6px;flex-wrap:wrap}.rtparts .chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line,#2a2e3a);background:transparent;color:var(--mute);font:inherit;font-size:13px}.rtparts .chip.on{color:var(--ink);border-color:var(--a)}.lifemsg{font-size:13px;color:var(--mute)}.srow .tx{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}.srow .tx b{font-size:15px;font-weight:560}.srow .tx span{font-size:12.5px;color:var(--mute)}
 .srow .go{border:1px solid var(--line);background:rgba(255,255,255,.08);color:var(--ink);border-radius:99px;padding:8px 14px;font-size:13px;cursor:pointer;flex:none}
 .srow .go.p{background:linear-gradient(135deg,#8b7bff,#5d86ff);border-color:transparent}
 .srow.click{cursor:pointer}.srow.click:active{background:rgba(255,255,255,.05)}
@@ -670,7 +670,7 @@ body.sheet-open .sheet{transform:none;visibility:visible;transition:transform .6
   <aside class="sheet" id="setSheet">
     <div class="grab"></div>
     <h2 data-t="settings"></h2>
-    <div id="setHealth"></div><div id="setJobs"></div><div id="setSkills"></div>
+    <div id="setHealth"></div><div id="setSmart"></div><div id="setShortcuts"></div><div id="setLife"></div><div id="setJobs"></div><div id="setSkills"></div>
     <div class="lbl" data-t="language"></div>
     <div class="langs" id="langList"></div>
     <div class="other" id="otherBox" hidden><input id="otherLang" data-tp="other_ph" autocomplete="off"><button class="btn p" id="otherSave" data-t="save"></button></div>
@@ -1023,6 +1023,98 @@ function skillLine(d) { // learned on the first try; and the words that ran a sk
   if (d.c === '_skilllearn' && DEVICE.includes('skillSave')) { const { c, ...sk } = d; nativeCall('skillSave', { ...sk, auto: true }).catch(() => {}); }
   if (d.c === '_skillused' && DEVICE.includes('skillExample')) nativeCall('skillExample', { name: d.name, text: d.said }).catch(() => {});
 }
+let packP = null, appsList = null, appsAt = 0;
+const starterPack = () => (packP ||= fetch('/skills-pack.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : Promise.reject()).then(j => { try { localStorage.lumenPack = JSON.stringify(j); } catch {} return j; })
+  .catch(() => { packP = null; try { return JSON.parse(localStorage.lumenPack); } catch { return null; } })); // kept for offline use
+const installedPkgs = async () => { // the apps on this phone, so starter skills only try apps that are there
+  if (appsList && Date.now() - appsAt < 600e3) return appsList;
+  try { const r = await Promise.race([nativeCall('apps', {}), new Promise(r => setTimeout(() => r({}), 1500))]); if (r.ok) { appsList = r.data.map(a => a.pkg); appsAt = Date.now(); } } catch {}
+  return appsList || [];
+};
+// the phone answers these by itself; each returns true when it handled the request
+const ago2 = t => { const m = Math.round((Date.now() - t) / 60e3); return m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; };
+async function instantCard(text, canvas) {
+  const t0 = text.trim().replace(/[?.!。？！]+$/, ''), has = m => DEVICE.includes(m), say = (title, subtitle, extra = []) => { canvas.querySelector('.wait')?.remove(); mount(canvas, { c: 'hero', title, subtitle }); extra.forEach(x => mount(canvas, x)); voice.say(title); return true; };
+  let m;
+  if (has('parked') && /^(where(?:'s| is| did i)? (?:i )?(?:park(?:ed)?|my car)|where did i leave (?:my |the )?car|我的车停在哪|车停哪了)/i.test(t0)) {
+    const r = await nativeCall('parked', {}).catch(() => null); if (!r?.ok) return false; const d = r.data;
+    return say('Your car is parked here', `Saved ${ago2(Date.parse(d.at) || d.at)}`, [{ c: 'actions', items: [{ label: 'Walk there', do: `Walking directions to ${d.lat},${d.lon}`, primary: true }] }]);
+  }
+  if (has('battery') && /^((?:what'?s |how much |check )?(?:my |the )?battery(?: level| left| percentage| life)?|电量(?:多少)?|还有多少电)$/i.test(t0)) {
+    const r = await nativeCall('battery', {}).catch(() => null); if (!r?.ok) return false; return say(`Battery at ${r.data.level}%`, r.data.charging ? 'Charging' : '');
+  }
+  if (has('health') && (m = t0.match(/^(how many steps(?: (?:have i|did i)(?: walked| taken| done)?)?(?: today)?|my steps(?: today)?|steps today|我(?:今天)?走了多少步|how (?:did|long did) i sleep(?: last night)?|my sleep|我睡了多久)$/i))) {
+    const sleep = /sleep|睡/.test(t0), r = await nativeCall('health', { what: sleep ? 'sleep' : 'steps' }).catch(() => null); if (!r?.ok) return false; const d = r.data;
+    if (sleep) { const mins = d.sleep?.minutes ?? d.minutes; if (!mins) return false; return say(`${Math.floor(mins / 60)} h ${mins % 60} min of sleep`, 'Last night'); }
+    const n = d.steps ?? d.today?.steps; if (n == null) return false; return say(`${Number(n).toLocaleString()} steps today`, '');
+  }
+  if (has('notifDigest') && /^(what did i miss|anything (?:new|i missed)|catch me up|any (?:new )?(?:messages|notifications)|我错过了什么|有什么新消息)$/i.test(t0)) {
+    const r = await nativeCall('notifDigest', {}).catch(() => null); if (!r?.ok) return false;
+    const all = [...(r.data.held || []), ...(r.data.recent || [])].sort((a, b) => (Date.parse(b.at) || b.at) - (Date.parse(a.at) || a.at)), by = {};
+    for (const x of all) (by[x.appLabel || x.app] ||= []).push(x);
+    const apps = Object.entries(by).sort((a, b) => b[1].length - a[1].length).slice(0, 8);
+    if (!apps.length) return say('Nothing new', 'All caught up');
+    return say(`${all.length} since you last looked`, apps.map(([a, xs]) => `${a} ${xs.length}`).join(', '), [{ c: 'list', items: apps.map(([a, xs]) => ({ icon: String(xs.length), title: a, meta: xs.slice(0, 2).map(x => [x.who, x.text].filter(Boolean).join(': ')).join(' / ').slice(0, 160) })) }, { c: 'actions', items: [{ label: 'Summarize it', do: 'Summarize what I missed in my notifications', primary: true }] }]);
+  }
+  if (has('calendarEvents') && /^(what'?s next(?: on my calendar)?|my next (?:meeting|event|appointment)|when is my next (?:meeting|event)|下一个(?:日程|会议)是什么)$/i.test(t0)) {
+    const now = new Date(), r = await nativeCall('calendarEvents', { from: now.toISOString(), to: new Date(+now + 7 * 864e5).toISOString() }).catch(() => null); if (!r?.ok) return false;
+    const ev = (Array.isArray(r.data) ? r.data : r.data?.events || []).filter(e => Date.parse(e.end || e.start) > +now).sort((a, b) => Date.parse(a.start) - Date.parse(b.start))[0];
+    if (!ev) return say('Nothing coming up', 'This week is clear');
+    const allDay = ev.allDay || (/T00:00:00(\.000)?Z$/.test(ev.start) && (Date.parse(ev.end) - Date.parse(ev.start)) % 864e5 === 0); // stored at midnight UTC
+    return say(ev.title, (allDay ? new Date(ev.start.slice(0, 10) + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ', all day' : new Date(ev.start).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + (ev.location ? ' · ' + ev.location : ''), ev.location ? [{ c: 'actions', items: [{ label: 'Directions', do: `Directions to ${ev.location}`, primary: true }] }] : []);
+  }
+  if (has('notifReply') && (m = t0.match(/^(?:reply to|text back|respond to|回复)\s*([^:,，：]{1,40}?)\s*[:,，：]\s*(?:saying |that )?(.{1,500})$/i))) {
+    const who = m[1].trim(), body = m[2].trim(), tg = await nativeCall('notifReplyTargets', {}).catch(() => null);
+    const hit = (tg?.data || []).find(x => String(x.who || '').toLowerCase().includes(who.toLowerCase()));
+    if (!hit) return false; // no recent message from them to answer in place: Lumen does it the long way
+    canvas.querySelector('.wait')?.remove(); mount(canvas, { c: 'hero', title: `Reply to ${hit.who}`, subtitle: `${hit.appLabel || hit.app}: “${body}”` });
+    const row = document.createElement('div'); row.className = 'actions';
+    const go = document.createElement('button'); go.className = 'btn p'; go.textContent = 'Send';
+    const no = document.createElement('button'); no.className = 'btn'; no.textContent = 'Cancel';
+    go.onclick = async () => { row.remove(); const r = await nativeCall('notifReply', { key: hit.key, text: body }).catch(() => null); mount(canvas, { c: r?.ok ? 'done' : 'note', text: r?.ok ? `Sent to ${hit.who}` : (r?.error || 'Could not send') }); };
+    no.onclick = () => { row.remove(); mount(canvas, { c: 'note', text: 'Not sent' }); };
+    row.append(go, no); canvas.append(row); voice.say(`Send this to ${hit.who}?`); return true;
+  }
+  if (has('teachStart') && (m = t0.match(/^(?:watch me|let me show you|i'?ll show you|teach you)(?: how to)?\s+(.{3,60})$/i))) {
+    const r = await nativeCall('teachStart', { name: m[1] }).catch(() => null); if (!r?.ok) return false;
+    return say('Watching', `Do "${m[1]}" now, then tap Stop. Next time just say it.`);
+  }
+  if (has('stashNote') && (m = t0.match(/^(?:note|remember this|save (?:a )?note|记一下)[:：,]?\s+(.{2,500})$/i))) {
+    const r = await nativeCall('stashNote', { text: m[1] }).catch(() => null); if (!r?.ok) return false; return say('Noted', m[1].slice(0, 80));
+  }
+  if (has('stashSearch') && (m = t0.match(/^(?:find|search|show me) (?:my |the )?(?:screenshots?|notes?|saved) (?:of |about |with |for )?(.{2,80})$/i))) {
+    const r = await nativeCall('stashSearch', { query: m[1], limit: 6 }).catch(() => null); if (!r?.ok || !r.data?.length) return false;
+    return say(`${r.data.length} found`, m[1], [{ c: 'list', items: r.data.map(x => ({ icon: x.uri?.startsWith('note:') ? 'N' : 'S', title: String(x.snippet || '').slice(0, 120), meta: ago2(Date.parse(x.at) || x.at) })) }]);
+  }
+  return false;
+}
+// what was on screen when the side key summoned Lumen (kept by the phone for two minutes): attached to that question
+const screenNow = async () => { if (!OVERLAY || !DEVICE.includes('assistContext')) return null; try { const r = await nativeCall('assistContext', {}); const at = Date.parse(r?.data?.at) || r?.data?.at || 0; return r?.ok && r.data.text && Date.now() - at < 120e3 ? { app: r.data.app, url: r.data.url, text: String(r.data.text).slice(0, 6000) } : null; } catch { return null; } };
+let scList = null, scAt = 0;
+const myShortcuts = async () => {
+  if (scList && Date.now() - scAt < 60e3) return scList;
+  try { const r = await Promise.race([api('/shortcuts').then(r => r.ok ? r.json() : null), new Promise(r => setTimeout(() => r(null), 1200))]); if (r) { scList = r.shortcuts || []; scAt = Date.now(); try { localStorage.lumenShortcuts = JSON.stringify(scList); } catch {} } } catch {}
+  if (scList) return scList; try { return JSON.parse(localStorage.lumenShortcuts || '[]'); } catch { return []; }
+};
+async function runShortcut(sc, canvas, pc) {
+  canvas.querySelector('.wait')?.remove();
+  mount(canvas, { c: 'hero', title: sc.name, subtitle: t('sc_running') });
+  const list = document.createElement('div'); list.className = 'k scsteps'; canvas.append(list);
+  const asks = [], t0 = performance.now();
+  for (const s of sc.steps) {
+    if (s.ask) { asks.push(s.ask); continue; }
+    const row = document.createElement('div'); row.className = 'scstep now'; row.textContent = pc.describeStep(s); list.append(row);
+    let ok = true;
+    if (s.say) voice.say(s.say);
+    else if (s.wait) await new Promise(r => setTimeout(r, s.wait));
+    else if (!NATIVE || !DEVICE.includes(s.do)) ok = false;
+    else { const r = await nativeCall(s.do, s.args || {}).catch(() => null); ok = !!r?.ok; await new Promise(r => setTimeout(r, 350)); } // a moment for each app to come up
+    row.className = 'scstep ' + (ok ? 'ok' : 'bad');
+  }
+  api('/log', { method: 'POST', body: JSON.stringify({ what: 'shortcut', detail: `${sc.name} in ${((performance.now() - t0) / 1000).toFixed(1)} s` }) }).catch(() => {});
+  busy = false; document.body.classList.remove('busy'); panel('busy', { on: false }); voice.turnDone(); if (OVERLAY && !asks.length) afterTurn(canvas);
+  if (asks.length) setTimeout(() => ask(asks.join('\n'), { kind: 'typed' }), 300); // the parts that need judgment, as an ordinary request
+}
 const quickLearn = () => localStorage.lumenQuickLearn !== 'off'; // on unless the person turns it off in Settings
 const mySkills = async () => { if (!DEVICE.includes('skillList')) return []; try { const r = await Promise.race([nativeCall('skillList', {}), new Promise(r => setTimeout(() => r({}), 800))]); return r.ok ? r.data : []; } catch { return []; } };
 function afterTurn(canvas) {
@@ -1116,6 +1208,7 @@ const safeImg = u => /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test
 const safeUrl = u => { try { const x = new URL(String(u).replace(/[‹›”’]/g, '')); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch { return ''; } };
 function mount(canvas, d) {
   if (d.c === '_skilllearn' || d.c === '_skillused') return skillLine(d);
+  if (d.c === '_shortcuts') { scAt = 0; return; } // a shortcut was saved: fetch the list again
   d = inert(d);
   const wait = canvas.querySelector('.wait');
   if (d.c === '_status') { if (wait) wait.querySelector('p').textContent = toolLabel(d.text.split(',')[0]) + '…'; return; }
@@ -1174,10 +1267,15 @@ async function ask(text, opts = {}) {
   requestAnimationFrame(() => feed.scrollTo({ top: turn.offsetTop - 6, behavior: 'smooth' }));
   const canvas = turn.querySelector('.canvas');
   voice.thinking();
+  // the person's own shortcut: their words run their saved steps, before anything else
+  if (kind !== 'tap') { const pc = await phoneCmds(), sc = pc?.shortcutMatch && pc.shortcutMatch(said, await myShortcuts()); if (sc) return runShortcut(sc, canvas, pc); }
+  // instant answers from the phone itself (no model): parking, battery, steps, sleep, what I missed, what's next, replies, notes
+  if (NATIVE && kind !== 'tap' && !said.includes('\n') && await instantCard(said, canvas)) { busy = false; document.body.classList.remove('busy'); panel('busy', { on: false }); voice.turnDone(); if (OVERLAY) afterTurn(canvas); return; }
   // instant: plain phone commands run right here on the phone (no server round trip; also works offline)
   if (NATIVE && kind !== 'tap') {
     const pc = await phoneCmds();
-    const q = pc && pc.phoneCommand(text, DEVICE);
+    let q = pc && pc.phoneCommand(text, DEVICE);
+    if (q?.method === 'openApp' && pc.packMatch && pc.packMatch(text, await starterPack(), await installedPkgs())) q = null; // "open battery usage" is a screen, not an app: the starter skill takes it
     if (q) {
       const done = await runDevice({ method: q.method, args: q.args }, canvas);
       if (!done?.ok) q.failed = true; // e.g. "open X" where X is not an app: let Lumen work it out below
@@ -1205,9 +1303,29 @@ async function ask(text, opts = {}) {
       text = `${text}\n(The learned skill "${sk.name}" stopped: ${r.error}. Do the task again from the start, opening the app first; the phone learns the new way by itself.)`; // Lumen takes over from where it stopped
     }
   }
+  // a starter skill: everyday requests that open the right screen in an installed app at once (no model)
+  if (NATIVE && kind !== 'tap' && !said.includes('\n')) {
+    const pc = await phoneCmds(), hit = pc?.packMatch && pc.packMatch(said, await starterPack(), await installedPkgs());
+    if (hit) {
+      const sk = hit.skill, steps = pc.packSteps(sk, hit.q), say = String(sk.say || '').replace('{q}', hit.q ?? '');
+      const one = steps.length === 1 && steps[0].open?.link, shr = steps.length === 1 && steps[0].share, ply = steps.length === 1 && steps[0].play, scr = steps.length === 1 && steps[0].intent;
+      const r = scr ? await nativeCall('systemScreen', scr) : ply ? await nativeCall('playSearch', ply) : shr ? await nativeCall('share', shr) : one ? await nativeCall('openApp', { pkg: steps[0].open.pkg || sk.pkg || '', link: steps[0].open.link })
+        : DEVICE.includes('screenDo') ? await nativeCall('screenDo', { steps }) : { ok: false };
+      const screen = JSON.stringify(r?.data?.screen || '').toLowerCase();
+      const landed = r?.ok && (scr ? r.data?.opened : ply ? r.data?.playing : shr ? r.data?.shared || r.data?.opened : one ? r.data?.link && !r.data?.in : true) && (!(sk.expect || []).length || one || sk.expect.some(w => screen.includes(String(w).toLowerCase())));
+      api('/log', { method: 'POST', body: JSON.stringify({ what: 'starter', detail: `${sk.id} ${landed ? 'done' : 'missed'} <- ${said}` }) }).catch(() => {});
+      if (landed) {
+        canvas.querySelector('.wait')?.remove();
+        mount(canvas, { c: 'hero', title: say || sk.app || sk.id });
+        if (say) voice.say(say);
+        busy = false; document.body.classList.remove('busy'); panel('busy', { on: false }); voice.turnDone(); if (OVERLAY) afterTurn(canvas);
+        return;
+      }
+    }
+  }
   if (NATIVE && !navigator.onLine && !(await fetch('/health', { cache: 'no-store' }).then(r => r.ok, () => false))) { canvas.querySelector('.wait')?.remove(); mount(canvas, { c: 'note', text: t('offline_note') }); busy = false; document.body.classList.remove('busy'); voice.turnDone(); return; }
   try {
-    const res = await api('/ask', { method: 'POST', body: JSON.stringify({ text, kind, lang: LANG, device: DEVICE, native: NATIVE, noInstant: NATIVE && kind !== 'tap', said,  image: lookFrame(), here: HERE, skills: await mySkills(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone }) });
+    const res = await api('/ask', { method: 'POST', body: JSON.stringify({ text, kind, lang: LANG, device: DEVICE, native: NATIVE, noInstant: NATIVE && kind !== 'tap', said, screen: await screenNow(),  image: lookFrame(), here: HERE, skills: await mySkills(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone }) });
     if (res.status === 401 || res.status === 403) { location.reload(); return; }
     if (!res.ok) tel('warn', 'ask_http', `HTTP ${res.status}`, { kind });
     if (res.status === 429) throw new Error(t('rate_limited'));
@@ -1250,6 +1368,7 @@ feed.addEventListener('submit', e => {
 async function confirmAct(card, ok) {
   card.querySelectorAll('button').forEach(b => b.disabled = true);
   const r = await (await api('/act', { method: 'POST', body: JSON.stringify({ id: card.dataset.act, ok }) })).json().catch(() => ({ ui: [{ c: 'note', text: t('conn_lost') }] }));
+  scAt = 0; // a confirmed shortcut is usable at once
   card.style.transition = 'opacity .35s'; card.style.opacity = .35;
   const canvas = card.closest('.canvas');
   for (const u of r.ui || []) { const d = inert(u), node = R[d.c] && el(R[d.c](d)); if (node) { card.after(node); animate(node); } }
@@ -1545,7 +1664,7 @@ async function openSettings() {
   const custom = chosen && !I18N.langs.some(l => l[0] === chosen) ? row(chosen, chosen) : '';
   $('#langList').innerHTML = row('', t('follow_phone', { lang: langLabel(PHONE_LANG) }), true) + I18N.langs.map(([c, n]) => row(c, n)).join('') + custom + `<button class="lang wide" data-lang="__other"><i></i><span>${esc(t('other_lang'))}</span></button>`;
   document.body.classList.add('set-open');
-  loadHealth(); loadJobs(); loadSkills();
+  loadHealth(); loadSmart(); loadShortcuts(); loadLife(); loadJobs(); loadSkills();
 }
 /* ---------------- settings: phone health, hands-free, jobs and activity, skills ---------------- */
 const srow = (dot, title, sub, btn, attrs = '') => `<div class="srow" ${attrs}>${dot != null ? `<i class="dot ${dot}"></i>` : ''}<div class="tx"><b>${esc(title)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}</div>${btn || ''}</div>`;
@@ -1574,6 +1693,57 @@ async function loadHealth() {
   <div class="sgroup"><h3>${esc(t('set_app'))}</h3>${srow(null, t('h_mode'), t('h_mode_sub'), `<button class="go" data-fix="mode">${esc(t('h_change'))}</button>`)}${srow(h.installs ? '' : 'idle', 'Lumen ' + h.version, h.installs ? t('h_updates_on') : t('h_updates_off'), `<button class="go" data-update>${esc(t('check_update'))}</button>`)}</div>`;
   document.body.classList.toggle('driving', !!h.driving);
 }
+// email read by script, and the morning and evening routines (life.mjs on the server)
+const ago = ms => { const m = Math.round((Date.now() - ms) / 60e3); return !ms ? t('mail_never') : m < 1 ? t('mail_now') : m < 60 ? t('mail_min', { n: m }) : t('mail_hr', { n: Math.round(m / 60) }); };
+// a habit Lumen noticed: the person chooses what to do with it (asked once)
+async function habitChoice(id) {
+  const r = await api('/life').then(r => r.ok ? r.json() : null).catch(() => null), hb = r?.habits?.found?.find(h => h.id === id); if (!hb) return;
+  $('#welcome')?.remove(); feed.querySelectorAll('.turn').forEach(t => t.classList.add('past'));
+  const turn = el(`<div class="turn"><div class="canvas"></div></div>`); feed.append(turn); const canvas = turn.querySelector('.canvas');
+  mount(canvas, { c: 'hero', title: t(hb.part === 'morning' ? 'hb_leave' : 'hb_home', { time: hb.time }), subtitle: t('hb_sub', { n: hb.n }) });
+  const row = document.createElement('div'); row.className = 'actions';
+  for (const [mode, label] of [['ask', 'hb_ask'], ['auto', 'hb_auto'], ['off', 'hb_no']]) { const b = document.createElement('button'); b.className = 'btn' + (mode === 'ask' ? ' p' : ''); b.textContent = t(label);
+    b.onclick = async () => { await lifePost({ action: 'habit', id, mode, lead: 15 }); row.remove(); mount(canvas, { c: 'done', text: t('hb_done_' + mode) }); }; row.append(b); }
+  canvas.append(row);
+}
+// notifications and the phone's own smarts (codes, calls, quiet apps, meetings)
+async function loadSmart() {
+  const box = $('#setSmart'); if (!NATIVE || !DEVICE.includes('triage')) { box.innerHTML = ''; return; }
+  const h = (await nativeCall('health', {}).catch(() => null))?.data || {}, tri = (await nativeCall('triage', {}).catch(() => null))?.data || {};
+  const rules = DEVICE.includes('localRules') ? (await nativeCall('localRules', {}).catch(() => null))?.data : null;
+  const apps = await installedPkgs(); let labels = {}; try { const r = await nativeCall('apps', {}); for (const a of r.data || []) labels[a.pkg] = a.label; } catch {}
+  box.innerHTML = `<div class="sgroup"><h3>${esc(t('set_smart'))}</h3>
+    ${srow(null, t('sm_otp'), t('sm_otp_sub'), swb(h.otpCopy !== false, 'data-pref="otpCopy"'))}
+    ${srow(null, t('sm_call'), t('sm_call_sub'), swb(h.callCard !== false, 'data-pref="callCard"'))}
+    ${rules ? srow(null, t('sm_meet'), t('sm_meet_sub'), swb(!!(rules.meetingSilence ?? rules.flags?.meetingSilence), 'data-meetsilence')) : ''}
+    ${srow(null, t('sm_vips'), t('sm_vips_sub'), `<input class="rtcity" data-triage="vips" value="${esc((tri.vips || []).join(', '))}" placeholder="${esc(t('sm_vips_ph'))}">`)}
+    ${srow(null, t('sm_quiet'), t('sm_quiet_sub'), `<input class="rtcity" data-triage="quiet" value="${esc((tri.quiet || []).map(p => labels[p] || p).join(', '))}" placeholder="Instagram, TikTok">`)}
+    ${srow(null, t('sm_digest'), t('sm_digest_sub'), `<input class="rtcity" data-triage="digestTimes" value="${esc((tri.digestTimes || []).join(', '))}" placeholder="12:30, 18:00">`)}</div>`;
+  box.dataset.labels = JSON.stringify(labels);
+}
+async function loadShortcuts() {
+  scAt = 0; const all = await myShortcuts(), box = $('#setShortcuts');
+  box.innerHTML = `<div class="sgroup"><h3>${esc(t('set_shortcuts'))}</h3>${all.map(sc => srow(null, sc.name, `"${sc.phrases[0]}" · ${t('steps_n', { n: sc.steps.length })}`, `<button class="go" data-scdel="${esc(sc.name)}">×</button>`)).join('') || srow(null, t('sc_none'), t('sc_hint'))}</div>`;
+}
+async function loadLife() {
+  const box = $('#setLife'); const r = await api('/life').then(r => r.ok ? r.json() : null).catch(() => null); if (!r) return;
+  const m = r.mail, rt = r.routines;
+  const mail = m.addr
+    ? srow(m.error ? 'bad' : 'ok', m.addr, m.error || t('mail_checked', { when: ago(m.checked), n: m.count || 0 }), `<button class="go" data-mailcheck>${esc(t('mail_check'))}</button>`)
+      + [['calendar', 'mail_p_calendar'], ['money', 'mail_p_money'], ['deliveries', 'mail_p_deliveries'], ['bookings', 'mail_p_bookings'], ['security', 'mail_p_security']].map(([k, s]) => srow(null, t(s), '', swb(m.prefs[k], `data-mailpref="${k}"`))).join('')
+      + srow(null, t('mail_watches', { n: m.watches }), t('mail_watches_sub'), `<button class="go" data-maildisconnect>${esc(t('mail_disconnect'))}</button>`)
+    : srow(null, t('mail_connect'), t('mail_connect_sub'), '') + (r.oauth?.google || r.oauth?.ms ? `<div class="srow lifeform">${r.oauth.google ? `<button class="go p" data-mailoauth="google">${esc(t('mail_gmail'))}</button>` : ''}${r.oauth.ms ? `<button class="go p" data-mailoauth="ms">${esc(t('mail_outlook'))}</button>` : ''}</div>` : '') + `<div class="srow lifeform"><input id="mailAddr" type="email" autocomplete="off" placeholder="${esc(t('mail_addr'))}"><input id="mailPass" type="password" autocomplete="off" placeholder="${esc(t('mail_pass'))}"><button class="go" data-mailconnect>${esc(t('mail_go'))}</button></div><div class="srow"><span id="mailMsg" class="lifemsg" role="status"></span></div>`;
+  const part = w => srow(null, t('rt_' + w), t('rt_' + w + '_sub'), `<input class="rttime" type="time" value="${esc(rt[w].time)}" data-rttime="${w}"> ${swb(rt[w].on, `data-rt="${w}"`)}`)
+    + `<div class="srow rtparts">${['weather', 'agenda', 'mail', 'news'].map(k => `<button class="chip ${rt[w][k] ? 'on' : ''}" data-rtpart="${w}.${k}" aria-pressed="${!!rt[w][k]}">${esc(t('rt_p_' + k))}</button>`).join('')}<button class="go" data-rttry="${w}">${esc(t('rt_try'))}</button></div>`;
+  const hb = r.habits || { on: true, found: [], plans: [] };
+  const cars = hb.on ? (hb.seen || []).map(dv => srow(null, dv, t('hb_car_q'), swb((hb.cars || []).includes(dv), `data-hbcar="${esc(dv)}"`))).join('') : '';
+  const habits = srow(null, t('hb_on'), t('hb_on_sub'), swb(hb.on, 'data-hbon')) + cars + (hb.on ? (hb.found.length ? hb.found.map(h => { const pl = hb.plans.find(x => x.id === h.id); const mode = pl?.mode || 'off';
+    return srow(null, t('hb_found', { when: t(h.days === 'weekends' ? 'hb_we' : 'hb_wd') + ' ' + t(h.part === 'morning' ? 'hb_out' : 'hb_back'), time: h.time }), t('hb_sub_short', { n: h.n }), `<button class="go" data-hbmode="${h.id}" data-mode="${mode}">${esc(t('hb_mode_' + mode))}</button>`); }).join('') : srow(null, t('hb_none'), '')) : '');
+  box.innerHTML = `<div class="sgroup"><h3>${esc(t('set_habits'))}</h3>${habits}</div><div class="sgroup"><h3>${esc(t('set_mail'))}</h3>${mail}</div><div class="sgroup"><h3>${esc(t('set_routines'))}</h3>${srow(null, t('rt_city'), t('rt_city_sub'), `<input class="rtcity" id="rtCity" value="${esc(rt.city || '')}" placeholder="${esc(t('rt_city_ph'))}">`)}${part('morning')}${part('evening')}</div>`;
+}
+const lifePost = async b => { const r = await api('/life', { method: 'POST', body: JSON.stringify(b) }); const j = await r.json().catch(() => ({})); return { ok: r.ok, ...j }; };
+const tzNow = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const unitsNow = () => /-(US|LR|MM)$/.test(navigator.language || '') ? 'F' : 'C'; // the person's own degrees
 async function loadJobs() {
   const box = $('#setJobs'); const r = await (await api('/receipts')).json().catch(() => null); if (!r) return;
   const when = j => j.trigger ? t('when_notif', { app: j.trigger.app }) : j.when?.at ? new Date(j.when.at).toLocaleString(LANG) : `${j.when?.every || ''} ${j.when?.time || ''}`;
@@ -1590,11 +1760,35 @@ async function loadSkills() {
 const STEP_KINDS = ['open', 'tap', 'type', 'scroll', 'press', 'wait', 'expect', 'toggle'];
 const stepText = s => { const k = STEP_KINDS.find(k => k in s) || 'tap'; const v = s[k]; return [k, k === 'open' ? (v?.name || v?.link || v?.pkg || v) : k === 'type' ? (v?.text ?? v) + (v?.into?.text ? ' → ' + v.into.text : '') : v]; };
 const stepFrom = (k, v) => k === 'open' ? { open: { name: v } } : k === 'type' ? (v.includes(' → ') ? { type: { text: v.split(' → ')[0], into: { text: v.split(' → ')[1] } } } : { type: { text: v } }) : k === 'wait' ? { wait: +v || 800 } : { [k]: v };
+$('#setSheet').addEventListener('change', e => {
+  const x = e.target;
+  if (x.dataset?.triage) { // names typed by the person; quiet apps are matched to the apps on the phone by their names
+    const list = x.value.split(/[,，]/).map(v => v.trim()).filter(Boolean), k = x.dataset.triage;
+    let val = list; if (k === 'quiet') { const labels = JSON.parse($('#setSmart').dataset.labels || '{}'); val = list.map(n => Object.keys(labels).find(p => labels[p].toLowerCase() === n.toLowerCase() || p === n) || '').filter(Boolean); }
+    if (k === 'digestTimes') val = list.filter(v => /^\d{1,2}:\d{2}$/.test(v)).map(v => v.padStart(5, '0'));
+    nativeCall('triage', { set: { [k]: val } }).then(() => toast(t('saved'))).catch(() => {});
+  }
+  if (x.dataset?.rttime) lifePost({ action: 'routines', routines: { tz: tzNow(), units: unitsNow(), [x.dataset.rttime]: { time: x.value } } });
+  if (x.id === 'rtCity') lifePost({ action: 'routines', routines: { tz: tzNow(), units: unitsNow(), city: x.value.trim() } });
+});
 $('#setSheet').addEventListener('click', async e => {
   const q = s => e.target.closest(s);
   let b;
   if ((b = q('[data-fix]'))) { await nativeCall('fix', { what: b.dataset.fix }); return; }
   if ((b = q('[data-quick]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); localStorage.lumenQuickLearn = on ? 'on' : 'off'; return; }
+  if ((b = q('[data-meetsilence]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); await nativeCall('localRules', { meetingSilence: on }); return; }
+  if ((b = q('[data-scdel]'))) { if (!confirm(t('sc_delete_q'))) return; await api('/shortcuts', { method: 'POST', body: JSON.stringify({ action: 'delete', name: b.dataset.scdel }) }); loadShortcuts(); return; }
+  if ((b = q('[data-hbon]'))) { const on = !b.classList.contains('on'); if (!on && !confirm(t('hb_off_q'))) return; b.classList.toggle('on', on); await lifePost({ action: 'habits', on }); loadLife(); return; }
+  if ((b = q('[data-hbcar]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); await lifePost({ action: 'car', dev: b.dataset.hbcar, car: on }); return; }
+  if ((b = q('[data-hbmode]'))) { const next = { off: 'ask', ask: 'auto', auto: 'off' }[b.dataset.mode]; await lifePost({ action: 'habit', id: b.dataset.hbmode, mode: next, lead: 15 }); loadLife(); return; }
+  if ((b = q('[data-mailoauth]'))) { const j = await api('/mail/oauth/begin', { method: 'POST', body: JSON.stringify({ provider: b.dataset.mailoauth }) }).then(r => r.json()).catch(() => ({})); if (!j.url) return toast(j.error || t('mail_failed')); if (NATIVE) nativeCall('openUrl', { url: j.url }); else window.open(j.url, '_blank', 'noopener'); toast(t('mail_oauth_back')); return; }
+  if ((b = q('[data-mailconnect]'))) { $('#mailMsg').textContent = t('mail_trying'); const r = await lifePost({ action: 'connect', addr: $('#mailAddr').value, pass: $('#mailPass').value }); if (!r.ok) { $('#mailMsg').textContent = r.error || t('mail_failed'); return; } loadLife(); return; }
+  if ((b = q('[data-mailcheck]'))) { b.textContent = t('mail_checking'); await lifePost({ action: 'check' }); loadLife(); return; }
+  if ((b = q('[data-maildisconnect]'))) { if (!confirm(t('mail_disconnect_q'))) return; await lifePost({ action: 'disconnect' }); loadLife(); return; }
+  if ((b = q('[data-mailpref]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); await lifePost({ action: 'prefs', prefs: { [b.dataset.mailpref]: on } }); return; }
+  if ((b = q('[data-rt]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); await lifePost({ action: 'routines', routines: { tz: tzNow(), units: unitsNow(), [b.dataset.rt]: { on } } }); return; }
+  if ((b = q('[data-rtpart]'))) { const [w, k] = b.dataset.rtpart.split('.'), on = !b.classList.contains('on'); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); await lifePost({ action: 'routines', routines: { tz: tzNow(), units: unitsNow(), [w]: { [k]: on } } }); return; }
+  if ((b = q('[data-rttry]'))) { b.textContent = t('rt_trying'); const r = await lifePost({ action: 'try', which: b.dataset.rttry }); b.textContent = t('rt_try'); toast((r.tried || []).join(' · ') || t('rt_quiet')); return; }
   if ((b = q('[data-wake]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); await nativeCall('wakeWord', { on }); setTimeout(loadHealth, 1500); return; }
   if ((b = q('[data-pref]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); await nativeCall('prefs', { [b.dataset.pref]: on }); if (b.dataset.pref === 'driving') document.body.classList.toggle('driving', on); return; }
   if ((b = q('[data-update]'))) { b.textContent = t('update_getting'); const r = await nativeCall('appUpdate', {}); b.textContent = r.ok ? (r.data.upToDate ? t('update_latest') : t('update_installing')) : t('update_now'); if (!r.ok) toast(/allow_installs/.test(r.error) ? t('update_allow') : r.error); return; }
@@ -1631,11 +1825,11 @@ $('#resetLook').onclick = async () => { await api('/settings', { method: 'POST',
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 const qIn = new URLSearchParams(location.search), shareRaw = qIn.get('share'), askIn = qIn.get('ask');
-const openIn = qIn.get('open'); if (openIn) history.replaceState(null, '', '/');
-const prefillIn = qIn.get('prefill'); if (prefillIn) { history.replaceState(null, '', '/'); setTimeout(() => { q.value = prefillIn.slice(0, 1500); q.focus(); }, 700); }
+const openIn = qIn.get('open'); if (openIn) history.replaceState(null, '', location.pathname);
+const prefillIn = qIn.get('prefill'); if (prefillIn) { history.replaceState(null, '', location.pathname); setTimeout(() => { q.value = prefillIn.slice(0, 1500); q.focus(); }, 700); }
 async function openReceipt(id) { await openSettings(); setTimeout(() => { const el2 = document.getElementById('rc-' + id); if (el2) { el2.classList.add('open'); el2.scrollIntoView({ block: 'center', behavior: 'smooth' }); } }, 700); }
-const sharedIn = askIn || (shareRaw && (shareRaw.startsWith('(shared)') ? shareRaw : '(shared) ' + shareRaw)); if (shareRaw || askIn) history.replaceState(null, '', '/');
-(async () => { paintProfile(); if (!I18N.strings[LANG] && !localStorage.getItem('lumen.str.' + LANG + '.' + Object.keys(I18N.strings.en).length)) { try { await useLang(LANG); } catch {} } applyStatic(); await boot(); if (openIn?.startsWith('receipt:')) openReceipt(openIn.slice(8)); if (NATIVE) phoneCmds(); if (NATIVE) nativeCall('health', {}).then(r => { if (r.ok) document.body.classList.toggle('driving', !!r.data.driving); }); if (sharedIn) setTimeout(() => { if (askIn && !shareRaw && NATIVE) ask(sharedIn.slice(0, 1500), { kind: 'typed' }); else { q.value = sharedIn.slice(0, 1500); q.focus(); } }, 600); })();
+const sharedIn = askIn || (shareRaw && (shareRaw.startsWith('(shared)') ? shareRaw : '(shared) ' + shareRaw)); if (shareRaw || askIn) history.replaceState(null, '', location.pathname);
+(async () => { paintProfile(); if (!I18N.strings[LANG] && !localStorage.getItem('lumen.str.' + LANG + '.' + Object.keys(I18N.strings.en).length)) { try { await useLang(LANG); } catch {} } applyStatic(); await boot(); if (openIn?.startsWith('receipt:')) openReceipt(openIn.slice(8)); if (openIn?.startsWith('ask:')) setTimeout(() => ask(openIn.slice(4).slice(0, 300), { kind: 'typed' }), 500); if (openIn?.startsWith('habit:')) habitChoice(openIn.slice(6)); if (NATIVE) phoneCmds(); if (NATIVE) nativeCall('health', {}).then(r => { if (r.ok) document.body.classList.toggle('driving', !!r.data.driving); }); if (sharedIn) setTimeout(() => { if (askIn && !shareRaw && NATIVE) ask(sharedIn.slice(0, 1500), { kind: 'typed' }); else { q.value = sharedIn.slice(0, 1500); q.focus(); } }, 600); })();
 $('#connBtn').onclick = () => { loadConn(); document.body.classList.add('sheet-open'); };
 let findT;
 $('#findForm').onsubmit = e => { e.preventDefault(); findNow(); };

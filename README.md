@@ -134,6 +134,12 @@ is in [deploy/README.md](deploy/README.md).
 - **Memory per person**: who you are, how you like things, facts you told it, and a searchable history. Ask it what it
   knows and delete anything. Separate profiles for personal and work.
 - **Search your life**: across your texts, notifications and photos on the phone, and your connected services.
+- **Screenshot and note search**: screenshots are read on the phone (text in English and Chinese) and kept in a private
+  index with your notes, so "find my screenshot of the parking sign" works weeks later. Screenshots holding passwords
+  or card numbers are skipped. Nothing leaves the phone until you ask.
+- **About this screen**: hold the side key over any app and ask "summarise this" or "add this to my calendar"; Lumen
+  gets what was on screen from Android, treats it as text written by others, and never follows instructions in it.
+- **Steps and sleep** from Health Connect (Samsung Health and others), answered instantly.
 
 ### Work that keeps going
 
@@ -143,9 +149,39 @@ is in [deploy/README.md](deploy/README.md).
 - **Triggers**: "when my pharmacy texts that it's ready, add it to my list". Started by a notification from an app you
   name, matched on the phone.
 - **Learned skills**: the first time it does a task in an app ("open my liked songs on Spotify"), it keeps the steps on your phone. The next time you say it, the phone replays them by itself with no AI call, in a few seconds. Steps that type your words or send anything are never replayed on their own.
-  Next time it replays them natively, about a second per step, with no AI call. You can view and edit them.
 - **Receipts**: every action taken on your behalf is written down: what, when, which apps, what was held for your OK,
   and anything it refused.
+
+### Fast, with no AI call
+Most everyday requests never reach a model:
+- **Starter skills**: about 285 built-in requests open the right screen at once (directions, music, settings pages,
+  Samsung and Google screens, the camera, search in popular apps), in English and Chinese.
+- **Instant answers** from the phone: battery, your next event, steps, sleep, where you parked, what you missed.
+- **Alarms, timers and music keys** in plain words ("wake me at 6:30", "10 minute timer", "next song").
+- **Voice shortcuts**: "when I say good night, set an alarm for 7 and turn on Do Not Disturb". You confirm the steps
+  once; after that the phrase runs them on the phone. A part that needs judgment can end in an "ask Lumen" step.
+- **Teach by showing**: say "watch me" and do a task once; Lumen records the taps and replays them, waiting for each
+  screen to load instead of fixed pauses.
+- **Rules on the phone**: at a time, when the car connects, when charging, on joining Wi-Fi; they run offline.
+
+### Email, routines and habits, by script
+- **Email** (IMAP; an app password, or one-tap Gmail and Outlook sign-in with your own OAuth client): a script reads
+  new mail every few minutes and keeps only the facts (payments, deliveries, bookings, bills, cancellations, trial
+  endings, return windows). Bookings go into your calendar, money deadlines get a nudge 3 days and 1 day before, and
+  "tell me when my passport email arrives" is watched by script. The AI reads the short digest, not your inbox.
+- **Morning and evening routines**: weather, your day, what came in, headlines, built without AI.
+- **Habits**: Lumen notes only when your phone joins or leaves your car. Once it sees when you usually set off, it asks
+  once whether to warm or cool your car (Tesla, through a learned skill) before you go, when the weather calls for it.
+- **Time to leave** for calendar events with a place, and a battery reminder before your usual departure.
+
+### Notifications and calls
+- **Reply from a notification**: "reply to Sam: on my way" answers in that chat without opening the app, after you tap
+  Send.
+- **Sign-in codes** are ready to paste and cleared after 2 minutes; they are never written to any log.
+- **Quiet apps and a digest**: hold noisy apps and see them together at your times; important people always ring.
+- **A card before calls** with your last messages with the caller, kept on the phone.
+- **Silence in meetings**: vibrate during calendar events with other people, then back.
+- **Live progress** for calls and long jobs on the lock screen (and Samsung's Now Bar).
 
 ### Connected services
 - **Any MCP server** (with sign-in where the server supports it), and **any HTTP API** you give a key for. Keys are
@@ -176,7 +212,9 @@ address. Details per provider: [server/VOICE.md](server/VOICE.md).
 
 ### On the road
 - **Driving mode** turns on when your phone connects to the car's Bluetooth: short spoken answers, and spoken yes or
-  no for confirmations.
+  no for confirmations. "Hey Lumen" keeps listening over the car's music, new messages are announced by sender, and
+  your parking spot is saved when the car disconnects.
+- **Send a place to your Tesla**: "send Golden Gate Park to my Tesla" hands it to the Tesla app for the car's navigation.
 
 ### Your choice of brain
 | Provider | Status |
@@ -238,7 +276,11 @@ Being honest about limits:
   and tells you rather than guessing. It never completes a purchase without your confirmation.
 - **No banking or payment apps automation by design**: it will not enter card numbers or passwords on your behalf
   (it can open the page and let you do it).
-- **Offline**: only instant commands (flashlight, open an app, volume and the like) work without your server.
+- **Offline**: instant commands, starter skills, learned skills and on-phone rules work without your server; anything
+  that needs the AI does not.
+- **Time to leave** uses typical driving times, not live traffic.
+- **One-tap email sign-in** needs OAuth client IDs you create (LUMEN_MS_CLIENT_ID, LUMEN_GOOGLE_CLIENT_ID and
+  LUMEN_GOOGLE_CLIENT_SECRET); an app password works without them. Outlook.com accounts need the one-tap sign-in.
 - **Multiple servers**: one phone talks to one server at a time.
 - **Model cost**: you pay your AI provider for usage with your own key. A busy day of phone control can be many
   requests; local models cost nothing per request.
@@ -251,17 +293,15 @@ Planned, roughly in order. Nothing here is promised by a date.
 
 **Next**
 - Wake word in your assistant's own name, and more wake word languages.
-- Live web search for every model (a built-in search connector).
+- Live web search for every model (headlines already work with every model).
+- Live traffic for time-to-leave, with a maps service of your choice.
 - Local speech: on-server speech recognition and voices, so voice works with no external service.
 - A Docker image on the GitHub Container Registry, so updating is one pull.
 - Testing and fixes across more phones (Pixel, other Samsung models, Xiaomi, OnePlus).
 
 **Later**
 - Skill library: share the skills your phone learned and add other people's, like a shortcuts gallery. Each skill shows its steps before you add it, and sending, paying or posting still asks you first.
-- Teach mode: show it a task once by doing it yourself while it watches, and it saves the skill.
 - Purchase guardian: before any payment, a clear summary of exactly what you are buying and the total.
-- Live progress in the status bar for long tasks.
-- Call screening: answer unknown callers for you and tell you who it is and what they want.
 - A unified inbox: texts, mail and messaging apps in one place, with drafted replies.
 - Desktop continuity: start something on your computer and finish it on your phone, and the other way around.
 - Smart home: Home Assistant as a built-in connector.

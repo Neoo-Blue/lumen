@@ -76,6 +76,7 @@ class LumenBridge(private val activity: MainActivity) {
             if (requestId.startsWith("srv:")) Thread { DeviceRelay.answer(requestId.removePrefix("srv:"), ServiceActions.run(activity, method, try { JSONObject(argsJson ?: "{}") } catch (_: Exception) { JSONObject() })) }.start()
             return
         }
+        if (activity.pageHost != LumenOrigin.HOST) return
         val args = try {
             if (argsJson.isNullOrBlank() || argsJson == "null") JSONObject() else JSONObject(argsJson)
         } catch (_: Exception) {
@@ -108,6 +109,10 @@ class LumenBridge(private val activity: MainActivity) {
             "takePhoto" -> takePhoto(requestId)
             "pickPhotos" -> pickPhotos(requestId, args)
             "notifications" -> notifications(requestId, args)
+            "notifReplyTargets" -> work(requestId) { deliver(requestId, ReplyCache.targets(activity)) }
+            "notifReply" -> work(requestId) { deliver(requestId, ReplyCache.reply(activity, args)) }
+            "triage" -> work(requestId) { deliver(requestId, NotifTriage.handle(activity, args)) }
+            "notifDigest" -> work(requestId) { deliver(requestId, NotifTriage.digest(activity)) }
             "openNotificationAccess" -> openNotificationAccess(requestId)
             "media" -> media(requestId, args)
             "apps" -> apps(requestId)
@@ -123,6 +128,8 @@ class LumenBridge(private val activity: MainActivity) {
                 anyOf = true
             ) { readLocation() }
             "share" -> share(requestId, args)
+            "playSearch" -> playSearch(requestId, args)
+            "systemScreen" -> systemScreen(requestId, args)
             "navigate" -> navigate(requestId, args)
             "openUrl" -> openUrl(requestId, args)
             "flashlight" -> flashlight(requestId, args)
@@ -154,8 +161,16 @@ class LumenBridge(private val activity: MainActivity) {
             }
             "bluetooth" -> if (Build.VERSION.SDK_INT >= 31) afterGrantBg(requestId, arrayOf(Manifest.permission.BLUETOOTH_CONNECT)) { ok(Powers.bluetooth(activity)) }
                 else work(requestId) { deliver(requestId, ok(Powers.bluetooth(activity))) }
-            "steps" -> if (Build.VERSION.SDK_INT >= 29) afterGrantBg(requestId, arrayOf(Manifest.permission.ACTIVITY_RECOGNITION)) { ok(Powers.steps(activity)) }
-                else work(requestId) { deliver(requestId, ok(Powers.steps(activity))) }
+            "steps" -> work(requestId) {
+                val hc = HealthData.stepsToday(activity)
+                if (hc != null) {
+                    deliver(requestId, ok(JSONObject().put("available", true).put("today", hc).put("todaySinceFirstCheck", hc).put("source", "health_connect")))
+                } else if (Build.VERSION.SDK_INT >= 29) {
+                    afterGrantBg(requestId, arrayOf(Manifest.permission.ACTIVITY_RECOGNITION)) { ok(Powers.steps(activity)) }
+                } else {
+                    deliver(requestId, ok(Powers.steps(activity)))
+                }
+            }
             "phoneInfo" -> afterGrantBg(requestId, arrayOf(Manifest.permission.READ_PHONE_STATE)) { ok(Powers.phoneInfo(activity)) }
             "endCall" -> afterGrantBg(requestId, arrayOf(Manifest.permission.ANSWER_PHONE_CALLS)) { ok(Powers.endCall(activity)) }
             "browserSessions" -> work(requestId) { deliver(requestId, ok(JSONObject().put("signedIn", Sessions.list(activity)))) }
@@ -216,23 +231,11 @@ class LumenBridge(private val activity: MainActivity) {
                 })
             }
             "lifeSearch" -> work(requestId) { deliver(requestId, ok(Powers.lifeSearch(activity, stringArg(args, "query"), stringArg(args, "from"), stringArg(args, "to"), boundedInt(args, "limit", 8, 25)))) }
-            // one look at everything Lumen needs, for Settings: what is on, what is off, and a fix for each
+            // Health Connect data when "what" is given; otherwise the existing app-health summary for Settings
             "health" -> work(requestId) {
-                val pm = activity.getSystemService(android.os.PowerManager::class.java)
-                val perms = listOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA, Manifest.permission.READ_CONTACTS, Manifest.permission.READ_CALENDAR, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS, Manifest.permission.CALL_PHONE, Manifest.permission.READ_CALL_LOG, Manifest.permission.READ_PHONE_STATE)
-                val missing = perms.filter { ContextCompat.checkSelfPermission(activity, it) != PackageManager.PERMISSION_GRANTED }.map { it.substringAfterLast('.') }
-                val d = JSONObject()
-                    .put("assistant", Build.VERSION.SDK_INT >= 29 && activity.getSystemService(android.app.role.RoleManager::class.java)?.isRoleHeld(android.app.role.RoleManager.ROLE_ASSISTANT) == true)
-                    .put("control", LumenAccess.instance != null)
-                    .put("notifications", NotificationAccess.enabled(activity))
-                    .put("wake", WakeService.enabled(activity)).put("samsung", android.os.Build.MANUFACTURER.equals("samsung", true)).put("wakeRunning", WakeService.instance != null)
-                    .put("installs", Build.VERSION.SDK_INT < 26 || activity.packageManager.canRequestPackageInstalls())
-                    .put("battery", pm.isIgnoringBatteryOptimizations(activity.packageName))
-                    .put("dnd", activity.getSystemService(android.app.NotificationManager::class.java).isNotificationPolicyAccessGranted)
-                    .put("systemSettings", android.provider.Settings.System.canWrite(activity))
-                    .put("missing", JSONArray(missing)).put("version", try { activity.packageManager.getPackageInfo(activity.packageName, 0).versionName } catch (_: Exception) { "" })
-                    .put("driving", Driving.on(activity)).put("drivingAuto", Driving.auto(activity)).put("wakeScreenOff", WakeService.screenOff(activity))
-                deliver(requestId, ok(d))
+                val what = stringArg(args, "what").trim()
+                if (what.isEmpty()) deliver(requestId, ok(HealthData.overview(activity)))
+                else deliver(requestId, HealthData.query(activity, what))
             }
             "fix" -> ui(requestId) {
                 val what = stringArg(args, "what")
@@ -249,6 +252,7 @@ class LumenBridge(private val activity: MainActivity) {
                     "sideKey" -> Intent("com.samsung.android.intent.action.SIDE_KEY_LONG_PRESS_SETTINGS").takeIf { it.resolveActivity(activity.packageManager) != null } ?: Intent(Settings.ACTION_VOICE_INPUT_SETTINGS)
                     "dnd" -> Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
                     "systemSettings" -> Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + activity.packageName))
+                    "health" -> { activity.requestHealthPermissions(); null }
                     "permissions" -> { activity.askMissing(); null }
                     "mode" -> { PhoneMode.choose(activity, ""); Tailnet.forget(activity); activity.getSystemService(android.app.ActivityManager::class.java).appTasks.forEach { it.finishAndRemoveTask() }
                         activity.startActivity(Intent(activity, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); android.os.Process.killProcess(android.os.Process.myPid()); null }
@@ -257,11 +261,24 @@ class LumenBridge(private val activity: MainActivity) {
                 if (i != null) startExternal(activity, i)
                 deliver(requestId, ok(JSONObject().put("opened", what)))
             }
+            "assistContext" -> work(requestId) { deliver(requestId, AssistContext.read()) }
+            "live" -> work(requestId) { deliver(requestId, LiveUpdates.post(activity, args)) }
+            "stashSearch" -> work(requestId) { deliver(requestId, Stash.search(activity, stringArg(args, "query"), boundedInt(args, "limit", 10, 50))) }
+            "stashNote" -> work(requestId) { deliver(requestId, Stash.addNote(activity, stringArg(args, "text"))) }
+            "stashStats" -> work(requestId) { deliver(requestId, ok(Stash.stats(activity))) }
+            "localRules" -> work(requestId) { deliver(requestId, LocalRules.handle(activity, args)) }
             "prefs" -> work(requestId) { // small switches the page can set: driving auto-on, hearing "Hey Lumen" with the screen off
                 if (args.has("drivingAuto")) Driving.setAuto(activity, args.optBoolean("drivingAuto"))
                 if (args.has("driving")) Driving.set(activity, args.optBoolean("driving"))
                 if (args.has("wakeScreenOff")) WakeService.setScreenOff(activity, args.optBoolean("wakeScreenOff"))
-                deliver(requestId, ok(JSONObject().put("driving", Driving.on(activity)).put("drivingAuto", Driving.auto(activity)).put("wakeScreenOff", WakeService.screenOff(activity))))
+                if (args.has("otpCopy")) NotifPrefs.setOtpCopy(activity, args.optBoolean("otpCopy"))
+                if (args.has("callCard")) NotifPrefs.setCallCard(activity, args.optBoolean("callCard"))
+                deliver(requestId, ok(JSONObject()
+                    .put("driving", Driving.on(activity))
+                    .put("drivingAuto", Driving.auto(activity))
+                    .put("wakeScreenOff", WakeService.screenOff(activity))
+                    .put("otpCopy", NotifPrefs.otpCopy(activity))
+                    .put("callCard", NotifPrefs.callCard(activity))))
             }
             "refreshTriggers" -> work(requestId) { Triggers.forget(); deliver(requestId, ok(JSONObject().put("refreshed", true))) }
             "notify" -> work(requestId) { Triggers.notify(activity, stringArg(args, "title"), stringArg(args, "text"), stringArg(args, "open")); Triggers.forget(); deliver(requestId, ok(JSONObject().put("shown", true))) }
@@ -274,6 +291,15 @@ class LumenBridge(private val activity: MainActivity) {
             // many steps in one go, run on the phone, the screen after comes back with the result
             "screenDo" -> work(requestId) { deliver(requestId, Skills.runSteps(activity, args.optJSONArray("steps") ?: JSONArray(), args.optJSONObject("params") ?: JSONObject(), "batch") { launchNow(it) }) }
             "skillRun" -> work(requestId) { deliver(requestId, Skills.run(activity, stringArg(args, "name"), args.optJSONObject("params") ?: JSONObject()) { launchNow(it) }) }
+            "teachStart" -> work(requestId) {
+                val a = LumenAccess.instance
+                deliver(requestId, if (a == null) error("screen control is off") else a.teachStart(stringArg(args, "name")))
+            }
+            "teachStop" -> work(requestId) {
+                val a = LumenAccess.instance
+                deliver(requestId, if (a == null) error("screen control is off") else a.teachStop())
+            }
+            "parked" -> work(requestId) { deliver(requestId, Driving.parked(activity)) }
             "wakeWord" -> ui(requestId) {
                 if (args.has("on")) WakeService.setEnabled(activity, args.optBoolean("on"))
                 deliver(requestId, ok(JSONObject().put("on", WakeService.enabled(activity))))
@@ -571,10 +597,52 @@ class LumenBridge(private val activity: MainActivity) {
         }
     }
 
+    /**
+     * Opens a system or app screen by its intent action (a settings page, the camera, the clock's alarms) or the phone's
+     * default app of a kind (calculator, gallery...). Only screens: nothing that calls, sends, pays, resets, deletes,
+     * installs or asks for a permission, and only activities (never a broadcast or service).
+     */
+    private val SCREEN_DENY = Regex("(?i)(CALL|DIAL|SEND|PAY|DELETE|RESET|WIPE|FACTORY|UNINSTALL|INSTALL|REQUEST|ENABLE|DISABLE|ADD_ACCOUNT|SET_|PICK|CHOOSER|EDIT|INSERT|SHUTDOWN|REBOOT|ALLOW)")
+    private val SCREEN_OPEN = setOf("android.media.action.STILL_IMAGE_CAMERA", "android.media.action.VIDEO_CAMERA", "android.intent.action.SHOW_ALARMS", "android.intent.action.SHOW_TIMERS", "android.intent.action.MAIN", "android.intent.action.POWER_USAGE_SUMMARY", "android.intent.action.VIEW_DOWNLOADS", "android.provider.MediaStore.RECORD_SOUND", "android.intent.action.SET_WALLPAPER", "android.intent.action.CREATE_NOTE", "android.telecom.action.SHOW_CALL_SETTINGS", "android.health.connect.action.HEALTH_HOME_SETTINGS", "android.intent.action.DIAL")
+    /** Blank editors the person fills and saves themselves (a new contact, a new event). */
+    private val SCREEN_INSERT = setOf("content://com.android.contacts/contacts", "content://com.android.calendar/events")
+    private fun systemScreen(requestId: String, args: JSONObject) {
+        val action = stringArg(args, "action").trim(); val category = stringArg(args, "category").trim(); val pkg = stringArg(args, "pkg").trim(); val data = stringArg(args, "data").trim()
+        val allowed = when {
+            category.isNotEmpty() -> category.startsWith("android.intent.category.APP_")
+            action in SCREEN_OPEN -> (action != "android.intent.action.MAIN" || pkg.isNotEmpty()) && (action != "android.intent.action.DIAL" || data.isEmpty())
+            action == "android.intent.action.INSERT" -> data in SCREEN_INSERT
+            action.startsWith("android.settings.") -> !Regex("(?i)(REQUEST|RESET|WIPE|FACTORY)").containsMatchIn(action) // every settings page only shows
+            action.startsWith("com.samsung.") || action.startsWith("com.sec.") || action.startsWith("com.google.") -> !SCREEN_DENY.containsMatchIn(action.substringAfterLast('.'))
+            else -> false
+        }
+        if (!allowed || (data.isNotEmpty() && !data.startsWith("package:") && data !in SCREEN_INSERT)) { deliver(requestId, error("bad_args")); return }
+        ui(requestId) {
+            val i = (if (category.isNotEmpty()) Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, category) else Intent(action)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (pkg.isNotEmpty()) i.setPackage(pkg)
+            if (data.isNotEmpty()) i.data = Uri.parse(data)
+            val target = i.resolveActivity(activity.packageManager)
+            deliver(requestId, if (target != null && startExternal(activity, i)) ok(JSONObject().put("opened", true).put("screen", target.className)) else error("unavailable"))
+        }
+    }
+
+    /** Plays a song, artist, album or playlist in a music app by name (Android's play-from-search, what voice assistants use). */
+    private fun playSearch(requestId: String, args: JSONObject) {
+        val q = stringArg(args, "q").trim().take(120); val pkg = stringArg(args, "pkg").trim()
+        if (q.isEmpty()) { deliver(requestId, error("bad_args")); return }
+        ui(requestId) {
+            val i = Intent(android.provider.MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .putExtra(android.app.SearchManager.QUERY, q).putExtra(android.provider.MediaStore.EXTRA_MEDIA_FOCUS, "vnd.android.cursor.item/*")
+            if (pkg.isNotEmpty()) i.setPackage(pkg)
+            deliver(requestId, if (startExternal(activity, i)) ok(JSONObject().put("playing", q).put("pkg", pkg)) else error("unavailable"))
+        }
+    }
+
     private fun share(requestId: String, args: JSONObject) {
         val text = stringArg(args, "text")
         val url = stringArg(args, "url")
-        ui(requestId) { deliver(requestId, doShare(text, url)) }
+        val pkg = stringArg(args, "pkg").trim()
+        ui(requestId) { deliver(requestId, if (pkg.isEmpty()) doShare(text, url) else shareTo(pkg, listOf(text, url).filter { it.isNotBlank() }.joinToString("\n"))) }
     }
 
     private fun navigate(requestId: String, args: JSONObject) {
@@ -1169,6 +1237,14 @@ class LumenBridge(private val activity: MainActivity) {
         return activity.getSystemService(VibratorManager::class.java)?.defaultVibrator
     }
 
+    /** Straight to one app, no chooser: only apps where sharing just hands over a place (a car's navigation). */
+    private val SHARE_DIRECT = setOf("com.teslamotors.tesla")
+    private fun shareTo(pkg: String, body: String): JSONObject {
+        if (pkg !in SHARE_DIRECT || body.isBlank() || body.length > 500) return error("bad_args")
+        val send = Intent(Intent.ACTION_SEND).setType("text/plain").setPackage(pkg).putExtra(Intent.EXTRA_TEXT, body).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return if (startExternal(activity, send)) ok(JSONObject().put("shared", true).put("pkg", pkg)) else error("unavailable")
+    }
+
     private fun doShare(text: String, url: String): JSONObject {
         val body = listOf(text, url).filter { it.isNotBlank() }.joinToString("\n")
         if (body.isBlank()) return error("bad_args")
@@ -1366,7 +1442,7 @@ class LumenBridge(private val activity: MainActivity) {
             "calendarEvents",
             "calendarAdd",
             "location",
-            "share",
+            "share", "playSearch", "systemScreen",
             "navigate",
             "openUrl",
             "flashlight",
@@ -1376,7 +1452,10 @@ class LumenBridge(private val activity: MainActivity) {
             "smsInbox", "smsSend", "contactSave", "music", "videos", "playLocal", "bluetooth", "steps", "phoneInfo", "endCall",
             "browserSessions", "browserOpen", "browserRead", "browserAct", "browserForget", "assistantStatus", "assistantSetup", "wakeWord",
             "screenRead", "screenshot", "lifeSearch", "screenTap", "screenType", "screenScroll", "press", "toggle", "setting", "settings",
-            "skillList", "skillGet", "skillSave", "skillExample", "skillRun", "skillDelete", "screenDo", "appUpdate", "formReview", "health", "fix", "prefs", "notify"
+            "skillList", "skillGet", "skillSave", "skillExample", "skillRun", "skillDelete", "screenDo", "appUpdate", "formReview", "health", "fix", "prefs", "notify",
+            "notifReplyTargets", "notifReply", "triage", "notifDigest",
+            "assistContext", "live", "stashSearch", "stashNote", "stashStats", "localRules",
+            "teachStart", "teachStop", "parked"
         )
 
         private val MEDIA_ACTIONS = setOf("now", "play", "pause", "toggle", "next", "previous")

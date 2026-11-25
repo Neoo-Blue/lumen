@@ -1,0 +1,7843 @@
+{
+ "version": 1,
+ "skills": [
+  {
+   "id": "gmaps.navigate",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "navigate to {q}",
+    "drive to {q}",
+    "take me to {q}",
+    "start navigation to {q}",
+    "gps to {q}",
+    "google maps navigate to {q}",
+    "route me to {q}",
+    "导航去{q}",
+    "开车去{q}",
+    "谷歌地图导航到{q}",
+    "带我去{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "google.navigation:q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting navigation to {q}",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.navigate_home",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "navigate home",
+    "drive home",
+    "take me home",
+    "go home",
+    "start navigation home",
+    "directions home",
+    "route home",
+    "head home",
+    "导航回家",
+    "开车回家",
+    "带我回家",
+    "回家路线"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "google.navigation:q=home"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting navigation home",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.navigate_work",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "navigate to work",
+    "drive to work",
+    "take me to work",
+    "go to work",
+    "start navigation to work",
+    "directions to work",
+    "commute to work",
+    "导航去公司",
+    "开车去上班",
+    "去公司的路线",
+    "导航到单位"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "google.navigation:q=work"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting navigation to work",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.walk_to",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "walk to {q}",
+    "walking directions to {q}",
+    "navigate on foot to {q}",
+    "walking route to {q}",
+    "how do i walk to {q}",
+    "pedestrian directions to {q}",
+    "walk me to {q}",
+    "步行去{q}",
+    "走路去{q}",
+    "步行导航到{q}",
+    "怎么走到{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "google.navigation:q={q}&mode=w"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting walking navigation to {q}",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.bike_to",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "bike to {q}",
+    "biking directions to {q}",
+    "cycling directions to {q}",
+    "bicycle route to {q}",
+    "cycle to {q}",
+    "ride my bike to {q}",
+    "bike route to {q}",
+    "骑车去{q}",
+    "骑行导航到{q}",
+    "自行车去{q}",
+    "骑行路线到{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "google.navigation:q={q}&mode=b"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting bicycling navigation to {q}",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.transit_to",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "transit directions to {q}",
+    "public transit to {q}",
+    "bus to {q}",
+    "train to {q}",
+    "subway to {q}",
+    "how to take transit to {q}",
+    "public transport to {q}",
+    "坐公交去{q}",
+    "坐地铁去{q}",
+    "公共交通去{q}",
+    "查去{q}的公交地铁"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "https://www.google.com/maps/dir/?api=1&destination={q}&travelmode=transit"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Showing transit directions to {q}",
+   "source": "https://developers.google.com/maps/documentation/urls/get-started"
+  },
+  {
+   "id": "gmaps.directions_to",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "directions to {q}",
+    "how to get to {q}",
+    "show route to {q}",
+    "how far is {q}",
+    "check traffic to {q}",
+    "map route to {q}",
+    "get directions to {q}",
+    "去{q}怎么走",
+    "查去{q}的路线",
+    "到{q}有多远",
+    "看去{q}的路况"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "https://www.google.com/maps/dir/?api=1&destination={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Showing directions to {q}",
+   "source": "https://developers.google.com/maps/documentation/urls/get-started"
+  },
+  {
+   "id": "gmaps.search",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "search google maps for {q}",
+    "find {q} on google maps",
+    "where is {q}",
+    "find {q} nearby",
+    "search nearby {q}",
+    "look up {q} on google maps",
+    "nearest {q}",
+    "google maps {q}",
+    "谷歌地图搜{q}",
+    "附近{q}",
+    "找附近的{q}",
+    "{q}在哪里"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Google Maps for {q}",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.nearby_restaurants",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "find restaurants nearby",
+    "restaurants near me",
+    "food near me",
+    "places to eat nearby",
+    "where can i eat nearby",
+    "show nearby restaurants",
+    "dinner spots near me",
+    "附近有什么吃的",
+    "附近的餐厅",
+    "找附近的饭店",
+    "附近美食"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q=restaurants"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Finding restaurants nearby on Google Maps",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.nearby_coffee",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "find coffee nearby",
+    "coffee shops near me",
+    "nearest coffee shop",
+    "cafes near me",
+    "where to get coffee nearby",
+    "show nearby cafes",
+    "coffee near me",
+    "附近的咖啡店",
+    "附近咖啡馆",
+    "找附近的咖啡",
+    "最近的咖啡厅"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q=coffee"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Finding coffee shops nearby on Google Maps",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.nearby_gas",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "find gas stations nearby",
+    "gas station near me",
+    "nearest gas station",
+    "fuel near me",
+    "where can i get gas",
+    "show nearby gas stations",
+    "petrol station near me",
+    "附近的加油站",
+    "最近的加油站",
+    "找加油站",
+    "哪里可以加油"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q=gas+station"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Finding gas stations nearby on Google Maps",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.nearby_parking",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "find parking nearby",
+    "parking near me",
+    "nearest parking lot",
+    "parking garage near me",
+    "where can i park",
+    "show nearby parking",
+    "find a parking spot",
+    "附近的停车场",
+    "哪里可以停车",
+    "找附近停车位",
+    "最近的停车场"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q=parking"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Finding parking nearby on Google Maps",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.nearby_pharmacy",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "find a pharmacy nearby",
+    "pharmacy near me",
+    "nearest drugstore",
+    "drugstore near me",
+    "chemist near me",
+    "show nearby pharmacies",
+    "where is the nearest pharmacy",
+    "附近的药店",
+    "最近的药房",
+    "找附近药店",
+    "附近哪里买药"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q=pharmacy"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Finding pharmacies nearby on Google Maps",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.nearby_grocery",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "find grocery stores nearby",
+    "grocery store near me",
+    "supermarket near me",
+    "nearest supermarket",
+    "where to buy groceries",
+    "show nearby grocery stores",
+    "food market near me",
+    "附近的超市",
+    "最近的超市",
+    "找附近生鲜超市",
+    "附近菜市场"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q=grocery+store"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Finding grocery stores nearby on Google Maps",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.nearby_hospital",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "find a hospital nearby",
+    "hospital near me",
+    "nearest hospital",
+    "emergency room near me",
+    "urgent care near me",
+    "medical center nearby",
+    "show nearby hospitals",
+    "附近的医院",
+    "最近的医院",
+    "找附近急诊",
+    "附近诊所"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q=hospital"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Finding hospitals nearby on Google Maps",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.nearby_atm",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "find an atm nearby",
+    "atm near me",
+    "nearest atm",
+    "cash machine near me",
+    "where is an atm",
+    "show nearby atms",
+    "bank atm near me",
+    "附近的atm",
+    "附近取款机",
+    "最近的自动取款机",
+    "哪里可以取钱"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q=atm"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Finding ATMs nearby on Google Maps",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "gmaps.nearby_ev_charger",
+   "app": "Google Maps",
+   "pkg": "com.google.android.apps.maps",
+   "phrases": [
+    "find ev charger nearby",
+    "ev charging station near me",
+    "electric car charger nearby",
+    "supercharger near me",
+    "nearest charging station",
+    "where to charge my ev",
+    "附近的充电桩",
+    "最近的新能源充电站",
+    "找附近充电桩",
+    "电动汽车充电站"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.maps",
+      "link": "geo:0,0?q=ev+charging+station"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Finding EV charging stations nearby on Google Maps",
+   "source": "https://developers.google.com/maps/documentation/urls/android-intents"
+  },
+  {
+   "id": "waze.navigate",
+   "app": "Waze",
+   "pkg": "com.waze",
+   "phrases": [
+    "waze navigate to {q}",
+    "drive to {q} with waze",
+    "waze to {q}",
+    "open waze to {q}",
+    "start waze navigation to {q}",
+    "use waze to go to {q}",
+    "route to {q} on waze",
+    "用waze导航去{q}",
+    "waze导航到{q}",
+    "waze开车去{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.waze",
+      "link": "https://waze.com/ul?q={q}&navigate=yes"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting Waze navigation to {q}",
+   "source": "https://developers.google.com/waze/deeplinks"
+  },
+  {
+   "id": "waze.search",
+   "app": "Waze",
+   "pkg": "com.waze",
+   "phrases": [
+    "search waze for {q}",
+    "find {q} on waze",
+    "look up {q} in waze",
+    "waze search {q}",
+    "check {q} on waze",
+    "show {q} in waze",
+    "locate {q} on waze",
+    "在waze上搜{q}",
+    "waze搜索{q}",
+    "waze查找{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.waze",
+      "link": "https://waze.com/ul?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Waze for {q}",
+   "source": "https://developers.google.com/waze/deeplinks"
+  },
+  {
+   "id": "waze.home",
+   "app": "Waze",
+   "pkg": "com.waze",
+   "phrases": [
+    "waze home",
+    "waze navigate home",
+    "drive home with waze",
+    "take me home on waze",
+    "start waze home",
+    "go home in waze",
+    "waze directions home",
+    "用waze回家",
+    "waze导航回家",
+    "waze带我回家"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.waze",
+      "link": "https://waze.com/ul?favorite=home&navigate=yes"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting Waze navigation home",
+   "source": "https://developers.google.com/waze/deeplinks"
+  },
+  {
+   "id": "waze.work",
+   "app": "Waze",
+   "pkg": "com.waze",
+   "phrases": [
+    "waze to work",
+    "waze navigate to work",
+    "drive to work with waze",
+    "take me to work on waze",
+    "start waze to work",
+    "commute with waze",
+    "waze directions to work",
+    "用waze去上班",
+    "waze导航去公司",
+    "waze去单位"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.waze",
+      "link": "https://waze.com/ul?favorite=work&navigate=yes"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting Waze navigation to work",
+   "source": "https://developers.google.com/waze/deeplinks"
+  },
+  {
+   "id": "amap.search",
+   "app": "Amap",
+   "pkg": "com.autonavi.minimap",
+   "phrases": [
+    "search amap for {q}",
+    "find {q} on amap",
+    "amap search {q}",
+    "gaode search {q}",
+    "look up {q} on gaode",
+    "show {q} on amap",
+    "高德地图搜{q}",
+    "在高德上搜{q}",
+    "高德查{q}",
+    "高德找{q}",
+    "高德搜索{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.autonavi.minimap",
+      "link": "androidamap://poi?sourceApplication=lumen&keywords={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Amap for {q}",
+   "source": "https://lbs.amap.com/api/amap-mobile/guide/android/search"
+  },
+  {
+   "id": "amap.navigate",
+   "app": "Amap",
+   "pkg": "com.autonavi.minimap",
+   "phrases": [
+    "amap navigate to {q}",
+    "navigate to {q} with amap",
+    "gaode navigate to {q}",
+    "drive to {q} on amap",
+    "route to {q} on gaode",
+    "高德导航去{q}",
+    "用高德导航到{q}",
+    "高德开车去{q}",
+    "高德带我去{q}",
+    "高德地图导航去{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.autonavi.minimap",
+      "link": "androidamap://keywordNavi?sourceApplication=lumen&keyword={q}&style=2"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting Amap navigation to {q}",
+   "source": "https://lbs.amap.com/api/amap-mobile/guide/android/navigation"
+  },
+  {
+   "id": "amap.nearby_food",
+   "app": "Amap",
+   "pkg": "com.autonavi.minimap",
+   "phrases": [
+    "amap nearby food",
+    "find restaurants on amap",
+    "gaode nearby restaurants",
+    "amap food near me",
+    "高德找附近美食",
+    "高德搜附近餐厅",
+    "高德附近好吃的",
+    "用高德找附近饭店",
+    "高德附近吃的"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.autonavi.minimap",
+      "link": "androidamap://poi?sourceApplication=lumen&keywords=%E7%BE%8E%E9%A3%9F"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching nearby food on Amap",
+   "source": "https://lbs.amap.com/api/amap-mobile/guide/android/search"
+  },
+  {
+   "id": "amap.nearby_gas",
+   "app": "Amap",
+   "pkg": "com.autonavi.minimap",
+   "phrases": [
+    "amap nearby gas station",
+    "find gas on amap",
+    "gaode gas station near me",
+    "amap fuel nearby",
+    "高德找附近加油站",
+    "高德搜加油站",
+    "用高德查最近加油站",
+    "高德附近加油"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.autonavi.minimap",
+      "link": "androidamap://poi?sourceApplication=lumen&keywords=%E5%8A%A0%E6%B2%B9%E7%AB%99"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching nearby gas stations on Amap",
+   "source": "https://lbs.amap.com/api/amap-mobile/guide/android/search"
+  },
+  {
+   "id": "amap.nearby_parking",
+   "app": "Amap",
+   "pkg": "com.autonavi.minimap",
+   "phrases": [
+    "amap nearby parking",
+    "find parking on amap",
+    "gaode parking near me",
+    "amap parking lot",
+    "高德找附近停车场",
+    "高德搜停车场",
+    "用高德找停车位",
+    "高德附近停车"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.autonavi.minimap",
+      "link": "androidamap://poi?sourceApplication=lumen&keywords=%E5%81%9C%E8%BD%A6%E5%9C%BA"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching nearby parking on Amap",
+   "source": "https://lbs.amap.com/api/amap-mobile/guide/android/search"
+  },
+  {
+   "id": "amap.nearby_subway",
+   "app": "Amap",
+   "pkg": "com.autonavi.minimap",
+   "phrases": [
+    "amap nearby subway",
+    "find subway station on amap",
+    "gaode metro near me",
+    "amap train station",
+    "高德找附近地铁站",
+    "高德搜地铁站",
+    "最近的地铁站在哪",
+    "高德查附近地铁"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.autonavi.minimap",
+      "link": "androidamap://poi?sourceApplication=lumen&keywords=%E5%9C%B0%E9%93%81%E7%AB%99"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching nearby subway stations on Amap",
+   "source": "https://lbs.amap.com/api/amap-mobile/guide/android/search"
+  },
+  {
+   "id": "amap.nearby_charging",
+   "app": "Amap",
+   "pkg": "com.autonavi.minimap",
+   "phrases": [
+    "amap nearby ev charger",
+    "find charging station on amap",
+    "gaode ev charger near me",
+    "高德找附近充电桩",
+    "高德搜充电站",
+    "用高德找汽车充电桩",
+    "高德附近充电",
+    "高德新能源充电"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.autonavi.minimap",
+      "link": "androidamap://poi?sourceApplication=lumen&keywords=%E5%85%85%E7%94%B5%E6%A1%A9"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching nearby EV chargers on Amap",
+   "source": "https://lbs.amap.com/api/amap-mobile/guide/android/search"
+  },
+  {
+   "id": "baidumap.search",
+   "app": "Baidu Maps",
+   "pkg": "com.baidu.BaiduMap",
+   "phrases": [
+    "search baidu maps for {q}",
+    "find {q} on baidu maps",
+    "baidu maps search {q}",
+    "look up {q} on baidu map",
+    "百度地图搜{q}",
+    "在百度地图上找{q}",
+    "百度地图搜索{q}",
+    "百度地图查{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.baidu.BaiduMap",
+      "link": "baidumap://map/place/search?query={q}&src=andr.lumen.assistant"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Baidu Maps for {q}",
+   "source": "https://lbsyun.baidu.com/index.php?title=uri/api/android"
+  },
+  {
+   "id": "baidumap.navigate",
+   "app": "Baidu Maps",
+   "pkg": "com.baidu.BaiduMap",
+   "phrases": [
+    "baidu maps navigate to {q}",
+    "drive to {q} with baidu maps",
+    "start baidu navigation to {q}",
+    "baidu map route to {q}",
+    "百度地图导航去{q}",
+    "用百度地图导航到{q}",
+    "百度地图开车去{q}",
+    "百度导航到{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.baidu.BaiduMap",
+      "link": "baidumap://map/navi?query={q}&src=andr.lumen.assistant"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Starting Baidu Maps navigation to {q}",
+   "source": "https://lbsyun.baidu.com/index.php?title=uri/api/android"
+  },
+  {
+   "id": "baidumap.directions_driving",
+   "app": "Baidu Maps",
+   "pkg": "com.baidu.BaiduMap",
+   "phrases": [
+    "baidu maps driving directions to {q}",
+    "baidu driving route to {q}",
+    "check drive to {q} on baidu",
+    "baidu car route to {q}",
+    "百度地图查开车去{q}",
+    "百度驾车路线到{q}",
+    "百度地图驾车去{q}",
+    "查百度到{q}怎么开车"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.baidu.BaiduMap",
+      "link": "baidumap://map/direction?destination={q}&mode=driving&src=andr.lumen.assistant"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Showing Baidu Maps driving route to {q}",
+   "source": "https://lbsyun.baidu.com/index.php?title=uri/api/android"
+  },
+  {
+   "id": "baidumap.directions_transit",
+   "app": "Baidu Maps",
+   "pkg": "com.baidu.BaiduMap",
+   "phrases": [
+    "baidu maps transit to {q}",
+    "baidu bus route to {q}",
+    "baidu subway to {q}",
+    "public transit to {q} on baidu",
+    "百度地图查公交去{q}",
+    "百度地图坐地铁去{q}",
+    "百度公交路线到{q}",
+    "百度查去{q}的公交"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.baidu.BaiduMap",
+      "link": "baidumap://map/direction?destination={q}&mode=transit&src=andr.lumen.assistant"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Showing Baidu Maps transit route to {q}",
+   "source": "https://lbsyun.baidu.com/index.php?title=uri/api/android"
+  },
+  {
+   "id": "baidumap.directions_walking",
+   "app": "Baidu Maps",
+   "pkg": "com.baidu.BaiduMap",
+   "phrases": [
+    "baidu maps walking directions to {q}",
+    "walk to {q} on baidu maps",
+    "baidu walking route to {q}",
+    "on foot to {q} baidu",
+    "百度地图步行去{q}",
+    "百度地图走路去{q}",
+    "百度步行路线到{q}",
+    "百度查怎么走到{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.baidu.BaiduMap",
+      "link": "baidumap://map/direction?destination={q}&mode=walking&src=andr.lumen.assistant"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Showing Baidu Maps walking route to {q}",
+   "source": "https://lbsyun.baidu.com/index.php?title=uri/api/android"
+  },
+  {
+   "id": "yelp.search",
+   "app": "Yelp",
+   "pkg": "com.yelp.android",
+   "phrases": [
+    "search yelp for {q}",
+    "find {q} on yelp",
+    "yelp reviews for {q}",
+    "look up {q} on yelp",
+    "yelp {q}",
+    "best {q} on yelp",
+    "在yelp上搜{q}",
+    "yelp搜索{q}",
+    "yelp查{q}评价"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.yelp.android",
+      "link": "https://www.yelp.com/search?find_desc={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Yelp for {q}",
+   "source": "https://www.yelp.com/search"
+  },
+  {
+   "id": "youtube.search",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "search youtube for {q}",
+    "find {q} on youtube",
+    "youtube search {q}",
+    "look up {q} on youtube",
+    "watch {q} on youtube",
+    "search videos for {q}",
+    "youtube {q}",
+    "在youtube上搜{q}",
+    "youtube搜索{q}",
+    "油管搜{q}",
+    "在油管找{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/results?search_query={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching YouTube for {q}",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "youtube.subscriptions",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "open my youtube subscriptions",
+    "youtube subscriptions",
+    "show my youtube subscriptions",
+    "check my subscriptions on youtube",
+    "new videos from my subscriptions",
+    "youtube sub box",
+    "打开youtube订阅",
+    "看我的油管订阅",
+    "youtube订阅列表",
+    "油管关注更新"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/feed/subscriptions"
+     }
+    }
+   ],
+   "expect": [
+    "Subscriptions",
+    "订阅"
+   ],
+   "say": "Opening your YouTube subscriptions",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "youtube.history",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "open my youtube history",
+    "youtube watch history",
+    "show videos i watched on youtube",
+    "my youtube history",
+    "recently watched on youtube",
+    "check youtube history",
+    "打开youtube历史记录",
+    "油管观看历史",
+    "看我最近看过的youtube视频",
+    "youtube播放历史"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/feed/history"
+     }
+    }
+   ],
+   "expect": [
+    "History",
+    "历史记录"
+   ],
+   "say": "Opening your YouTube watch history",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "youtube.watch_later",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "open youtube watch later",
+    "my watch later playlist",
+    "show watch later on youtube",
+    "youtube watch later",
+    "videos saved for later on youtube",
+    "check watch later",
+    "打开youtube稍后观看",
+    "油管稍后再看",
+    "我的youtube稍后观看列表",
+    "看稍后观看"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/playlist?list=WL"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your YouTube Watch Later list",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "youtube.liked",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "open my liked videos on youtube",
+    "youtube liked videos",
+    "show videos i liked on youtube",
+    "my youtube likes",
+    "liked videos playlist",
+    "check youtube liked videos",
+    "打开youtube赞过的视频",
+    "我点赞的油管视频",
+    "youtube喜欢列表",
+    "油管点赞记录"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/playlist?list=LL"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your liked YouTube videos",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "youtube.library",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "open my youtube library",
+    "youtube library",
+    "show my youtube tab",
+    "open youtube you tab",
+    "my youtube account page",
+    "go to youtube library",
+    "打开youtube媒体库",
+    "油管我的页面",
+    "youtube个人中心",
+    "油管收藏库"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/feed/you"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your YouTube library",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "youtube.playlists",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "open my youtube playlists",
+    "youtube playlists",
+    "show my playlists on youtube",
+    "my saved playlists on youtube",
+    "check youtube playlists",
+    "view youtube playlists",
+    "打开youtube播放列表",
+    "我的油管歌单",
+    "youtube播单",
+    "看我的youtube列表"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/feed/playlists"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your YouTube playlists",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "youtube.shorts",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "open youtube shorts",
+    "watch youtube shorts",
+    "show youtube shorts",
+    "youtube shorts feed",
+    "play shorts on youtube",
+    "browse youtube shorts",
+    "打开youtube短视频",
+    "看油管shorts",
+    "刷youtube shorts",
+    "油管短视频"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/shorts"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening YouTube Shorts",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "youtube.trending",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "open youtube trending",
+    "what is trending on youtube",
+    "youtube trending videos",
+    "popular videos on youtube",
+    "show youtube trending",
+    "hot on youtube",
+    "打开youtube热门",
+    "油管热门视频",
+    "看油管热榜",
+    "youtube流行趋势"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/feed/trending"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening YouTube Trending",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "youtube.channel",
+   "app": "YouTube",
+   "pkg": "com.google.android.youtube",
+   "phrases": [
+    "open youtube channel {q}",
+    "go to {q} on youtube",
+    "show youtube creator {q}",
+    "youtube channel {q}",
+    "view {q} youtube channel",
+    "visit {q} on youtube",
+    "打开youtube频道{q}",
+    "看油管博主{q}",
+    "油管频道{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.youtube",
+      "link": "https://www.youtube.com/@{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening YouTube channel {q}",
+   "source": "https://developer.android.com/training/app-links"
+  },
+  {
+   "id": "ytmusic.search",
+   "app": "YouTube Music",
+   "pkg": "com.google.android.apps.youtube.music",
+   "phrases": [
+    "search youtube music for {q}",
+    "find {q} on youtube music",
+    "youtube music search {q}",
+    "look up {q} on youtube music",
+    "yt music {q}",
+    "find song {q} on youtube music",
+    "在youtube music上搜{q}",
+    "youtube music搜索{q}",
+    "油管音乐搜{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.youtube.music",
+      "link": "https://music.youtube.com/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching YouTube Music for {q}",
+   "source": "https://music.youtube.com/"
+  },
+  {
+   "id": "ytmusic.library",
+   "app": "YouTube Music",
+   "pkg": "com.google.android.apps.youtube.music",
+   "phrases": [
+    "open my youtube music library",
+    "youtube music library",
+    "show my youtube music library",
+    "my yt music library",
+    "my saved songs on youtube music",
+    "go to youtube music library",
+    "打开youtube music音乐库",
+    "油管音乐库",
+    "我的youtube music收藏"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.youtube.music",
+      "link": "https://music.youtube.com/library"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your YouTube Music library",
+   "source": "https://music.youtube.com/"
+  },
+  {
+   "id": "ytmusic.liked",
+   "app": "YouTube Music",
+   "pkg": "com.google.android.apps.youtube.music",
+   "phrases": [
+    "open liked songs on youtube music",
+    "youtube music liked songs",
+    "my liked music on youtube music",
+    "show my yt music likes",
+    "songs i liked on youtube music",
+    "yt music liked playlist",
+    "打开youtube music喜欢的音乐",
+    "油管音乐我喜欢的歌",
+    "youtube music点赞歌曲"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.youtube.music",
+      "link": "https://music.youtube.com/playlist?list=LM"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your liked songs on YouTube Music",
+   "source": "https://music.youtube.com/"
+  },
+  {
+   "id": "spotify.search",
+   "app": "Spotify",
+   "pkg": "com.spotify.music",
+   "phrases": [
+    "search spotify for {q}",
+    "find {q} on spotify",
+    "spotify search {q}",
+    "look up {q} on spotify",
+    "find song {q} on spotify",
+    "find artist {q} on spotify",
+    "spotify {q}",
+    "在spotify上搜{q}",
+    "spotify搜索{q}",
+    "声破天搜{q}",
+    "在spotify找{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.spotify.music",
+      "link": "spotify:search:{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Spotify for {q}",
+   "source": "https://developer.spotify.com/documentation/android/tutorials/content-linking"
+  },
+  {
+   "id": "spotify.liked",
+   "app": "Spotify",
+   "pkg": "com.spotify.music",
+   "phrases": [
+    "open my spotify liked songs",
+    "spotify liked songs",
+    "show my liked songs on spotify",
+    "my liked tracks on spotify",
+    "saved songs on spotify",
+    "go to spotify liked songs",
+    "打开spotify我喜欢的歌曲",
+    "spotify收藏的歌",
+    "声破天喜欢列表",
+    "spotify红心歌单"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.spotify.music",
+      "link": "spotify:collection:tracks"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Spotify Liked Songs",
+   "source": "https://developer.spotify.com/documentation/android/tutorials/content-linking"
+  },
+  {
+   "id": "spotify.library",
+   "app": "Spotify",
+   "pkg": "com.spotify.music",
+   "phrases": [
+    "open my spotify library",
+    "spotify your library",
+    "show my spotify library",
+    "my spotify playlists",
+    "go to spotify library",
+    "open spotify collection",
+    "打开spotify音乐库",
+    "我的spotify歌单",
+    "声破天媒体库",
+    "spotify收藏"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.spotify.music",
+      "link": "spotify:collection"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Spotify library",
+   "source": "https://developer.spotify.com/documentation/android/tutorials/content-linking"
+  },
+  {
+   "id": "spotify.albums",
+   "app": "Spotify",
+   "pkg": "com.spotify.music",
+   "phrases": [
+    "open my spotify albums",
+    "spotify saved albums",
+    "show my albums on spotify",
+    "my albums in spotify",
+    "saved albums spotify",
+    "go to spotify albums",
+    "打开spotify专辑",
+    "我收藏的spotify专辑",
+    "声破天专辑列表"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.spotify.music",
+      "link": "spotify:collection:albums"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your saved albums on Spotify",
+   "source": "https://developer.spotify.com/documentation/android/tutorials/content-linking"
+  },
+  {
+   "id": "spotify.artists",
+   "app": "Spotify",
+   "pkg": "com.spotify.music",
+   "phrases": [
+    "open my spotify artists",
+    "spotify followed artists",
+    "show my artists on spotify",
+    "artists i follow on spotify",
+    "my spotify artists",
+    "go to spotify artists",
+    "打开spotify关注的歌手",
+    "spotify艺人列表",
+    "声破天关注的艺术家"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.spotify.music",
+      "link": "spotify:collection:artists"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your followed artists on Spotify",
+   "source": "https://developer.spotify.com/documentation/android/tutorials/content-linking"
+  },
+  {
+   "id": "spotify.podcasts",
+   "app": "Spotify",
+   "pkg": "com.spotify.music",
+   "phrases": [
+    "open my spotify podcasts",
+    "spotify podcasts",
+    "show my podcasts on spotify",
+    "my saved podcasts on spotify",
+    "go to spotify podcasts",
+    "spotify shows",
+    "打开spotify播客",
+    "我的spotify播客",
+    "声破天播客列表"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.spotify.music",
+      "link": "spotify:collection:podcasts"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Spotify podcasts",
+   "source": "https://developer.spotify.com/documentation/android/tutorials/content-linking"
+  },
+  {
+   "id": "netease.recognize",
+   "app": "NetEase Cloud Music",
+   "pkg": "com.netease.cloudmusic",
+   "phrases": [
+    "netease recognize song",
+    "identify song with netease",
+    "netease music shazam",
+    "listen to song on netease",
+    "网易云听歌识曲",
+    "用网易云识曲",
+    "网易云音乐识别这首歌",
+    "网易云听一下这是什么歌",
+    "打开网易云识曲"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.netease.cloudmusic",
+      "link": "orpheus://recognize"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening song recognition in NetEase Cloud Music",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "netease.radio",
+   "app": "NetEase Cloud Music",
+   "pkg": "com.netease.cloudmusic",
+   "phrases": [
+    "netease private fm",
+    "open netease radio",
+    "netease fm",
+    "play netease radio",
+    "网易云私人fm",
+    "打开网易云私人电台",
+    "网易云音乐fm",
+    "听网易云私人fm",
+    "网易云漫游"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.netease.cloudmusic",
+      "link": "orpheus://radio"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Private FM in NetEase Cloud Music",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "netease.downloads",
+   "app": "NetEase Cloud Music",
+   "pkg": "com.netease.cloudmusic",
+   "phrases": [
+    "netease downloaded music",
+    "netease local songs",
+    "open netease downloads",
+    "my downloads on netease music",
+    "网易云本地音乐",
+    "网易云下载管理",
+    "打开网易云已下载的歌",
+    "网易云音乐下载列表"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.netease.cloudmusic",
+      "link": "orpheus://download"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening downloaded music in NetEase Cloud Music",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "qqmusic.search",
+   "app": "QQ Music",
+   "pkg": "com.tencent.qqmusic",
+   "phrases": [
+    "open qq music search",
+    "search on qq music",
+    "qq music search page",
+    "find music on qq music",
+    "打开qq音乐搜索",
+    "qq音乐搜歌",
+    "去qq音乐搜索页面",
+    "qq音乐查找歌曲"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.tencent.qqmusic",
+      "link": "qqmusic://qq.com/ui/search"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening QQ Music search",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "qqmusic.recognize",
+   "app": "QQ Music",
+   "pkg": "com.tencent.qqmusic",
+   "phrases": [
+    "qq music recognize song",
+    "identify song with qq music",
+    "qq music song finder",
+    "what song is this on qq music",
+    "qq音乐听歌识曲",
+    "用qq音乐识曲",
+    "打开qq音乐识别歌曲",
+    "qq音乐听一下这是什么歌"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.tencent.qqmusic",
+      "link": "qqmusic://qq.com/ui/recognize"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening song recognition in QQ Music",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "bilibili.search",
+   "app": "Bilibili",
+   "pkg": "tv.danmaku.bili",
+   "phrases": [
+    "search bilibili for {q}",
+    "find {q} on bilibili",
+    "bilibili search {q}",
+    "b站 search {q}",
+    "在b站搜{q}",
+    "b站搜索{q}",
+    "哔哩哔哩搜{q}",
+    "去b站找{q}",
+    "b站查{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "tv.danmaku.bili",
+      "link": "bilibili://search?keyword={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Bilibili for {q}",
+   "source": "https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/misc/url_scheme.md"
+  },
+  {
+   "id": "bilibili.history",
+   "app": "Bilibili",
+   "pkg": "tv.danmaku.bili",
+   "phrases": [
+    "open bilibili history",
+    "my bilibili watch history",
+    "recently watched on bilibili",
+    "bilibili history",
+    "打开b站历史记录",
+    "b站观看历史",
+    "哔哩哔哩历史记录",
+    "看我最近看过的b站视频",
+    "b站播放历史"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "tv.danmaku.bili",
+      "link": "bilibili://user_center/history"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Bilibili watch history",
+   "source": "https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/misc/url_scheme.md"
+  },
+  {
+   "id": "bilibili.watch_later",
+   "app": "Bilibili",
+   "pkg": "tv.danmaku.bili",
+   "phrases": [
+    "open bilibili watch later",
+    "my bilibili watch later",
+    "saved for later on bilibili",
+    "bilibili watch later",
+    "打开b站稍后再看",
+    "b站稍后再看列表",
+    "哔哩哔哩稍后再看",
+    "看b站稍后再看"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "tv.danmaku.bili",
+      "link": "bilibili://user_center/watch_later"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Bilibili Watch Later list",
+   "source": "https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/misc/url_scheme.md"
+  },
+  {
+   "id": "bilibili.favorites",
+   "app": "Bilibili",
+   "pkg": "tv.danmaku.bili",
+   "phrases": [
+    "open bilibili favorites",
+    "my bilibili bookmarks",
+    "saved videos on bilibili",
+    "bilibili favorites",
+    "打开b站收藏夹",
+    "我的b站收藏",
+    "哔哩哔哩收藏",
+    "看b站收藏的视频"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "tv.danmaku.bili",
+      "link": "bilibili://main/favorite"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Bilibili favorites",
+   "source": "https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/misc/url_scheme.md"
+  },
+  {
+   "id": "bilibili.hot",
+   "app": "Bilibili",
+   "pkg": "tv.danmaku.bili",
+   "phrases": [
+    "open bilibili hot",
+    "bilibili trending",
+    "popular on bilibili",
+    "bilibili top videos",
+    "打开b站热门",
+    "b站热榜",
+    "哔哩哔哩热门视频",
+    "看b站排行榜",
+    "b站有什么热门"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "tv.danmaku.bili",
+      "link": "bilibili://pegasus/hottopic"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Bilibili trending videos",
+   "source": "https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/misc/url_scheme.md"
+  },
+  {
+   "id": "bilibili.live",
+   "app": "Bilibili",
+   "pkg": "tv.danmaku.bili",
+   "phrases": [
+    "open bilibili live",
+    "bilibili live streams",
+    "watch live on bilibili",
+    "bilibili live tab",
+    "打开b站直播",
+    "哔哩哔哩直播间",
+    "看b站直播",
+    "b站直播首页"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "tv.danmaku.bili",
+      "link": "bilibili://live/home"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Bilibili Live",
+   "source": "https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/misc/url_scheme.md"
+  },
+  {
+   "id": "bilibili.anime",
+   "app": "Bilibili",
+   "pkg": "tv.danmaku.bili",
+   "phrases": [
+    "open bilibili anime",
+    "bilibili bangumi",
+    "watch anime on bilibili",
+    "bilibili anime tab",
+    "打开b站番剧",
+    "b站追番",
+    "哔哩哔哩动漫",
+    "看b站新番"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "tv.danmaku.bili",
+      "link": "bilibili://pgc/home"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Bilibili Anime",
+   "source": "https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/misc/url_scheme.md"
+  },
+  {
+   "id": "douyin.search",
+   "app": "Douyin",
+   "pkg": "com.ss.android.ugc.aweme",
+   "phrases": [
+    "search douyin for {q}",
+    "find {q} on douyin",
+    "douyin search {q}",
+    "look up {q} on douyin",
+    "在抖音上搜{q}",
+    "抖音搜索{q}",
+    "抖音找{q}",
+    "去抖音搜{q}",
+    "抖音查{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.ss.android.ugc.aweme",
+      "link": "snssdk1128://search?keyword={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Douyin for {q}",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "douyin.trending",
+   "app": "Douyin",
+   "pkg": "com.ss.android.ugc.aweme",
+   "phrases": [
+    "open douyin trending",
+    "douyin hot search",
+    "what is trending on douyin",
+    "douyin top trends",
+    "打开抖音热搜",
+    "抖音热榜",
+    "看抖音热门榜单",
+    "抖音今天热搜",
+    "抖音热搜榜"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.ss.android.ugc.aweme",
+      "link": "snssdk1128://search/trending"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Douyin trending topics",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "douyin.profile",
+   "app": "Douyin",
+   "pkg": "com.ss.android.ugc.aweme",
+   "phrases": [
+    "open my douyin profile",
+    "my douyin page",
+    "douyin account page",
+    "go to my douyin",
+    "打开我的抖音主页",
+    "抖音个人中心",
+    "看我的抖音",
+    "抖音我的页面"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.ss.android.ugc.aweme",
+      "link": "snssdk1128://user/profile"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Douyin profile",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "tiktok.profile",
+   "app": "TikTok",
+   "pkg": "com.zhiliaoapp.musically",
+   "phrases": [
+    "open tiktok profile {q}",
+    "show {q} on tiktok",
+    "tiktok user {q}",
+    "go to @{q} on tiktok",
+    "view {q} tiktok",
+    "visit {q} on tiktok",
+    "打开tiktok用户{q}",
+    "看tiktok博主{q}",
+    "tiktok主页{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.zhiliaoapp.musically",
+      "link": "https://www.tiktok.com/@{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening TikTok profile @{q}",
+   "source": "https://developers.tiktok.com/doc/overview"
+  },
+  {
+   "id": "tiktok.inbox",
+   "app": "TikTok",
+   "pkg": "com.zhiliaoapp.musically",
+   "phrases": [
+    "open tiktok inbox",
+    "check my tiktok messages",
+    "tiktok notifications",
+    "my tiktok inbox",
+    "show tiktok activity",
+    "tiktok dms",
+    "打开tiktok消息",
+    "看tiktok收件箱",
+    "tiktok私信",
+    "tiktok通知"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.zhiliaoapp.musically",
+      "link": "https://www.tiktok.com/inbox"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your TikTok inbox",
+   "source": "https://developers.tiktok.com/doc/overview"
+  },
+  {
+   "id": "tiktok.explore",
+   "app": "TikTok",
+   "pkg": "com.zhiliaoapp.musically",
+   "phrases": [
+    "open tiktok explore",
+    "tiktok discover",
+    "trending on tiktok",
+    "browse tiktok explore",
+    "popular on tiktok",
+    "explore tiktok",
+    "打开tiktok发现",
+    "tiktok热门",
+    "看tiktok推荐"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.zhiliaoapp.musically",
+      "link": "https://www.tiktok.com/explore"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening TikTok Explore",
+   "source": "https://developers.tiktok.com/doc/overview"
+  },
+  {
+   "id": "netflix.search",
+   "app": "Netflix",
+   "pkg": "com.netflix.mediaclient",
+   "phrases": [
+    "search netflix for {q}",
+    "find {q} on netflix",
+    "netflix search {q}",
+    "is {q} on netflix",
+    "look up {q} on netflix",
+    "watch {q} on netflix",
+    "在netflix上搜{q}",
+    "网飞搜{q}",
+    "奈飞搜索{q}",
+    "网飞上有{q}吗"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.netflix.mediaclient",
+      "link": "https://www.netflix.com/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Netflix for {q}",
+   "source": "https://www.netflix.com/search"
+  },
+  {
+   "id": "pinterest.search",
+   "app": "Pinterest",
+   "pkg": "com.pinterest",
+   "phrases": [
+    "search pinterest for {q}",
+    "find {q} on pinterest",
+    "pinterest search {q}",
+    "look up {q} ideas on pinterest",
+    "pins for {q}",
+    "pinterest {q}",
+    "在pinterest上搜{q}",
+    "pinterest搜索{q}",
+    "pinterest找{q}图片"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.pinterest",
+      "link": "https://www.pinterest.com/search/pins/?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Pinterest for {q}",
+   "source": "https://developers.pinterest.com/docs/getting-started/introduction/"
+  },
+  {
+   "id": "whatsapp.chat_number",
+   "app": "WhatsApp",
+   "pkg": "com.whatsapp",
+   "phrases": [
+    "whatsapp {q}",
+    "message {q} on whatsapp",
+    "open whatsapp chat with {q}",
+    "start whatsapp chat with {q}",
+    "chat with {q} on whatsapp",
+    "text {q} on whatsapp",
+    "用whatsapp联系{q}",
+    "whatsapp发消息给{q}",
+    "打开和{q}的whatsapp聊天"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.whatsapp",
+      "link": "https://wa.me/{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening WhatsApp chat with {q}",
+   "source": "https://faq.whatsapp.com/5913398998672934"
+  },
+  {
+   "id": "whatsapp.draft_message",
+   "app": "WhatsApp",
+   "pkg": "com.whatsapp",
+   "phrases": [
+    "draft whatsapp message {q}",
+    "compose whatsapp saying {q}",
+    "new whatsapp message {q}",
+    "prepare whatsapp text {q}",
+    "write whatsapp message {q}",
+    "写一条whatsapp消息{q}",
+    "whatsapp草拟消息{q}",
+    "用whatsapp起草{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.whatsapp",
+      "link": "https://wa.me/?text={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Drafting a WhatsApp message",
+   "source": "https://faq.whatsapp.com/5913398998672934"
+  },
+  {
+   "id": "telegram.resolve",
+   "app": "Telegram",
+   "pkg": "org.telegram.messenger",
+   "phrases": [
+    "open telegram {q}",
+    "open telegram channel {q}",
+    "message @{q} on telegram",
+    "find @{q} on telegram",
+    "go to telegram user {q}",
+    "open {q} on telegram",
+    "打开telegram用户{q}",
+    "打开电报频道{q}",
+    "tg打开{q}",
+    "电报找{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "org.telegram.messenger",
+      "link": "tg://resolve?domain={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Telegram @{q}",
+   "source": "https://core.telegram.org/api/links"
+  },
+  {
+   "id": "telegram.search",
+   "app": "Telegram",
+   "pkg": "org.telegram.messenger",
+   "phrases": [
+    "search telegram",
+    "open telegram search",
+    "find chats on telegram",
+    "telegram global search",
+    "search messages in telegram",
+    "look up in telegram",
+    "打开telegram搜索",
+    "电报搜索",
+    "tg搜索聊天",
+    "在电报里搜"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "org.telegram.messenger",
+      "link": "tg://search"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Telegram search",
+   "source": "https://core.telegram.org/api/links"
+  },
+  {
+   "id": "telegram.contacts",
+   "app": "Telegram",
+   "pkg": "org.telegram.messenger",
+   "phrases": [
+    "open telegram contacts",
+    "my telegram contacts",
+    "show contacts on telegram",
+    "telegram address book",
+    "telegram friends list",
+    "打开telegram联系人",
+    "电报通讯录",
+    "tg联系人列表",
+    "看电报好友"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "org.telegram.messenger",
+      "link": "tg://contacts"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Telegram contacts",
+   "source": "https://core.telegram.org/api/links"
+  },
+  {
+   "id": "telegram.settings",
+   "app": "Telegram",
+   "pkg": "org.telegram.messenger",
+   "phrases": [
+    "open telegram settings",
+    "telegram settings",
+    "change telegram settings",
+    "go to telegram preferences",
+    "telegram account settings",
+    "打开telegram设置",
+    "电报设置",
+    "tg设置页面"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "org.telegram.messenger",
+      "link": "tg://settings"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Telegram settings",
+   "source": "https://core.telegram.org/api/links"
+  },
+  {
+   "id": "discord.dms",
+   "app": "Discord",
+   "pkg": "com.discord",
+   "phrases": [
+    "open discord dms",
+    "discord direct messages",
+    "open discord friends",
+    "check my discord messages",
+    "discord messages",
+    "go to discord dms",
+    "打开discord私信",
+    "discord好友列表",
+    "看discord消息",
+    "discord私聊"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.discord",
+      "link": "https://discord.com/channels/@me"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Discord messages and friends",
+   "source": "https://discord.com/developers/docs/intro"
+  },
+  {
+   "id": "reddit.search",
+   "app": "Reddit",
+   "pkg": "com.reddit.frontpage",
+   "phrases": [
+    "search reddit for {q}",
+    "find {q} on reddit",
+    "reddit search {q}",
+    "look up {q} on reddit",
+    "what does reddit say about {q}",
+    "reddit {q}",
+    "在reddit上搜{q}",
+    "reddit搜索{q}",
+    "红迪搜{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.reddit.frontpage",
+      "link": "https://www.reddit.com/search/?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Reddit for {q}",
+   "source": "https://support.reddithelp.com/hc/en-us/articles/205243525-How-do-I-use-the-Reddit-app"
+  },
+  {
+   "id": "reddit.subreddit",
+   "app": "Reddit",
+   "pkg": "com.reddit.frontpage",
+   "phrases": [
+    "open subreddit {q}",
+    "go to r/{q}",
+    "open r/{q} on reddit",
+    "show subreddit {q}",
+    "reddit r/{q}",
+    "browse r/{q}",
+    "打开reddit版块{q}",
+    "打开r/{q}",
+    "看红迪{q}社区"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.reddit.frontpage",
+      "link": "https://www.reddit.com/r/{q}/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening subreddit r/{q}",
+   "source": "https://support.reddithelp.com/hc/en-us/articles/205243525-How-do-I-use-the-Reddit-app"
+  },
+  {
+   "id": "reddit.popular",
+   "app": "Reddit",
+   "pkg": "com.reddit.frontpage",
+   "phrases": [
+    "open reddit popular",
+    "popular on reddit",
+    "reddit trending",
+    "what is hot on reddit",
+    "show reddit popular feed",
+    "reddit front page popular",
+    "打开reddit热门",
+    "红迪热榜",
+    "看reddit流行帖子"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.reddit.frontpage",
+      "link": "https://www.reddit.com/r/popular/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Reddit Popular",
+   "source": "https://support.reddithelp.com/hc/en-us/articles/205243525-How-do-I-use-the-Reddit-app"
+  },
+  {
+   "id": "reddit.inbox",
+   "app": "Reddit",
+   "pkg": "com.reddit.frontpage",
+   "phrases": [
+    "open reddit inbox",
+    "check my reddit notifications",
+    "reddit messages",
+    "my reddit replies",
+    "show reddit inbox",
+    "reddit alerts",
+    "打开reddit收件箱",
+    "看reddit消息",
+    "红迪通知",
+    "reddit回复"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.reddit.frontpage",
+      "link": "https://www.reddit.com/message/inbox/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Reddit inbox",
+   "source": "https://support.reddithelp.com/hc/en-us/articles/205243525-How-do-I-use-the-Reddit-app"
+  },
+  {
+   "id": "reddit.user",
+   "app": "Reddit",
+   "pkg": "com.reddit.frontpage",
+   "phrases": [
+    "open reddit user {q}",
+    "go to u/{q}",
+    "show reddit profile {q}",
+    "reddit user {q}",
+    "view u/{q} on reddit",
+    "check reddit user {q}",
+    "打开reddit用户{q}",
+    "看红迪用户{q}",
+    "reddit个人主页{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.reddit.frontpage",
+      "link": "https://www.reddit.com/user/{q}/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Reddit user u/{q}",
+   "source": "https://support.reddithelp.com/hc/en-us/articles/205243525-How-do-I-use-the-Reddit-app"
+  },
+  {
+   "id": "x.search",
+   "app": "X",
+   "pkg": "com.twitter.android",
+   "phrases": [
+    "search x for {q}",
+    "search twitter for {q}",
+    "find {q} on x",
+    "find {q} on twitter",
+    "twitter search {q}",
+    "x search {q}",
+    "look up {q} on x",
+    "在推特上搜{q}",
+    "推特搜索{q}",
+    "x搜索{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.twitter.android",
+      "link": "https://x.com/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching X for {q}",
+   "source": "https://developer.x.com/en/docs/x-for-websites/tweet-button/guides/web-intent"
+  },
+  {
+   "id": "x.profile",
+   "app": "X",
+   "pkg": "com.twitter.android",
+   "phrases": [
+    "open x profile {q}",
+    "open twitter profile {q}",
+    "go to @{q} on x",
+    "show {q} on twitter",
+    "view twitter account {q}",
+    "x user {q}",
+    "打开推特用户{q}",
+    "看{q}的推特",
+    "x主页{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.twitter.android",
+      "link": "https://x.com/{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening X profile @{q}",
+   "source": "https://developer.x.com/en/docs/x-for-websites/tweet-button/guides/web-intent"
+  },
+  {
+   "id": "x.compose",
+   "app": "X",
+   "pkg": "com.twitter.android",
+   "phrases": [
+    "draft a tweet {q}",
+    "compose post on x {q}",
+    "draft x post {q}",
+    "start a tweet saying {q}",
+    "write a tweet draft {q}",
+    "compose twitter post {q}",
+    "起草一条推特{q}",
+    "写推特草稿{q}",
+    "在x上草拟{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.twitter.android",
+      "link": "https://x.com/intent/post?text={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Drafting a post on X",
+   "source": "https://developer.x.com/en/docs/x-for-websites/tweet-button/guides/web-intent"
+  },
+  {
+   "id": "x.messages",
+   "app": "X",
+   "pkg": "com.twitter.android",
+   "phrases": [
+    "open x messages",
+    "open twitter dms",
+    "check my twitter messages",
+    "x direct messages",
+    "twitter inbox",
+    "my x dms",
+    "打开推特私信",
+    "看x私信",
+    "推特消息列表"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.twitter.android",
+      "link": "https://x.com/messages"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your X messages",
+   "source": "https://developer.x.com/en/docs/x-for-websites/tweet-button/guides/web-intent"
+  },
+  {
+   "id": "x.notifications",
+   "app": "X",
+   "pkg": "com.twitter.android",
+   "phrases": [
+    "open x notifications",
+    "open twitter notifications",
+    "check my twitter alerts",
+    "x mentions",
+    "twitter notifications",
+    "my x notifications",
+    "打开推特通知",
+    "看x提醒",
+    "推特互动消息"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.twitter.android",
+      "link": "https://x.com/notifications"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your X notifications",
+   "source": "https://developer.x.com/en/docs/x-for-websites/tweet-button/guides/web-intent"
+  },
+  {
+   "id": "instagram.profile",
+   "app": "Instagram",
+   "pkg": "com.instagram.android",
+   "phrases": [
+    "open instagram profile {q}",
+    "show {q} on instagram",
+    "instagram user {q}",
+    "go to @{q} on instagram",
+    "view {q} on ig",
+    "open ig {q}",
+    "打开instagram用户{q}",
+    "看{q}的ins主页",
+    "ins用户{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.instagram.android",
+      "link": "https://www.instagram.com/{q}/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Instagram profile {q}",
+   "source": "https://developers.facebook.com/docs/instagram"
+  },
+  {
+   "id": "instagram.explore",
+   "app": "Instagram",
+   "pkg": "com.instagram.android",
+   "phrases": [
+    "open instagram explore",
+    "instagram explore",
+    "browse instagram explore",
+    "instagram discover",
+    "show ig explore",
+    "trending on instagram",
+    "打开instagram发现",
+    "ins探索页",
+    "看ins推荐"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.instagram.android",
+      "link": "https://www.instagram.com/explore/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Instagram Explore",
+   "source": "https://developers.facebook.com/docs/instagram"
+  },
+  {
+   "id": "weibo.search",
+   "app": "Weibo",
+   "pkg": "com.sina.weibo",
+   "phrases": [
+    "search weibo for {q}",
+    "find {q} on weibo",
+    "weibo search {q}",
+    "look up {q} on weibo",
+    "在微博上搜{q}",
+    "微博搜索{q}",
+    "微博查{q}",
+    "去微博搜{q}",
+    "搜微博{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.sina.weibo",
+      "link": "sinaweibo://searchall?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Weibo for {q}",
+   "source": "https://open.weibo.com/wiki/Android_SDK"
+  },
+  {
+   "id": "weibo.hotsearch",
+   "app": "Weibo",
+   "pkg": "com.sina.weibo",
+   "phrases": [
+    "open weibo hot search",
+    "weibo trending",
+    "what is trending on weibo",
+    "weibo top trends",
+    "打开微博热搜",
+    "微博热搜榜",
+    "看今天微博热搜",
+    "微博热榜",
+    "微博有什么热点"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.sina.weibo",
+      "link": "sinaweibo://hotsearch"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Weibo Hot Search",
+   "source": "https://open.weibo.com/wiki/Android_SDK"
+  },
+  {
+   "id": "weibo.messages",
+   "app": "Weibo",
+   "pkg": "com.sina.weibo",
+   "phrases": [
+    "open weibo messages",
+    "check my weibo dms",
+    "weibo inbox",
+    "weibo notifications",
+    "打开微博消息",
+    "看微博私信",
+    "微博互动消息",
+    "微博消息中心"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.sina.weibo",
+      "link": "sinaweibo://message"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Weibo messages",
+   "source": "https://open.weibo.com/wiki/Android_SDK"
+  },
+  {
+   "id": "xhs.search",
+   "app": "Xiaohongshu",
+   "pkg": "com.xingin.xhs",
+   "phrases": [
+    "search xiaohongshu for {q}",
+    "search rednote for {q}",
+    "find {q} on xiaohongshu",
+    "rednote search {q}",
+    "xhs search {q}",
+    "在小红书上搜{q}",
+    "小红书搜索{q}",
+    "小红书找{q}",
+    "去小红书查{q}",
+    "小红书看{q}攻略"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.xingin.xhs",
+      "link": "xhsdiscover://search/result?keyword={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Xiaohongshu for {q}",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "xhs.explore",
+   "app": "Xiaohongshu",
+   "pkg": "com.xingin.xhs",
+   "phrases": [
+    "open xiaohongshu explore",
+    "rednote explore",
+    "browse xiaohongshu feed",
+    "xhs discover",
+    "打开小红书发现页",
+    "小红书推荐",
+    "刷小红书发现",
+    "看小红书首页推荐"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.xingin.xhs",
+      "link": "xhsdiscover://home/explore"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Xiaohongshu Explore",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "xhs.follow",
+   "app": "Xiaohongshu",
+   "pkg": "com.xingin.xhs",
+   "phrases": [
+    "open xiaohongshu following",
+    "rednote following feed",
+    "who i follow on xiaohongshu",
+    "xhs following",
+    "打开小红书关注页",
+    "小红书我的关注",
+    "看小红书关注更新",
+    "小红书关注列表"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.xingin.xhs",
+      "link": "xhsdiscover://home/follow"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Xiaohongshu Following feed",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "xhs.nearby",
+   "app": "Xiaohongshu",
+   "pkg": "com.xingin.xhs",
+   "phrases": [
+    "open xiaohongshu nearby",
+    "rednote local feed",
+    "nearby posts on xiaohongshu",
+    "xhs local",
+    "打开小红书附近",
+    "小红书同城",
+    "看小红书附近动态",
+    "小红书同城笔记"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.xingin.xhs",
+      "link": "xhsdiscover://home/localfeed"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Xiaohongshu Nearby",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "xhs.messages",
+   "app": "Xiaohongshu",
+   "pkg": "com.xingin.xhs",
+   "phrases": [
+    "open xiaohongshu messages",
+    "rednote inbox",
+    "check my xiaohongshu notifications",
+    "xhs messages",
+    "打开小红书消息",
+    "小红书私信",
+    "看小红书通知",
+    "小红书消息列表"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.xingin.xhs",
+      "link": "xhsdiscover://messages"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Xiaohongshu messages",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "xhs.collects",
+   "app": "Xiaohongshu",
+   "pkg": "com.xingin.xhs",
+   "phrases": [
+    "open my xiaohongshu saved",
+    "rednote collections",
+    "my xiaohongshu bookmarks",
+    "xhs favorites",
+    "打开小红书收藏",
+    "我的小红书收藏夹",
+    "看小红书收藏的笔记",
+    "小红书专辑"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.xingin.xhs",
+      "link": "xhsdiscover://user/me/collects"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Xiaohongshu saved notes",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "xhs.profile",
+   "app": "Xiaohongshu",
+   "pkg": "com.xingin.xhs",
+   "phrases": [
+    "open my xiaohongshu profile",
+    "my rednote profile",
+    "my xiaohongshu page",
+    "xhs my page",
+    "打开我的小红书主页",
+    "小红书个人中心",
+    "小红书我的页面",
+    "看我的小红书"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.xingin.xhs",
+      "link": "xhsdiscover://profile"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Xiaohongshu profile",
+   "source": "https://github.com/nicholascw/app-url-schemes"
+  },
+  {
+   "id": "linkedin.search",
+   "app": "LinkedIn",
+   "pkg": "com.linkedin.android",
+   "phrases": [
+    "search linkedin for {q}",
+    "find {q} on linkedin",
+    "linkedin search {q}",
+    "look up {q} on linkedin",
+    "find person {q} on linkedin",
+    "在领英上搜{q}",
+    "linkedin搜索{q}",
+    "领英找{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.linkedin.android",
+      "link": "https://www.linkedin.com/search/results/all/?keywords={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching LinkedIn for {q}",
+   "source": "https://learn.microsoft.com/en-us/linkedin/"
+  },
+  {
+   "id": "linkedin.jobs_search",
+   "app": "LinkedIn",
+   "pkg": "com.linkedin.android",
+   "phrases": [
+    "search linkedin jobs for {q}",
+    "find {q} jobs on linkedin",
+    "linkedin job search {q}",
+    "look for {q} roles on linkedin",
+    "jobs for {q} on linkedin",
+    "领英搜{q}职位",
+    "linkedin找{q}工作",
+    "领英招聘搜索{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.linkedin.android",
+      "link": "https://www.linkedin.com/jobs/search/?keywords={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching LinkedIn Jobs for {q}",
+   "source": "https://learn.microsoft.com/en-us/linkedin/"
+  },
+  {
+   "id": "linkedin.jobs",
+   "app": "LinkedIn",
+   "pkg": "com.linkedin.android",
+   "phrases": [
+    "open linkedin jobs",
+    "browse linkedin jobs",
+    "my linkedin job board",
+    "check jobs on linkedin",
+    "linkedin job listings",
+    "打开领英职位",
+    "linkedin找工作",
+    "看领英招聘"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.linkedin.android",
+      "link": "https://www.linkedin.com/jobs/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening LinkedIn Jobs",
+   "source": "https://learn.microsoft.com/en-us/linkedin/"
+  },
+  {
+   "id": "linkedin.messaging",
+   "app": "LinkedIn",
+   "pkg": "com.linkedin.android",
+   "phrases": [
+    "open linkedin messages",
+    "check my linkedin inbox",
+    "linkedin messaging",
+    "my linkedin chats",
+    "linkedin dms",
+    "打开领英消息",
+    "看linkedin私信",
+    "领英收件箱"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.linkedin.android",
+      "link": "https://www.linkedin.com/messaging/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening LinkedIn Messaging",
+   "source": "https://learn.microsoft.com/en-us/linkedin/"
+  },
+  {
+   "id": "linkedin.notifications",
+   "app": "LinkedIn",
+   "pkg": "com.linkedin.android",
+   "phrases": [
+    "open linkedin notifications",
+    "check my linkedin alerts",
+    "linkedin notifications",
+    "my linkedin activity",
+    "linkedin updates",
+    "打开领英通知",
+    "看linkedin提醒",
+    "领英动态通知"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.linkedin.android",
+      "link": "https://www.linkedin.com/notifications/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening LinkedIn Notifications",
+   "source": "https://learn.microsoft.com/en-us/linkedin/"
+  },
+  {
+   "id": "linkedin.mynetwork",
+   "app": "LinkedIn",
+   "pkg": "com.linkedin.android",
+   "phrases": [
+    "open linkedin my network",
+    "linkedin connections",
+    "check linkedin invitations",
+    "my linkedin network",
+    "linkedin connection requests",
+    "打开领英人脉",
+    "看linkedin好友请求",
+    "领英联系人"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.linkedin.android",
+      "link": "https://www.linkedin.com/mynetwork/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening LinkedIn My Network",
+   "source": "https://learn.microsoft.com/en-us/linkedin/"
+  },
+  {
+   "id": "facebook.search",
+   "app": "Facebook",
+   "pkg": "com.facebook.katana",
+   "phrases": [
+    "search facebook for {q}",
+    "find {q} on facebook",
+    "facebook search {q}",
+    "look up {q} on fb",
+    "fb search {q}",
+    "在facebook上搜{q}",
+    "脸书搜索{q}",
+    "fb搜{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.facebook.katana",
+      "link": "https://www.facebook.com/search/top/?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Facebook for {q}",
+   "source": "https://developers.facebook.com/docs/applinks/android"
+  },
+  {
+   "id": "facebook.marketplace",
+   "app": "Facebook",
+   "pkg": "com.facebook.katana",
+   "phrases": [
+    "open facebook marketplace",
+    "fb marketplace",
+    "browse facebook marketplace",
+    "check marketplace on facebook",
+    "facebook buy and sell",
+    "打开facebook集市",
+    "脸书二手市场",
+    "facebook二手集市"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.facebook.katana",
+      "link": "https://www.facebook.com/marketplace/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Facebook Marketplace",
+   "source": "https://developers.facebook.com/docs/applinks/android"
+  },
+  {
+   "id": "facebook.notifications",
+   "app": "Facebook",
+   "pkg": "com.facebook.katana",
+   "phrases": [
+    "open facebook notifications",
+    "check my fb notifications",
+    "facebook alerts",
+    "my facebook notifications",
+    "fb notifications",
+    "打开facebook通知",
+    "看脸书提醒",
+    "fb消息通知"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.facebook.katana",
+      "link": "https://www.facebook.com/notifications/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Facebook Notifications",
+   "source": "https://developers.facebook.com/docs/applinks/android"
+  },
+  {
+   "id": "facebook.events",
+   "app": "Facebook",
+   "pkg": "com.facebook.katana",
+   "phrases": [
+    "open facebook events",
+    "fb events",
+    "upcoming events on facebook",
+    "check my facebook events",
+    "events near me on facebook",
+    "打开facebook活动",
+    "脸书活动列表",
+    "看fb活动"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.facebook.katana",
+      "link": "https://www.facebook.com/events/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Facebook Events",
+   "source": "https://developers.facebook.com/docs/applinks/android"
+  },
+  {
+   "id": "gmail.compose_to",
+   "app": "Gmail",
+   "pkg": "com.google.android.gm",
+   "phrases": [
+    "gmail {q}",
+    "send gmail to {q}",
+    "compose gmail to {q}",
+    "write a gmail to {q}",
+    "new gmail to {q}",
+    "draft gmail to {q}",
+    "用gmail发邮件给{q}",
+    "gmail写信给{q}",
+    "打开gmail给{q}写邮件"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.gm",
+      "link": "mailto:{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Gmail compose for {q}",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "outlook.compose_to",
+   "app": "Outlook",
+   "pkg": "com.microsoft.office.outlook",
+   "phrases": [
+    "outlook email {q}",
+    "compose outlook email to {q}",
+    "write outlook mail to {q}",
+    "new outlook email to {q}",
+    "draft outlook to {q}",
+    "用outlook发邮件给{q}",
+    "outlook写信给{q}",
+    "打开outlook给{q}发邮件"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.microsoft.office.outlook",
+      "link": "ms-outlook://compose?to={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Outlook compose for {q}",
+   "source": "https://learn.microsoft.com/en-us/outlook/actionable-messages/"
+  },
+  {
+   "id": "gcalendar.new_event",
+   "app": "Google Calendar",
+   "pkg": "com.google.android.calendar",
+   "phrases": [
+    "new calendar event {q}",
+    "add {q} to google calendar",
+    "create calendar event {q}",
+    "schedule {q} on google calendar",
+    "draft event {q}",
+    "add event {q} to calendar",
+    "在谷歌日历添加{q}",
+    "新建日历日程{q}",
+    "日历安排{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.calendar",
+      "link": "https://calendar.google.com/calendar/r/eventedit?text={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening new calendar event for {q}",
+   "source": "https://calendar.google.com/"
+  },
+  {
+   "id": "gcalendar.today",
+   "app": "Google Calendar",
+   "pkg": "com.google.android.calendar",
+   "phrases": [
+    "open today on google calendar",
+    "show my schedule today",
+    "what is on my calendar today",
+    "today's calendar",
+    "check my google calendar today",
+    "google calendar day view",
+    "看今天的谷歌日历",
+    "今天有什么日程",
+    "打开今日日程",
+    "谷歌日历今天"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.calendar",
+      "link": "https://calendar.google.com/calendar/r/day"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening today's Google Calendar",
+   "source": "https://calendar.google.com/"
+  },
+  {
+   "id": "gcalendar.week",
+   "app": "Google Calendar",
+   "pkg": "com.google.android.calendar",
+   "phrases": [
+    "open this week on google calendar",
+    "show my weekly schedule",
+    "google calendar week view",
+    "what is on my calendar this week",
+    "my schedule this week",
+    "看这周的谷歌日历",
+    "本周日程",
+    "谷歌日历周视图"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.calendar",
+      "link": "https://calendar.google.com/calendar/r/week"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening this week on Google Calendar",
+   "source": "https://calendar.google.com/"
+  },
+  {
+   "id": "gdrive.search",
+   "app": "Google Drive",
+   "pkg": "com.google.android.apps.docs",
+   "phrases": [
+    "search google drive for {q}",
+    "find {q} in google drive",
+    "drive search {q}",
+    "find file {q} on drive",
+    "look up {q} in my drive",
+    "google drive {q}",
+    "在google drive搜{q}",
+    "谷歌云盘搜{q}",
+    "在谷歌网盘找{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.docs",
+      "link": "https://drive.google.com/drive/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Google Drive for {q}",
+   "source": "https://developers.google.com/drive/api/guides/about-sdk"
+  },
+  {
+   "id": "gdrive.recent",
+   "app": "Google Drive",
+   "pkg": "com.google.android.apps.docs",
+   "phrases": [
+    "open recent files in google drive",
+    "google drive recent",
+    "my recent drive files",
+    "show recent documents in drive",
+    "recently opened on google drive",
+    "打开谷歌云盘最近文件",
+    "google drive最近打开",
+    "谷歌网盘近期文档"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.docs",
+      "link": "https://drive.google.com/drive/recent"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening recent files in Google Drive",
+   "source": "https://developers.google.com/drive/api/guides/about-sdk"
+  },
+  {
+   "id": "gdrive.starred",
+   "app": "Google Drive",
+   "pkg": "com.google.android.apps.docs",
+   "phrases": [
+    "open starred files in google drive",
+    "google drive starred",
+    "my starred drive documents",
+    "show favorite files in drive",
+    "drive starred",
+    "打开谷歌云盘星标文件",
+    "google drive收藏文档",
+    "谷歌网盘加星文件"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.docs",
+      "link": "https://drive.google.com/drive/starred"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening starred files in Google Drive",
+   "source": "https://developers.google.com/drive/api/guides/about-sdk"
+  },
+  {
+   "id": "gdrive.shared",
+   "app": "Google Drive",
+   "pkg": "com.google.android.apps.docs",
+   "phrases": [
+    "open shared with me in google drive",
+    "google drive shared files",
+    "files shared with me",
+    "show shared documents on drive",
+    "drive shared with me",
+    "打开谷歌云盘与我共享",
+    "别人分享给我的谷歌文档",
+    "google drive共享文件"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.docs",
+      "link": "https://drive.google.com/drive/shared-with-me"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Shared with me in Google Drive",
+   "source": "https://developers.google.com/drive/api/guides/about-sdk"
+  },
+  {
+   "id": "gphotos.favorites",
+   "app": "Google Photos",
+   "pkg": "com.google.android.apps.photos",
+   "phrases": [
+    "open my favorite photos",
+    "google photos favorites",
+    "show my starred photos",
+    "my liked photos on google photos",
+    "favorite pictures",
+    "打开谷歌相册收藏",
+    "我收藏的照片",
+    "google photos星标照片"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.photos",
+      "link": "https://photos.google.com/search/favorites"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your favorite Google Photos",
+   "source": "https://photos.google.com/"
+  },
+  {
+   "id": "gtranslate.to_en",
+   "app": "Google Translate",
+   "pkg": "com.google.android.apps.translate",
+   "phrases": [
+    "translate {q} to english",
+    "how do you say {q} in english",
+    "english translation of {q}",
+    "google translate {q} to english",
+    "what does {q} mean in english",
+    "把{q}翻译成英文",
+    "{q}的英语怎么说",
+    "{q}翻译成英语",
+    "谷歌翻译{q}为英文"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.translate",
+      "link": "https://translate.google.com/?sl=auto&tl=en&text={q}&op=translate"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Translating {q} to English",
+   "source": "https://translate.google.com/"
+  },
+  {
+   "id": "gtranslate.to_zh",
+   "app": "Google Translate",
+   "pkg": "com.google.android.apps.translate",
+   "phrases": [
+    "translate {q} to chinese",
+    "how do you say {q} in chinese",
+    "chinese translation of {q}",
+    "google translate {q} to chinese",
+    "what is {q} in mandarin",
+    "把{q}翻译成中文",
+    "{q}中文是什么意思",
+    "{q}翻译成汉语",
+    "谷歌翻译{q}成中文"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.translate",
+      "link": "https://translate.google.com/?sl=auto&tl=zh-CN&text={q}&op=translate"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Translating {q} to Chinese",
+   "source": "https://translate.google.com/"
+  },
+  {
+   "id": "chrome.search",
+   "app": "Chrome",
+   "pkg": "com.android.chrome",
+   "phrases": [
+    "search {q} in chrome",
+    "open chrome and search {q}",
+    "chrome search {q}",
+    "google {q} in chrome",
+    "look up {q} in chrome",
+    "用chrome搜{q}",
+    "在chrome浏览器搜索{q}",
+    "谷歌浏览器搜{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.android.chrome",
+      "link": "https://www.google.com/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching {q} in Chrome",
+   "source": "https://www.google.com/search"
+  },
+  {
+   "id": "playstore.search",
+   "app": "Google Play Store",
+   "pkg": "com.android.vending",
+   "phrases": [
+    "search play store for {q}",
+    "find app {q}",
+    "download {q} app",
+    "install {q} from play store",
+    "play store search {q}",
+    "look up {q} on google play",
+    "在play商店搜{q}",
+    "谷歌商店搜索{q}",
+    "下载{q}应用",
+    "找应用{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.android.vending",
+      "link": "market://search?q={q}&c=apps"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Play Store for {q}",
+   "source": "https://developer.android.com/distribute/marketing-tools/linking-to-google-play"
+  },
+  {
+   "id": "gwallet.passes",
+   "app": "Google Wallet",
+   "pkg": "com.google.android.apps.walletnfcrel",
+   "phrases": [
+    "show my wallet passes",
+    "open my boarding passes in google wallet",
+    "google wallet cards",
+    "my loyalty cards in google wallet",
+    "show my google wallet",
+    "transit cards in google wallet",
+    "打开谷歌钱包卡包",
+    "看google wallet里的卡",
+    "谷歌钱包登机牌",
+    "我的谷歌钱包卡券"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.walletnfcrel",
+      "link": "https://wallet.google.com/wallet/home"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Google Wallet passes",
+   "source": "https://developers.google.com/wallet"
+  },
+  {
+   "id": "glens.open",
+   "app": "Google Lens",
+   "pkg": "com.google.android.googlequicksearchbox",
+   "phrases": [
+    "open google lens",
+    "scan with google lens",
+    "visual search with google lens",
+    "identify this with google lens",
+    "camera search",
+    "translate with camera",
+    "打开google lens",
+    "谷歌镜头识图",
+    "拍照识物",
+    "用谷歌镜头扫描"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.googlequicksearchbox",
+      "link": "googleapp://lens"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Google Lens",
+   "source": "https://lens.google/"
+  },
+  {
+   "id": "amazon.search",
+   "app": "Amazon",
+   "pkg": "com.amazon.mShop.android.shopping",
+   "phrases": [
+    "search amazon for {q}",
+    "find {q} on amazon",
+    "amazon search {q}",
+    "shop for {q} on amazon",
+    "look up {q} on amazon",
+    "check price of {q} on amazon",
+    "在亚马逊上搜{q}",
+    "亚马逊搜索{q}",
+    "amazon搜{q}",
+    "去亚马逊找{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.amazon.mShop.android.shopping",
+      "link": "https://www.amazon.com/s?k={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Amazon for {q}",
+   "source": "https://developer.amazon.com/docs/app-links/overview.html"
+  },
+  {
+   "id": "amazon.orders",
+   "app": "Amazon",
+   "pkg": "com.amazon.mShop.android.shopping",
+   "phrases": [
+    "open my amazon orders",
+    "check my amazon orders",
+    "track my amazon package",
+    "amazon order history",
+    "where is my amazon order",
+    "my amazon deliveries",
+    "打开亚马逊订单",
+    "查我的亚马逊物流",
+    "amazon订单记录",
+    "看亚马逊快递"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.amazon.mShop.android.shopping",
+      "link": "https://www.amazon.com/gp/css/order-history"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Amazon orders",
+   "source": "https://developer.amazon.com/docs/app-links/overview.html"
+  },
+  {
+   "id": "amazon.cart",
+   "app": "Amazon",
+   "pkg": "com.amazon.mShop.android.shopping",
+   "phrases": [
+    "open my amazon cart",
+    "show my amazon shopping cart",
+    "check my amazon cart",
+    "what is in my amazon cart",
+    "amazon cart",
+    "打开亚马逊购物车",
+    "看amazon购物车",
+    "查看亚马逊购物车"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.amazon.mShop.android.shopping",
+      "link": "https://www.amazon.com/gp/cart/view.html"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Amazon cart",
+   "source": "https://developer.amazon.com/docs/app-links/overview.html"
+  },
+  {
+   "id": "ebay.search",
+   "app": "eBay",
+   "pkg": "com.ebay.mobile",
+   "phrases": [
+    "search ebay for {q}",
+    "find {q} on ebay",
+    "ebay search {q}",
+    "look up {q} on ebay",
+    "check {q} prices on ebay",
+    "shop {q} on ebay",
+    "在ebay上搜{q}",
+    "ebay搜索{q}",
+    "易贝搜{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.ebay.mobile",
+      "link": "https://www.ebay.com/sch/i.html?_nkw={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching eBay for {q}",
+   "source": "https://developer.ebay.com/"
+  },
+  {
+   "id": "offerup.search",
+   "app": "OfferUp",
+   "pkg": "com.offerup",
+   "phrases": [
+    "search offerup for {q}",
+    "find {q} on offerup",
+    "offerup search {q}",
+    "used {q} on offerup",
+    "local {q} on offerup",
+    "在offerup上搜{q}",
+    "offerup搜索{q}",
+    "offerup找二手{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.offerup",
+      "link": "https://offerup.com/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching OfferUp for {q}",
+   "source": "https://offerup.com/"
+  },
+  {
+   "id": "taobao.search",
+   "app": "Taobao",
+   "pkg": "com.taobao.taobao",
+   "phrases": [
+    "search taobao for {q}",
+    "find {q} on taobao",
+    "taobao search {q}",
+    "buy {q} on taobao",
+    "在淘宝上搜{q}",
+    "淘宝搜索{q}",
+    "淘宝找{q}",
+    "去淘宝买{q}",
+    "淘宝查{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.taobao.taobao",
+      "link": "taobao://s.taobao.com?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Taobao for {q}",
+   "source": "https://open.taobao.com/"
+  },
+  {
+   "id": "taobao.cart",
+   "app": "Taobao",
+   "pkg": "com.taobao.taobao",
+   "phrases": [
+    "open my taobao cart",
+    "taobao shopping cart",
+    "show my taobao cart",
+    "check taobao cart",
+    "打开淘宝购物车",
+    "看我的淘宝购物车",
+    "查看淘宝购物车",
+    "淘宝购物车"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.taobao.taobao",
+      "link": "taobao://cart.taobao.com/cart.htm"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Taobao cart",
+   "source": "https://open.taobao.com/"
+  },
+  {
+   "id": "taobao.orders",
+   "app": "Taobao",
+   "pkg": "com.taobao.taobao",
+   "phrases": [
+    "open my taobao orders",
+    "check my taobao orders",
+    "track taobao package",
+    "taobao order list",
+    "打开淘宝订单",
+    "查看我的淘宝订单",
+    "查淘宝物流",
+    "淘宝买了什么",
+    "看淘宝快递"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.taobao.taobao",
+      "link": "tbopen://m.taobao.com/tbopen/index.html?h5Url=https%3A%2F%2Fh5.m.taobao.com%2Fmlapp%2Folist.html"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Taobao orders",
+   "source": "https://open.taobao.com/"
+  },
+  {
+   "id": "jd.search",
+   "app": "JD",
+   "pkg": "com.jingdong.app.mall",
+   "phrases": [
+    "search jd for {q}",
+    "find {q} on jd",
+    "jd search {q}",
+    "jingdong search {q}",
+    "在京东上搜{q}",
+    "京东搜索{q}",
+    "京东找{q}",
+    "去京东查{q}",
+    "京东买{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.jingdong.app.mall",
+      "link": "openapp.jdmobile://virtual?params=%7B%22category%22%3A%22jump%22%2C%22des%22%3A%22search%22%2C%22key%22%3A%22{q}%22%7D"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching JD for {q}",
+   "source": "https://open.jd.com/"
+  },
+  {
+   "id": "jd.cart",
+   "app": "JD",
+   "pkg": "com.jingdong.app.mall",
+   "phrases": [
+    "open my jd cart",
+    "jd shopping cart",
+    "check jd cart",
+    "jingdong cart",
+    "打开京东购物车",
+    "看我的京东购物车",
+    "查看京东购物车",
+    "京东购物车"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.jingdong.app.mall",
+      "link": "openapp.jdmobile://virtual?params=%7B%22category%22%3A%22jump%22%2C%22des%22%3A%22cart%22%7D"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your JD cart",
+   "source": "https://open.jd.com/"
+  },
+  {
+   "id": "jd.orders",
+   "app": "JD",
+   "pkg": "com.jingdong.app.mall",
+   "phrases": [
+    "open my jd orders",
+    "check my jd orders",
+    "track jd delivery",
+    "jingdong orders",
+    "打开京东订单",
+    "查看我的京东订单",
+    "查京东物流",
+    "看京东快递"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.jingdong.app.mall",
+      "link": "openapp.jdmobile://virtual?params=%7B%22category%22%3A%22jump%22%2C%22des%22%3A%22orderlist%22%7D"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your JD orders",
+   "source": "https://open.jd.com/"
+  },
+  {
+   "id": "meituan.search",
+   "app": "Meituan",
+   "pkg": "com.sankuai.meituan",
+   "phrases": [
+    "search meituan for {q}",
+    "find {q} on meituan",
+    "meituan search {q}",
+    "look up {q} on meituan",
+    "在美团上搜{q}",
+    "美团搜索{q}",
+    "美团找{q}",
+    "去美团查{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.sankuai.meituan",
+      "link": "imeituan://www.meituan.com/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Meituan for {q}",
+   "source": "https://developer.meituan.com/"
+  },
+  {
+   "id": "meituanwaimai.search",
+   "app": "Meituan Waimai",
+   "pkg": "com.sankuai.meituan.takeoutnew",
+   "phrases": [
+    "search meituan waimai for {q}",
+    "order {q} on meituan",
+    "meituan delivery search {q}",
+    "find food {q} on meituan waimai",
+    "美团外卖搜{q}",
+    "在美团外卖找{q}",
+    "美团外卖点{q}",
+    "搜美团外卖{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.sankuai.meituan.takeoutnew",
+      "link": "meituanwaimai://waimai.meituan.com/search?query={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Meituan Waimai for {q}",
+   "source": "https://developer.meituan.com/"
+  },
+  {
+   "id": "doordash.search",
+   "app": "DoorDash",
+   "pkg": "com.dd.doordash",
+   "phrases": [
+    "search doordash for {q}",
+    "find {q} on doordash",
+    "doordash search {q}",
+    "order {q} on doordash",
+    "food delivery {q} on doordash",
+    "在doordash上搜{q}",
+    "doordash搜索{q}",
+    "doordash点{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.dd.doordash",
+      "link": "https://www.doordash.com/search/store/{q}/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching DoorDash for {q}",
+   "source": "https://developer.doordash.com/"
+  },
+  {
+   "id": "ubereats.search",
+   "app": "Uber Eats",
+   "pkg": "com.ubercab.eats",
+   "phrases": [
+    "search uber eats for {q}",
+    "find {q} on uber eats",
+    "ubereats search {q}",
+    "order {q} on uber eats",
+    "get {q} delivered on uber eats",
+    "在uber eats上搜{q}",
+    "ubereats搜索{q}",
+    "uber eats点{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.ubercab.eats",
+      "link": "https://www.ubereats.com/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Uber Eats for {q}",
+   "source": "https://www.ubereats.com/"
+  },
+  {
+   "id": "instacart.search",
+   "app": "Instacart",
+   "pkg": "com.instacart.client",
+   "phrases": [
+    "search instacart for {q}",
+    "find {q} on instacart",
+    "instacart search {q}",
+    "order groceries {q} on instacart",
+    "shop {q} on instacart",
+    "在instacart上搜{q}",
+    "instacart搜索{q}",
+    "instacart买{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.instacart.client",
+      "link": "https://www.instacart.com/store/s?k={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Instacart for {q}",
+   "source": "https://www.instacart.com/"
+  },
+  {
+   "id": "uber.ride_to",
+   "app": "Uber",
+   "pkg": "com.ubercab",
+   "phrases": [
+    "get an uber to {q}",
+    "uber to {q}",
+    "call an uber to {q}",
+    "ride to {q} with uber",
+    "check uber price to {q}",
+    "book uber to {q}",
+    "打uber去{q}",
+    "优步去{q}",
+    "查uber去{q}多少钱",
+    "叫一辆uber到{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.ubercab",
+      "link": "uber://?action=setPickup&pickup=my_location&dropoff[formatted_address]={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Uber ride to {q}",
+   "source": "https://developer.uber.com/docs/riders/ride-requests/tutorials/deep-links/introduction"
+  },
+  {
+   "id": "alipay.scan",
+   "app": "Alipay",
+   "pkg": "com.eg.android.AlipayGphone",
+   "phrases": [
+    "alipay scan",
+    "open alipay scanner",
+    "scan qr code with alipay",
+    "alipay qr scanner",
+    "支付宝扫一扫",
+    "打开支付宝扫码",
+    "用支付宝扫二维码",
+    "支付宝扫描",
+    "支付宝扫一下"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.eg.android.AlipayGphone",
+      "link": "alipays://platformapi/startapp?saId=10000007"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Alipay QR scanner",
+   "source": "https://opendocs.alipay.com/open/00a0ut"
+  },
+  {
+   "id": "alipay.paycode",
+   "app": "Alipay",
+   "pkg": "com.eg.android.AlipayGphone",
+   "phrases": [
+    "show my alipay pay code",
+    "open alipay payment barcode",
+    "alipay pay code",
+    "alipay qr code to pay",
+    "打开支付宝付款码",
+    "支付宝付款码",
+    "出示支付宝付款码",
+    "支付宝扫码付",
+    "打开付款码"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.eg.android.AlipayGphone",
+      "link": "alipays://platformapi/startapp?saId=20000056"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Alipay payment code",
+   "source": "https://opendocs.alipay.com/open/00a0ut"
+  },
+  {
+   "id": "alipay.receivecode",
+   "app": "Alipay",
+   "pkg": "com.eg.android.AlipayGphone",
+   "phrases": [
+    "show my alipay receive code",
+    "open alipay collect code",
+    "alipay receive money qr",
+    "alipay collection code",
+    "打开支付宝收款码",
+    "支付宝收款码",
+    "出示我的支付宝收款码",
+    "支付宝收钱码"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.eg.android.AlipayGphone",
+      "link": "alipays://platformapi/startapp?saId=20000123"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Alipay receive code",
+   "source": "https://opendocs.alipay.com/open/00a0ut"
+  },
+  {
+   "id": "alipay.transit",
+   "app": "Alipay",
+   "pkg": "com.eg.android.AlipayGphone",
+   "phrases": [
+    "open alipay transit code",
+    "alipay subway code",
+    "alipay bus qr code",
+    "show alipay metro card",
+    "打开支付宝乘车码",
+    "支付宝乘车码",
+    "支付宝地铁码",
+    "支付宝公交码",
+    "刷支付宝乘车"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.eg.android.AlipayGphone",
+      "link": "alipays://platformapi/startapp?saId=200011235"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Alipay transit code",
+   "source": "https://opendocs.alipay.com/open/00a0ut"
+  },
+  {
+   "id": "alipay.bills",
+   "app": "Alipay",
+   "pkg": "com.eg.android.AlipayGphone",
+   "phrases": [
+    "open my alipay bills",
+    "alipay transaction history",
+    "check alipay spending",
+    "my alipay statements",
+    "打开支付宝账单",
+    "看我的支付宝账单",
+    "查支付宝消费记录",
+    "支付宝明细"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.eg.android.AlipayGphone",
+      "link": "alipays://platformapi/startapp?saId=20000003"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your Alipay bills",
+   "source": "https://opendocs.alipay.com/open/00a0ut"
+  },
+  {
+   "id": "alipay.yuebao",
+   "app": "Alipay",
+   "pkg": "com.eg.android.AlipayGphone",
+   "phrases": [
+    "open alipay yuebao",
+    "check my yuebao balance",
+    "show yuebao",
+    "alipay savings",
+    "打开余额宝",
+    "看余额宝收益",
+    "查余额宝余额",
+    "支付宝余额宝"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.eg.android.AlipayGphone",
+      "link": "alipays://platformapi/startapp?saId=20000032"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Alipay Yu'e Bao",
+   "source": "https://opendocs.alipay.com/open/00a0ut"
+  },
+  {
+   "id": "paypal.activity",
+   "app": "PayPal",
+   "pkg": "com.paypal.android.p2pmobile",
+   "phrases": [
+    "open my paypal summary",
+    "check my paypal balance",
+    "paypal activity",
+    "my paypal transactions",
+    "paypal account overview",
+    "打开paypal账单",
+    "查paypal余额",
+    "看paypal交易记录"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.paypal.android.p2pmobile",
+      "link": "https://www.paypal.com/myaccount/summary"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening your PayPal account summary",
+   "source": "https://developer.paypal.com/docs/checkout/"
+  },
+  {
+   "id": "venmo.profile",
+   "app": "Venmo",
+   "pkg": "com.venmo",
+   "phrases": [
+    "open venmo profile {q}",
+    "find {q} on venmo",
+    "look up {q} on venmo",
+    "venmo user {q}",
+    "show {q} on venmo",
+    "打开venmo用户{q}",
+    "在venmo上找{q}",
+    "查venmo账号{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.venmo",
+      "link": "https://venmo.com/{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Venmo profile for {q}",
+   "source": "https://developer.paypal.com/braintree/docs/guides/venmo/overview"
+  },
+  {
+   "id": "cashapp.profile",
+   "app": "Cash App",
+   "pkg": "com.squareup.cash",
+   "phrases": [
+    "open cash app profile {q}",
+    "find {q} on cash app",
+    "look up cashtag {q}",
+    "cash app user {q}",
+    "show ${q} on cash app",
+    "打开cash app用户{q}",
+    "在cash app上找{q}",
+    "查cash app账号{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.squareup.cash",
+      "link": "https://cash.app/${q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Cash App profile ${q}",
+   "source": "https://developers.cash.app/docs/api/start"
+  },
+  {
+   "id": "phone.dial",
+   "app": "Phone",
+   "pkg": null,
+   "phrases": [
+    "dial {q}",
+    "open dialer with {q}",
+    "put {q} in the dialer",
+    "enter number {q}",
+    "prepare call to {q}",
+    "phone number {q}",
+    "拨号{q}",
+    "在拨号盘输入{q}",
+    "准备拨打{q}",
+    "打开拨号盘{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "tel:{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening dialer with {q}",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "sms.compose_to",
+   "app": "Messages",
+   "pkg": null,
+   "phrases": [
+    "new text to {q}",
+    "text {q}",
+    "compose sms to {q}",
+    "start a message to {q}",
+    "draft text to {q}",
+    "write sms to {q}",
+    "给{q}发短信",
+    "发短信给{q}",
+    "新建短信给{q}",
+    "起草短信给{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "smsto:{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening text message to {q}",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "email.compose_to",
+   "app": "Email",
+   "pkg": null,
+   "phrases": [
+    "email {q}",
+    "new email to {q}",
+    "compose email to {q}",
+    "write an email to {q}",
+    "draft email to {q}",
+    "start email to {q}",
+    "给{q}发邮件",
+    "发邮件给{q}",
+    "写邮件给{q}",
+    "新建邮件给{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "mailto:{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening email compose for {q}",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "geo.search",
+   "app": "Maps",
+   "pkg": null,
+   "phrases": [
+    "search map for {q}",
+    "find {q} on the map",
+    "locate {q} on maps",
+    "map search {q}",
+    "show {q} on the map",
+    "find nearby {q} on map",
+    "在地图上搜{q}",
+    "地图搜索{q}",
+    "地图找{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "geo:0,0?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching maps for {q}",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "web.google_search",
+   "app": "Google Search",
+   "pkg": null,
+   "phrases": [
+    "google {q}",
+    "search google for {q}",
+    "search the web for {q}",
+    "look up {q}",
+    "web search {q}",
+    "find {q} online",
+    "search {q}",
+    "谷歌搜{q}",
+    "搜索{q}",
+    "网上查一下{q}",
+    "帮我搜{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://www.google.com/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Google for {q}",
+   "source": "https://www.google.com/search"
+  },
+  {
+   "id": "web.google_images",
+   "app": "Google Images",
+   "pkg": null,
+   "phrases": [
+    "search images of {q}",
+    "google images {q}",
+    "find pictures of {q}",
+    "show photos of {q}",
+    "image search {q}",
+    "look up pictures of {q}",
+    "搜{q}的图片",
+    "谷歌图片搜索{q}",
+    "找{q}照片",
+    "看{q}的图片"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://www.google.com/search?tbm=isch&q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Google Images for {q}",
+   "source": "https://www.google.com/search"
+  },
+  {
+   "id": "web.google_news",
+   "app": "Google News",
+   "pkg": null,
+   "phrases": [
+    "news about {q}",
+    "search google news for {q}",
+    "latest news on {q}",
+    "find news about {q}",
+    "headlines about {q}",
+    "google news {q}",
+    "搜{q}的新闻",
+    "关于{q}的最新消息",
+    "谷歌新闻搜{q}",
+    "查{q}资讯"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://news.google.com/search?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Google News for {q}",
+   "source": "https://news.google.com/"
+  },
+  {
+   "id": "web.weather",
+   "app": "Google Search",
+   "pkg": null,
+   "phrases": [
+    "weather in {q}",
+    "check weather for {q}",
+    "forecast for {q}",
+    "how is the weather in {q}",
+    "temperature in {q}",
+    "what is the weather in {q}",
+    "{q}天气",
+    "查{q}的天气",
+    "{q}今天天气怎么样",
+    "{q}天气预报"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://www.google.com/search?q=weather+{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Checking weather for {q}",
+   "source": "https://www.google.com/search"
+  },
+  {
+   "id": "web.weather_local",
+   "app": "Google Search",
+   "pkg": null,
+   "phrases": [
+    "check the weather",
+    "what is the weather today",
+    "local weather forecast",
+    "is it going to rain",
+    "today's forecast",
+    "weather outside",
+    "今天天气怎么样",
+    "查一下天气",
+    "今天会下雨吗",
+    "本地天气预报"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://www.google.com/search?q=weather"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Checking local weather",
+   "source": "https://www.google.com/search"
+  },
+  {
+   "id": "web.stock",
+   "app": "Google Search",
+   "pkg": null,
+   "phrases": [
+    "stock price of {q}",
+    "check {q} stock",
+    "how is {q} stock doing",
+    "{q} share price",
+    "look up {q} stock",
+    "quote for {q} stock",
+    "{q}股价",
+    "查{q}股票",
+    "{q}股票多少钱",
+    "{q}股市行情"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://www.google.com/search?q={q}+stock"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Checking stock price for {q}",
+   "source": "https://www.google.com/search"
+  },
+  {
+   "id": "web.define",
+   "app": "Google Search",
+   "pkg": null,
+   "phrases": [
+    "define {q}",
+    "definition of {q}",
+    "what does {q} mean",
+    "meaning of {q}",
+    "dictionary {q}",
+    "look up the word {q}",
+    "{q}是什么意思",
+    "查单词{q}",
+    "{q}的定义",
+    "词典查{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://www.google.com/search?q=define+{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Looking up the definition of {q}",
+   "source": "https://www.google.com/search"
+  },
+  {
+   "id": "web.google_flights",
+   "app": "Google Flights",
+   "pkg": null,
+   "phrases": [
+    "search flights to {q}",
+    "google flights {q}",
+    "find flights to {q}",
+    "cheap flights to {q}",
+    "check flights to {q}",
+    "plane tickets to {q}",
+    "查去{q}的机票",
+    "谷歌航班搜{q}",
+    "飞往{q}的航班",
+    "搜{q}机票"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://www.google.com/travel/flights?q={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Google Flights for {q}",
+   "source": "https://www.google.com/travel/flights"
+  },
+  {
+   "id": "web.wikipedia",
+   "app": "Wikipedia",
+   "pkg": null,
+   "phrases": [
+    "wikipedia {q}",
+    "search wikipedia for {q}",
+    "look up {q} on wikipedia",
+    "wiki {q}",
+    "read wikipedia about {q}",
+    "维基百科搜{q}",
+    "英文维基搜{q}",
+    "查{q}的维基百科"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://en.wikipedia.org/wiki/Special:Search?search={q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Searching Wikipedia for {q}",
+   "source": "https://en.wikipedia.org/"
+  },
+  {
+   "id": "web.open_site",
+   "app": "Web Browser",
+   "pkg": null,
+   "phrases": [
+    "open website {q}",
+    "go to website {q}",
+    "visit {q}",
+    "open web page {q}",
+    "browse to {q}",
+    "load site {q}",
+    "打开网站{q}",
+    "访问网页{q}",
+    "浏览网站{q}",
+    "打开网址{q}"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening website {q}",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "tesla.navigate",
+   "app": "Tesla",
+   "pkg": "com.teslamotors.tesla",
+   "phrases": [
+    "send {q} to my tesla",
+    "send {q} to the tesla",
+    "send {q} to my car",
+    "navigate my tesla to {q}",
+    "navigate the car to {q}",
+    "tesla navigate to {q}",
+    "set my tesla destination to {q}",
+    "tell my tesla to go to {q}",
+    "put {q} in my tesla",
+    "share {q} to my tesla",
+    "把{q}发到特斯拉",
+    "让特斯拉导航到{q}",
+    "特斯拉导航到{q}",
+    "把{q}发到车上",
+    "车导航到{q}"
+   ],
+   "steps": [
+    {
+     "share": {
+      "pkg": "com.teslamotors.tesla",
+      "text": "{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Sent {q} to your Tesla",
+   "source": "Tesla app share target com.tesla.share.ShareActivity (text/plain): shared addresses go to the car's navigation"
+  },
+  {
+   "id": "ytmusic.play",
+   "app": "YouTube Music",
+   "pkg": "com.google.android.apps.youtube.music",
+   "phrases": [
+    "play {q}",
+    "play some {q}",
+    "play the song {q}",
+    "play songs by {q}",
+    "play music by {q}",
+    "put on {q}",
+    "listen to {q}",
+    "i want to hear {q}",
+    "play {q} on youtube music",
+    "play {q} on yt music",
+    "play {q} on youtube",
+    "youtube music play {q}",
+    "播放{q}",
+    "放{q}",
+    "放一首{q}",
+    "来一首{q}",
+    "我想听{q}",
+    "听{q}",
+    "用youtube music播放{q}"
+   ],
+   "steps": [
+    {
+     "play": {
+      "pkg": "com.google.android.apps.youtube.music",
+      "q": "{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Playing {q}",
+   "source": "Android MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH, handled by YouTube Music (what voice assistants use)"
+  },
+  {
+   "id": "ytmusic.liked_short",
+   "app": "YouTube Music",
+   "pkg": "com.google.android.apps.youtube.music",
+   "phrases": [
+    "open my liked songs",
+    "my liked songs",
+    "show my liked songs",
+    "liked songs",
+    "my liked music",
+    "打开我喜欢的歌",
+    "我喜欢的歌曲",
+    "我的收藏歌曲"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.youtube.music",
+      "link": "https://music.youtube.com/playlist?list=LM"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Your liked songs",
+   "source": "music.youtube.com/playlist?list=LM is the Liked Music playlist"
+  },
+  {
+   "id": "ytmusic.library_short",
+   "app": "YouTube Music",
+   "pkg": "com.google.android.apps.youtube.music",
+   "phrases": [
+    "open my music library",
+    "my music library",
+    "my playlists",
+    "show my playlists",
+    "open my music",
+    "我的音乐库",
+    "我的歌单"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.youtube.music",
+      "link": "https://music.youtube.com/library"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Your music library",
+   "source": "music.youtube.com/library"
+  },
+  {
+   "id": "spotify.play",
+   "app": "Spotify",
+   "pkg": "com.spotify.music",
+   "phrases": [
+    "play {q} on spotify",
+    "spotify play {q}",
+    "play {q} in spotify",
+    "put on {q} on spotify",
+    "listen to {q} on spotify",
+    "在spotify上播放{q}",
+    "用spotify放{q}"
+   ],
+   "steps": [
+    {
+     "play": {
+      "pkg": "com.spotify.music",
+      "q": "{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Playing {q} on Spotify",
+   "source": "Android play-from-search, handled by Spotify"
+  },
+  {
+   "id": "settings.wireless",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open wireless settings",
+    "network and internet settings",
+    "open connection settings",
+    "open connections settings",
+    "wireless and networks",
+    "more connection settings",
+    "show network settings",
+    "打开无线和网络设置",
+    "打开连接设置",
+    "网络与互联网设置",
+    "进入网络连接设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.WIRELESS_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening wireless and network settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.data_usage",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open data usage settings",
+    "check mobile data usage",
+    "show my data usage",
+    "how much data have i used",
+    "cellular data usage",
+    "manage data usage",
+    "mobile data stats",
+    "查看流量使用情况",
+    "打开数据流量设置",
+    "看看用了多少流量",
+    "手机流量统计"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.DATA_USAGE_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening data usage settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.airplane_mode",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open airplane mode settings",
+    "flight mode settings",
+    "show airplane mode page",
+    "configure airplane mode",
+    "aeroplane mode settings",
+    "go to flight mode settings",
+    "打开飞行模式设置",
+    "进入飞行模式页面",
+    "查看飞行模式设置",
+    "飞行模式选项"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.AIRPLANE_MODE_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening airplane mode settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.data_roaming",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open data roaming settings",
+    "open mobile network settings",
+    "cellular network settings",
+    "roaming settings",
+    "international roaming settings",
+    "manage mobile networks",
+    "5g network settings",
+    "打开移动网络设置",
+    "打开数据漫游设置",
+    "蜂窝网络设置",
+    "国际漫游设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.DATA_ROAMING_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening mobile network and data roaming settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.network_operator",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open network operator settings",
+    "select network operator",
+    "carrier selection settings",
+    "choose mobile carrier",
+    "manual network selection",
+    "switch cell carrier",
+    "打开网络运营商设置",
+    "选择移动运营商",
+    "手动选择网络运营商",
+    "运营商网络设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.NETWORK_OPERATOR_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening network operator settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.apn",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open apn settings",
+    "access point names",
+    "show access point names",
+    "edit apn settings",
+    "mobile apn settings",
+    "cellular apn config",
+    "打开apn设置",
+    "打开接入点名称",
+    "查看接入点设置",
+    "修改apn"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.APN_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening APN settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.vpn",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open vpn settings",
+    "manage my vpn",
+    "show vpn connections",
+    "configure vpn",
+    "vpn settings page",
+    "check vpn settings",
+    "打开vpn设置",
+    "管理vpn连接",
+    "进入vpn页面",
+    "查看vpn配置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.VPN_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening VPN settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.nfc",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open nfc settings",
+    "nfc and contactless settings",
+    "configure nfc",
+    "manage nfc settings",
+    "show nfc options",
+    "nfc settings page",
+    "打开nfc设置",
+    "进入nfc设置页面",
+    "管理nfc选项",
+    "nfc与非接触式付款设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.NFC_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening NFC settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.nfc_payment",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open tap and pay settings",
+    "contactless payment settings",
+    "default payment app settings",
+    "nfc payment settings",
+    "change default wallet app",
+    "manage tap to pay",
+    "打开nfc付款设置",
+    "默认支付应用设置",
+    "触碰付款设置",
+    "管理非接触式支付"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.NFC_PAYMENT_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening contactless payment settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.cast",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open cast settings",
+    "cast my screen",
+    "screen mirroring settings",
+    "wireless display settings",
+    "open smart view",
+    "mirror phone to tv",
+    "screen cast settings",
+    "打开投屏设置",
+    "手机投屏到电视",
+    "打开无线投屏",
+    "打开smart view投屏"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.CAST_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening screen cast settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.wifi_calling",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open wifi calling settings",
+    "wi-fi calling settings",
+    "configure wifi calling",
+    "manage wifi calling",
+    "show wifi calling options",
+    "wifi call preferences",
+    "打开wifi通话设置",
+    "无线局域网通话设置",
+    "管理wifi通话",
+    "进入wifi通话页面"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.WIFI_CALLING_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Wi-Fi calling settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.wifi_ip",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open wifi ip settings",
+    "advanced wifi ip settings",
+    "static ip settings",
+    "check wifi ip configuration",
+    "wifi advanced network settings",
+    "configure wifi ip address",
+    "打开wifi ip设置",
+    "静态ip设置",
+    "查看wifi高级设置",
+    "配置无线ip地址"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.WIFI_IP_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Wi-Fi IP settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.satellite",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open satellite settings",
+    "satellite messaging settings",
+    "satellite connectivity settings",
+    "check satellite network",
+    "emergency satellite settings",
+    "satellite sos settings",
+    "打开卫星通信设置",
+    "卫星消息设置",
+    "查看卫星连接设置",
+    "卫星联网选项"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.SATELLITE_SETTING"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening satellite settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.panel_internet",
+   "app": "Settings Panel",
+   "pkg": null,
+   "phrases": [
+    "show internet panel",
+    "open internet quick panel",
+    "quick internet controls",
+    "pop up internet settings",
+    "show connectivity panel",
+    "internet toggle panel",
+    "弹出网络控制面板",
+    "打开快捷网络面板",
+    "显示互联网面板",
+    "快速切换网络面板"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.panel.action.INTERNET_CONNECTIVITY"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening the Internet panel",
+   "source": "https://developer.android.com/reference/android/provider/Settings.Panel"
+  },
+  {
+   "id": "settings.panel_wifi",
+   "app": "Settings Panel",
+   "pkg": null,
+   "phrases": [
+    "show wifi panel",
+    "open wifi quick panel",
+    "pop up wifi networks",
+    "quick wifi chooser",
+    "floating wifi panel",
+    "switch wifi network panel",
+    "弹出wifi面板",
+    "打开快捷wifi面板",
+    "快速选择wifi",
+    "显示无线网络弹窗"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.panel.action.WIFI"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening the Wi-Fi panel",
+   "source": "https://developer.android.com/reference/android/provider/Settings.Panel"
+  },
+  {
+   "id": "settings.panel_volume",
+   "app": "Settings Panel",
+   "pkg": null,
+   "phrases": [
+    "show volume panel",
+    "open volume sliders",
+    "show all volume controls",
+    "pop up volume mixer",
+    "volume control panel",
+    "adjust all volumes",
+    "打开音量面板",
+    "显示全部音量滑块",
+    "弹出音量调节面板",
+    "声音滑块控制"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.panel.action.VOLUME"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening the volume panel",
+   "source": "https://developer.android.com/reference/android/provider/Settings.Panel"
+  },
+  {
+   "id": "settings.panel_nfc",
+   "app": "Settings Panel",
+   "pkg": null,
+   "phrases": [
+    "show nfc panel",
+    "open nfc quick panel",
+    "pop up nfc toggle",
+    "floating nfc panel",
+    "quick nfc controls",
+    "nfc popup panel",
+    "弹出nfc面板",
+    "打开快捷nfc开关面板",
+    "显示nfc弹窗",
+    "快速nfc面板"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.panel.action.NFC"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening the NFC panel",
+   "source": "https://developer.android.com/reference/android/provider/Settings.Panel"
+  },
+  {
+   "id": "settings.night_display",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open night light settings",
+    "eye comfort shield settings",
+    "blue light filter settings",
+    "night display settings",
+    "warm screen filter settings",
+    "configure eye comfort shield",
+    "打开护眼模式设置",
+    "打开蓝光过滤设置",
+    "夜览显示设置",
+    "护眼屏设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.NIGHT_DISPLAY_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Night Display settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.auto_rotate",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open auto rotate settings",
+    "screen rotation settings",
+    "configure auto rotation",
+    "auto rotate options",
+    "portrait landscape settings",
+    "manage screen rotation",
+    "打开自动旋转设置",
+    "屏幕旋转设置",
+    "管理横竖屏切换",
+    "自动旋屏选项"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.AUTO_ROTATE_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening auto-rotate settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.screen_saver",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open screen saver settings",
+    "screensaver settings",
+    "daydream settings",
+    "configure screen saver",
+    "dock screen saver settings",
+    "charging screen saver",
+    "打开屏幕保护程序设置",
+    "屏保设置",
+    "充电屏保设置",
+    "管理屏幕保护"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.DREAM_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening screen saver settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.accessibility",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open accessibility settings",
+    "accessibility options",
+    "manage accessibility services",
+    "talkback and accessibility",
+    "vision and hearing settings",
+    "show accessibility menu",
+    "打开无障碍设置",
+    "打开辅助功能设置",
+    "管理无障碍服务",
+    "进入无障碍页面"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.ACCESSIBILITY_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening accessibility settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.captioning",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open caption settings",
+    "open subtitle settings",
+    "caption preferences",
+    "closed captions settings",
+    "live caption preferences",
+    "customize subtitle style",
+    "打开字幕设置",
+    "字幕偏好设置",
+    "隐藏式字幕设置",
+    "管理实时字幕样式"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.CAPTIONING_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening captioning settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.zen_priority",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open do not disturb settings",
+    "dnd settings",
+    "do not disturb exceptions",
+    "configure do not disturb",
+    "dnd priority settings",
+    "manage dnd exceptions",
+    "打开勿扰模式设置",
+    "勿扰例外设置",
+    "管理免打扰设置",
+    "配置勿扰模式"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.ZEN_MODE_PRIORITY_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Do Not Disturb settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.zen_rules",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open automatic dnd rules",
+    "do not disturb schedules",
+    "automatic zen rules",
+    "manage dnd schedules",
+    "modes and dnd rules",
+    "scheduled do not disturb",
+    "打开勿扰定时规则",
+    "自动免打扰计划",
+    "管理勿扰日程",
+    "定时勿扰设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.AUTOMATIC_ZEN_RULE_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening automatic Do Not Disturb rules",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.call_settings",
+   "app": "Phone",
+   "pkg": null,
+   "phrases": [
+    "open call settings",
+    "phone call settings",
+    "call forwarding settings",
+    "voicemail settings",
+    "blocked numbers settings",
+    "manage call preferences",
+    "打开通话设置",
+    "来电转接设置",
+    "语音信箱设置",
+    "电话设置页面"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.telecom.action.SHOW_CALL_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening call settings",
+   "source": "https://developer.android.com/reference/android/telecom/TelecomManager"
+  },
+  {
+   "id": "settings.battery_usage",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "check battery usage",
+    "show battery usage",
+    "which apps use the most battery",
+    "battery drain breakdown",
+    "app battery usage",
+    "battery consumption stats",
+    "查看耗电排行",
+    "查看电池用量",
+    "哪些应用最耗电",
+    "电量消耗详情"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.POWER_USAGE_SUMMARY"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening battery usage summary",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.battery_saver",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open battery saver settings",
+    "power saving mode settings",
+    "configure battery saver",
+    "battery saver schedule",
+    "low power mode settings",
+    "manage power saving",
+    "打开省电模式设置",
+    "电池节能设置",
+    "配置省电选项",
+    "低电量模式设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.BATTERY_SAVER_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening battery saver settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.battery_optimization",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open battery optimization settings",
+    "ignore battery optimization settings",
+    "unrestricted battery apps",
+    "doze mode exceptions",
+    "background battery whitelist",
+    "manage battery optimization",
+    "打开电池优化设置",
+    "忽略电池优化名单",
+    "后台电量白名单",
+    "管理应用电池优化"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening battery optimization settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.internal_storage",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open storage settings",
+    "check phone storage",
+    "how much storage is left",
+    "internal storage settings",
+    "check storage space",
+    "manage device storage",
+    "查看手机存储空间",
+    "打开存储设置",
+    "看看还剩多少内存空间",
+    "管理内部存储"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.INTERNAL_STORAGE_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening storage settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.memory_card",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open sd card settings",
+    "memory card settings",
+    "external storage settings",
+    "check sd card space",
+    "manage memory card",
+    "microsd card settings",
+    "打开sd卡设置",
+    "存储卡设置",
+    "查看外置存储卡",
+    "管理内存卡空间"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.MEMORY_CARD_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening memory card settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.security",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open security settings",
+    "screen lock settings",
+    "device security settings",
+    "change lock screen pin",
+    "security and lock settings",
+    "manage phone security",
+    "打开安全设置",
+    "锁屏与安全设置",
+    "修改锁屏密码设置",
+    "设备安全中心"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.SECURITY_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening security settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.privacy",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open privacy settings",
+    "privacy controls",
+    "manage phone privacy",
+    "privacy dashboard settings",
+    "app privacy settings",
+    "check privacy options",
+    "打开隐私设置",
+    "隐私权限管理",
+    "查看隐私控制面板",
+    "进入隐私页面"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.PRIVACY_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening privacy settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.biometrics",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open biometrics settings",
+    "add a fingerprint",
+    "set up fingerprint unlock",
+    "face unlock setup",
+    "enroll biometrics",
+    "fingerprint and face settings",
+    "打开生物识别设置",
+    "录入指纹",
+    "设置人脸解锁",
+    "添加指纹和面部识别"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.BIOMETRIC_ENROLL"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening biometrics setup",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.credential_provider",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open passkey settings",
+    "passwords and passkeys settings",
+    "credential provider settings",
+    "autofill password provider",
+    "manage password managers",
+    "change autofill service",
+    "打开通行密钥设置",
+    "密码与自动填充设置",
+    "管理密码管理器",
+    "凭据提供程序设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.CREDENTIAL_PROVIDER"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening passwords and passkeys settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.add_account",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "add a new account",
+    "add google account",
+    "add account to phone",
+    "sign in to another account",
+    "open add account settings",
+    "add email account",
+    "添加新账号",
+    "添加谷歌账号",
+    "打开添加账户页面",
+    "登录新账户"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.ADD_ACCOUNT_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Add Account",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.sync",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open account sync settings",
+    "manage accounts and sync",
+    "auto sync settings",
+    "accounts and backup sync",
+    "check account sync",
+    "google account sync settings",
+    "打开账号同步设置",
+    "管理账户与同步",
+    "查看自动同步设置",
+    "同步账户页面"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.SYNC_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening account sync settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.quick_access_wallet",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "quick access wallet settings",
+    "lock screen wallet settings",
+    "configure quick access wallet",
+    "manage wallet shortcut settings",
+    "show wallet lockscreen options",
+    "wallet quick access preferences",
+    "打开快捷钱包设置",
+    "锁屏钱包快捷方式设置",
+    "配置快速访问钱包",
+    "管理快捷卡包设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.QUICK_ACCESS_WALLET_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Quick Access Wallet settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.work_policy",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open work profile policy",
+    "show work policy info",
+    "work profile info",
+    "enterprise device policy",
+    "check managed work profile",
+    "company phone policy info",
+    "查看工作资料政策",
+    "打开工作配置信息",
+    "企业设备策略信息",
+    "查看受管工作账户信息"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.SHOW_WORK_POLICY_INFO"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening work profile policy info",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.health_connect",
+   "app": "Health Connect",
+   "pkg": null,
+   "phrases": [
+    "open health connect",
+    "health connect settings",
+    "manage health data permissions",
+    "connected health apps",
+    "check health connect data",
+    "fitness data sync settings",
+    "打开health connect",
+    "打开健康数据连接设置",
+    "管理健康应用权限",
+    "查看健康连接数据"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.health.connect.action.HEALTH_HOME_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Health Connect",
+   "source": "https://developer.android.com/health-and-fitness/guides/health-connect/develop/get-started"
+  },
+  {
+   "id": "settings.usage_access",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open usage access settings",
+    "app usage access permissions",
+    "usage data access settings",
+    "apps with usage access",
+    "manage usage statistics access",
+    "check usage access",
+    "打开使用情况访问权限",
+    "应用使用数据权限",
+    "管理使用统计访问权限",
+    "查看使用情况权限"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.USAGE_ACCESS_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening usage access settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.notification_history",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "show notification history",
+    "open notification history",
+    "dismissed notifications",
+    "recent notification log",
+    "past notifications",
+    "check old notifications",
+    "查看通知历史记录",
+    "打开通知记录",
+    "查看已清除的通知",
+    "历史通知列表"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.NOTIFICATION_HISTORY"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening notification history",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.notification_access",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open notification access settings",
+    "notification listener settings",
+    "device and app notifications access",
+    "apps that can read notifications",
+    "manage notification read access",
+    "notification access permissions",
+    "打开通知读取权限",
+    "通知使用权设置",
+    "管理可读取通知的应用",
+    "通知监听权限设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening notification access settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.dnd_access",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open do not disturb access",
+    "dnd access permissions",
+    "apps with do not disturb access",
+    "notification policy access",
+    "manage dnd access",
+    "dnd override permissions",
+    "打开勿扰权限设置",
+    "管理勿扰访问权限",
+    "可控制勿扰模式的应用",
+    "免打扰权限列表"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.NOTIFICATION_POLICY_ACCESS_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Do Not Disturb access settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.notification_assistant",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open notification assistant settings",
+    "enhanced notifications settings",
+    "adaptive notifications settings",
+    "manage notification assistant",
+    "smart notification suggestions",
+    "configure notification assistant",
+    "打开通知助手设置",
+    "增强型通知设置",
+    "自适应通知设置",
+    "管理智能通知建议"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.NOTIFICATION_ASSISTANT_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening notification assistant settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.default_apps",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open default apps",
+    "default apps settings",
+    "change default browser",
+    "change default phone app",
+    "manage default apps",
+    "choose default apps",
+    "打开默认应用设置",
+    "更改默认浏览器",
+    "管理默认应用程序",
+    "选择默认应用"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.MANAGE_DEFAULT_APPS_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening default apps settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.home_launcher",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "change home launcher",
+    "default home app settings",
+    "switch launcher settings",
+    "home screen app settings",
+    "choose default launcher",
+    "manage home apps",
+    "更改默认桌面",
+    "切换启动器设置",
+    "默认主屏幕应用",
+    "选择手机桌面应用"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.HOME_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening default home launcher settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.unknown_apps",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "install unknown apps settings",
+    "unknown sources settings",
+    "sideload app permissions",
+    "allow apk install settings",
+    "manage unknown app sources",
+    "open install unknown apps",
+    "打开安装未知应用设置",
+    "未知来源安装权限",
+    "允许安装apk权限设置",
+    "管理未知应用来源"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.MANAGE_UNKNOWN_APP_SOURCES"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening install unknown apps settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.overlay_permission",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "display over other apps settings",
+    "appear on top settings",
+    "draw over apps permissions",
+    "floating window permissions",
+    "overlay permission settings",
+    "manage screen overlays",
+    "打开悬浮窗权限设置",
+    "显示在其他应用上层设置",
+    "管理应用悬浮权限",
+    "顶层显示权限"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.action.MANAGE_OVERLAY_PERMISSION"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening display over other apps settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.write_settings",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "modify system settings permission",
+    "change system settings access",
+    "apps that can modify settings",
+    "write system settings permissions",
+    "manage modify system settings",
+    "system settings write access",
+    "打开修改系统设置权限",
+    "可更改系统设置的应用",
+    "管理修改系统设置权限",
+    "系统写入权限设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.action.MANAGE_WRITE_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening modify system settings permissions",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.all_files_access",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "all files access settings",
+    "manage all files access",
+    "full storage access permissions",
+    "apps with all files access",
+    "external storage manager settings",
+    "file access special permissions",
+    "打开所有文件访问权限",
+    "管理全部文件访问权限",
+    "完整存储访问权限设置",
+    "特殊文件访问权限"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.MANAGE_ALL_FILES_ACCESS_PERMISSION"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening all files access settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.date_time",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open date and time settings",
+    "change time zone",
+    "date and time preferences",
+    "24 hour clock settings",
+    "automatic time zone settings",
+    "manage date and time",
+    "打开日期和时间设置",
+    "更改时区设置",
+    "24小时制设置",
+    "时间与日期选项"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.DATE_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening date and time settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.language",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open language settings",
+    "change phone language",
+    "system language settings",
+    "add a language to my phone",
+    "locale settings",
+    "manage system languages",
+    "打开语言设置",
+    "更改系统语言",
+    "添加手机语言",
+    "语言和地区设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.LOCALE_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening language settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.regional_preferences",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open regional preferences",
+    "change temperature unit",
+    "celsius fahrenheit settings",
+    "first day of week settings",
+    "regional units settings",
+    "number and unit preferences",
+    "打开区域偏好设置",
+    "更改温度单位设置",
+    "摄氏度华氏度设置",
+    "每周第一天设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.REGIONAL_PREFERENCES_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening regional preferences",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.keyboard",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open keyboard settings",
+    "input method settings",
+    "change default keyboard",
+    "on screen keyboard settings",
+    "manage keyboards",
+    "gboard and samsung keyboard settings",
+    "打开键盘设置",
+    "输入法设置",
+    "切换默认输入法",
+    "管理屏幕键盘"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.INPUT_METHOD_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening keyboard settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.physical_keyboard",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open physical keyboard settings",
+    "external keyboard settings",
+    "bluetooth keyboard layout settings",
+    "hardware keyboard settings",
+    "configure physical keyboard",
+    "usb keyboard settings",
+    "打开实体键盘设置",
+    "外接键盘设置",
+    "蓝牙键盘布局设置",
+    "硬件键盘选项"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.HARD_KEYBOARD_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening physical keyboard settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.user_dictionary",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open personal dictionary",
+    "user dictionary settings",
+    "manage custom words",
+    "keyboard personal dictionary",
+    "text shortcuts dictionary",
+    "edit personal dictionary",
+    "打开个人词典",
+    "用户词典设置",
+    "管理自定义词库",
+    "输入法个人字典"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.USER_DICTIONARY_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening personal dictionary settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.voice_input",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open voice input settings",
+    "default digital assistant settings",
+    "change default voice assistant",
+    "assist app settings",
+    "voice recognition settings",
+    "manage voice input",
+    "打开语音输入设置",
+    "默认语音助手设置",
+    "更改默认数字助理",
+    "管理语音识别设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.VOICE_INPUT_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening voice input and assistant settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.printing",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open printing settings",
+    "printer settings",
+    "manage wireless printers",
+    "default print service",
+    "check print jobs",
+    "add a printer settings",
+    "打开打印设置",
+    "打印机设置",
+    "管理无线打印机",
+    "查看打印服务"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.PRINT_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening printing settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.developer_options",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open developer options",
+    "usb debugging settings",
+    "developer settings",
+    "wireless debugging settings",
+    "go to developer mode",
+    "show developer options",
+    "打开开发者选项",
+    "打开usb调试设置",
+    "进入开发者模式",
+    "无线调试设置"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.APPLICATION_DEVELOPMENT_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Developer options",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.webview",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open webview settings",
+    "webview implementation settings",
+    "change android webview",
+    "select webview provider",
+    "check webview version",
+    "system webview settings",
+    "打开webview设置",
+    "更改webview实现",
+    "选择系统webview",
+    "查看webview提供程序"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.WEBVIEW_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening WebView settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.about_phone",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "open about phone",
+    "device info settings",
+    "check android version",
+    "check phone model and serial",
+    "about this device",
+    "software information page",
+    "打开关于手机",
+    "查看本机信息",
+    "查看安卓版本",
+    "设备型号和序列号"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.DEVICE_INFO_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening About phone",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.system_update",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "check for software update",
+    "open system update",
+    "software update settings",
+    "check for android updates",
+    "security patch update",
+    "update my phone software",
+    "检查系统更新",
+    "打开软件更新",
+    "检查安卓系统升级",
+    "查看系统安全补丁更新"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.SYSTEM_UPDATE_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening system update settings",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.regulatory_info",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "show regulatory info",
+    "open regulatory labels",
+    "check fcc id",
+    "regulatory compliance info",
+    "device certification labels",
+    "legal regulatory information",
+    "查看监管信息",
+    "打开法规标签",
+    "查看认证标识",
+    "设备合规信息"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.SHOW_REGULATORY_INFO"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening regulatory information",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "settings.app_search",
+   "app": "Settings",
+   "pkg": null,
+   "phrases": [
+    "search phone settings",
+    "open settings search",
+    "find a setting",
+    "search in settings",
+    "look up a phone setting",
+    "settings search bar",
+    "搜索手机设置",
+    "在设置中搜索",
+    "查找系统设置项",
+    "打开设置搜索栏"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.settings.APP_SEARCH_SETTINGS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening settings search",
+   "source": "https://developer.android.com/reference/android/provider/Settings"
+  },
+  {
+   "id": "app.default_calculator",
+   "app": "Calculator",
+   "pkg": null,
+   "phrases": [
+    "open the calculator",
+    "open default calculator",
+    "launch calculator app",
+    "start calculator",
+    "i need a calculator",
+    "pull up calculator",
+    "打开计算器",
+    "启动默认计算器",
+    "帮我开一下计算器",
+    "打开算账计算器"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_CALCULATOR"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening calculator",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_gallery",
+   "app": "Gallery",
+   "pkg": null,
+   "phrases": [
+    "open default gallery",
+    "open my photo gallery",
+    "show my photo library",
+    "open pictures app",
+    "view my photos",
+    "launch gallery app",
+    "打开相册",
+    "打开默认图库",
+    "查看我的照片",
+    "打开手机相册"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_GALLERY"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening gallery",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_contacts",
+   "app": "Contacts",
+   "pkg": null,
+   "phrases": [
+    "open default contacts",
+    "open my address book",
+    "show my contacts list",
+    "open phonebook",
+    "launch contacts app",
+    "view my contacts",
+    "打开通讯录",
+    "打开默认联系人",
+    "查看电话本",
+    "打开联系人列表"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_CONTACTS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening contacts",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_music",
+   "app": "Music",
+   "pkg": null,
+   "phrases": [
+    "open default music app",
+    "open my music player",
+    "launch music player",
+    "go to my music app",
+    "open audio player",
+    "show my music app",
+    "打开默认音乐应用",
+    "打开音乐播放器",
+    "启动我的音乐软件",
+    "进入音乐app"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_MUSIC"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening music app",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_files",
+   "app": "Files",
+   "pkg": null,
+   "phrases": [
+    "open default file manager",
+    "open my files",
+    "browse phone files",
+    "open file explorer",
+    "launch files app",
+    "view local files",
+    "打开文件管理",
+    "打开我的文件",
+    "浏览手机文件",
+    "打开默认文件浏览器"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_FILES"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening files",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_messages",
+   "app": "Messages",
+   "pkg": null,
+   "phrases": [
+    "open default messages",
+    "open my text messages",
+    "open sms inbox",
+    "check my text messages",
+    "launch messaging app",
+    "show my sms app",
+    "打开短信",
+    "打开默认信息应用",
+    "查看我的短信箱",
+    "打开手机短信"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_MESSAGING"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening messages",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_email",
+   "app": "Email",
+   "pkg": null,
+   "phrases": [
+    "open default email app",
+    "open my email inbox",
+    "check my email",
+    "launch mail app",
+    "go to my email",
+    "show my mail client",
+    "打开邮箱",
+    "打开默认电子邮件",
+    "查看我的邮件",
+    "启动邮件应用"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_EMAIL"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening email",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_browser",
+   "app": "Browser",
+   "pkg": null,
+   "phrases": [
+    "open default browser",
+    "open web browser",
+    "launch internet browser",
+    "open the internet",
+    "start my browser",
+    "go to web browser",
+    "打开浏览器",
+    "打开默认网页浏览器",
+    "启动上网浏览器",
+    "打开互联网浏览器"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_BROWSER"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening browser",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_calendar",
+   "app": "Calendar",
+   "pkg": null,
+   "phrases": [
+    "open default calendar",
+    "open my calendar app",
+    "launch calendar app",
+    "show full calendar",
+    "go to calendar app",
+    "open schedule app",
+    "打开日历",
+    "打开默认日历应用",
+    "查看完整日历",
+    "启动日程表"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_CALENDAR"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening calendar",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_maps",
+   "app": "Maps",
+   "pkg": null,
+   "phrases": [
+    "open default maps app",
+    "open navigation app",
+    "launch my maps app",
+    "go to maps app",
+    "open map app",
+    "start default maps",
+    "打开默认地图",
+    "打开导航软件",
+    "启动手机地图",
+    "进入地图应用"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_MAPS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening maps",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_weather",
+   "app": "Weather",
+   "pkg": null,
+   "phrases": [
+    "open default weather app",
+    "open my weather app",
+    "launch weather app",
+    "show weather app",
+    "open weather forecast app",
+    "check weather app",
+    "打开天气应用",
+    "打开默认天气软件",
+    "启动天气预报app",
+    "进入天气页面"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_WEATHER"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening weather app",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_fitness",
+   "app": "Fitness",
+   "pkg": null,
+   "phrases": [
+    "open default fitness app",
+    "open my health app",
+    "launch fitness tracker",
+    "open workout app",
+    "check my fitness app",
+    "go to health and fitness",
+    "打开默认运动健康应用",
+    "打开健身应用",
+    "启动健康追踪软件",
+    "查看运动健康app"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_FITNESS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening fitness app",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "app.default_app_store",
+   "app": "App Store",
+   "pkg": null,
+   "phrases": [
+    "open default app store",
+    "open app market",
+    "launch app store",
+    "go to app store",
+    "browse app store",
+    "open store to download apps",
+    "打开应用商店",
+    "打开默认应用市场",
+    "启动软件商店",
+    "进入应用商城"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "category": "android.intent.category.APP_MARKET"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening app store",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "camera.photo",
+   "app": "Camera",
+   "pkg": null,
+   "phrases": [
+    "open camera in photo mode",
+    "take a photo",
+    "take a picture",
+    "snap a picture",
+    "camera photo mode",
+    "ready the camera",
+    "open still camera",
+    "打开相机拍照",
+    "我要拍照",
+    "拍张照片",
+    "打开拍照模式"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.media.action.STILL_IMAGE_CAMERA"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening camera in photo mode",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "camera.video",
+   "app": "Camera",
+   "pkg": null,
+   "phrases": [
+    "open video camera",
+    "record a video",
+    "shoot a video",
+    "camera video mode",
+    "start video camera",
+    "take a video",
+    "film a video",
+    "打开相机录像",
+    "拍个视频",
+    "我要录视频",
+    "打开录像模式"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.media.action.VIDEO_CAMERA"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening camera in video mode",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "audio.voice_recorder",
+   "app": "Voice Recorder",
+   "pkg": null,
+   "phrases": [
+    "open voice recorder",
+    "record audio",
+    "start a voice memo",
+    "open sound recorder",
+    "record my voice",
+    "new voice recording",
+    "打开录音机",
+    "开始录音",
+    "录一段语音备忘录",
+    "打开声音录制器"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.provider.MediaStore.RECORD_SOUND"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening voice recorder",
+   "source": "https://developer.android.com/reference/android/provider/MediaStore"
+  },
+  {
+   "id": "clock.show_alarms",
+   "app": "Clock",
+   "pkg": null,
+   "phrases": [
+    "show my alarms",
+    "view all alarms",
+    "check my alarms",
+    "what alarms do i have set",
+    "open alarm list",
+    "list my alarms",
+    "查看我的闹钟",
+    "显示所有闹钟",
+    "看看我设了什么闹钟",
+    "打开闹钟列表"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.SHOW_ALARMS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Showing your alarms",
+   "source": "https://developer.android.com/reference/android/provider/AlarmClock"
+  },
+  {
+   "id": "clock.show_timers",
+   "app": "Clock",
+   "pkg": null,
+   "phrases": [
+    "show my timers",
+    "view all timers",
+    "check my timers",
+    "how much time is left on my timer",
+    "open timer list",
+    "check active timers",
+    "查看我的计时器",
+    "显示所有倒计时",
+    "看看计时器还剩多久",
+    "打开计时器列表"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.SHOW_TIMERS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Showing your timers",
+   "source": "https://developer.android.com/reference/android/provider/AlarmClock"
+  },
+  {
+   "id": "files.downloads",
+   "app": "Downloads",
+   "pkg": null,
+   "phrases": [
+    "open downloads",
+    "show my downloads",
+    "open downloads folder",
+    "view downloaded files",
+    "check my downloads",
+    "recently downloaded files",
+    "打开下载文件夹",
+    "查看已下载的文件",
+    "显示我的下载",
+    "打开下载管理"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.VIEW_DOWNLOADS"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Downloads",
+   "source": "https://developer.android.com/reference/android/app/DownloadManager"
+  },
+  {
+   "id": "display.wallpaper",
+   "app": "Wallpaper",
+   "pkg": null,
+   "phrases": [
+    "change my wallpaper",
+    "set a new wallpaper",
+    "open wallpaper picker",
+    "choose home screen wallpaper",
+    "customize wallpaper",
+    "pick a wallpaper",
+    "更换壁纸",
+    "设置新壁纸",
+    "打开壁纸选择器",
+    "换个手机桌面壁纸"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.SET_WALLPAPER"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening wallpaper picker",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "notes.create",
+   "app": "Notes",
+   "pkg": null,
+   "phrases": [
+    "create a new note",
+    "take a note",
+    "write a quick note",
+    "start a new note",
+    "open a blank note",
+    "jot down a note",
+    "新建笔记",
+    "记个笔记",
+    "写一条新备忘录",
+    "创建空白笔记"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.CREATE_NOTE"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening a new note",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "contacts.new",
+   "app": "Contacts",
+   "pkg": null,
+   "phrases": [
+    "add a new contact",
+    "create a new contact",
+    "save a new phone number",
+    "new contact form",
+    "add someone to contacts",
+    "add person to address book",
+    "新建联系人",
+    "添加新联系人",
+    "存一个新电话号码",
+    "在通讯录添加联系人"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.INSERT",
+      "data": "content://com.android.contacts/contacts"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening new contact form",
+   "source": "https://developer.android.com/guide/topics/providers/contacts-provider"
+  },
+  {
+   "id": "calendar.new_event",
+   "app": "Calendar",
+   "pkg": null,
+   "phrases": [
+    "create a new calendar event",
+    "add an event to my calendar",
+    "new calendar appointment",
+    "schedule a new event",
+    "add calendar reminder",
+    "open new event screen",
+    "新建日历日程",
+    "添加新日程",
+    "在日历里创建活动",
+    "新建一个日历事件"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.INSERT",
+      "data": "content://com.android.calendar/events"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening new calendar event",
+   "source": "https://developer.android.com/guide/topics/providers/calendar-provider"
+  },
+  {
+   "id": "phone.dialer",
+   "app": "Phone",
+   "pkg": null,
+   "phrases": [
+    "open phone keypad",
+    "open the dialer",
+    "show dial pad",
+    "bring up the keypad",
+    "open phone dial pad",
+    "make a phone call keypad",
+    "打开拨号键盘",
+    "打开电话拨号盘",
+    "显示拨号界面",
+    "调出拨号键"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.DIAL"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening the phone dialer",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "music.play_default",
+   "app": "Music",
+   "pkg": null,
+   "phrases": [
+    "play {q}",
+    "play song {q}",
+    "play music {q}",
+    "listen to {q}",
+    "put on {q}",
+    "play track {q}",
+    "play artist {q}",
+    "播放{q}",
+    "听{q}",
+    "放一首{q}",
+    "播放歌曲{q}"
+   ],
+   "steps": [
+    {
+     "play": {
+      "pkg": null,
+      "q": "{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Playing {q}",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "music.play_pandora",
+   "app": "Pandora",
+   "pkg": "com.pandora.android",
+   "phrases": [
+    "play {q} on pandora",
+    "pandora play {q}",
+    "listen to {q} on pandora",
+    "play {q} radio on pandora",
+    "start {q} station on pandora",
+    "put on {q} on pandora",
+    "用pandora播放{q}",
+    "在pandora听{q}",
+    "pandora电台播放{q}",
+    "pandora放{q}"
+   ],
+   "steps": [
+    {
+     "play": {
+      "pkg": "com.pandora.android",
+      "q": "{q}"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Playing {q} on Pandora",
+   "source": "https://developer.android.com/guide/components/intents-common"
+  },
+  {
+   "id": "samsung.device_care",
+   "app": "Samsung Device Care",
+   "pkg": "com.samsung.android.lool",
+   "phrases": [
+    "open device care",
+    "open samsung device care",
+    "optimize my phone",
+    "check phone health",
+    "galaxy device care",
+    "phone optimization screen",
+    "打开智能管理器",
+    "打开三星设备维护",
+    "优化我的手机",
+    "检查手机健康状态"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "com.samsung.android.sm.ACTION_DASHBOARD",
+      "pkg": "com.samsung.android.lool"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Samsung Device Care",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.device_care_battery",
+   "app": "Samsung Device Care",
+   "pkg": "com.samsung.android.lool",
+   "phrases": [
+    "open device care battery",
+    "samsung battery care",
+    "galaxy battery protection",
+    "device care battery page",
+    "check samsung battery health",
+    "open galaxy battery settings",
+    "打开三星电池维护",
+    "智能管理器电池页面",
+    "三星电池保护设置",
+    "查看三星电池状态"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "com.samsung.android.sm.ACTION_BATTERY",
+      "pkg": "com.samsung.android.lool"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Samsung Device Care battery",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.device_care_storage",
+   "app": "Samsung Device Care",
+   "pkg": "com.samsung.android.lool",
+   "phrases": [
+    "open device care storage",
+    "samsung storage cleaner",
+    "clean up samsung storage",
+    "device care storage page",
+    "check galaxy storage",
+    "free up space in device care",
+    "打开三星存储清理",
+    "智能管理器存储空间",
+    "清理三星手机空间",
+    "查看设备维护存储"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "com.samsung.android.sm.ACTION_STORAGE",
+      "pkg": "com.samsung.android.lool"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Samsung Device Care storage",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.device_care_memory",
+   "app": "Samsung Device Care",
+   "pkg": "com.samsung.android.lool",
+   "phrases": [
+    "open device care memory",
+    "check my ram usage",
+    "samsung memory cleaner",
+    "clear ram screen",
+    "check galaxy ram",
+    "ram plus settings",
+    "打开三星内存清理",
+    "查看运行内存使用",
+    "智能管理器内存页面",
+    "清理手机运存页面"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "com.samsung.android.sm.ACTION_RAM",
+      "pkg": "com.samsung.android.lool"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Samsung Device Care memory",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.device_care_security",
+   "app": "Samsung Device Care",
+   "pkg": "com.samsung.android.lool",
+   "phrases": [
+    "open device protection",
+    "scan phone for malware",
+    "samsung virus scan",
+    "device care security scan",
+    "check app protection",
+    "galaxy security scanner",
+    "打开三星设备保护",
+    "手机安全扫描",
+    "扫描手机病毒",
+    "打开智能管理器安全"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "com.samsung.android.sm.ACTION_SECURITY",
+      "pkg": "com.samsung.android.lool"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Samsung Device Protection",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.modes_routines",
+   "app": "Modes and Routines",
+   "pkg": "com.samsung.android.app.routines",
+   "phrases": [
+    "open modes and routines",
+    "open bixby routines",
+    "manage samsung routines",
+    "samsung modes settings",
+    "my galaxy routines",
+    "automation routines on samsung",
+    "打开模式与日常程序",
+    "打开三星日常程序",
+    "管理bixby日常程序",
+    "查看三星自动化模式"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "pkg": "com.samsung.android.app.routines"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Modes and Routines",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.digital_wellbeing",
+   "app": "Samsung Digital Wellbeing",
+   "pkg": "com.samsung.android.forest",
+   "phrases": [
+    "check my screen time",
+    "open samsung digital wellbeing",
+    "how much screen time today",
+    "app timers and screen time",
+    "digital wellbeing dashboard",
+    "samsung parental controls",
+    "查看屏幕使用时间",
+    "打开三星数字健康",
+    "今天玩了多久手机",
+    "应用计时器与数字健康"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "pkg": "com.samsung.android.forest"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Digital Wellbeing",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.secure_folder",
+   "app": "Secure Folder",
+   "pkg": "com.samsung.knox.securefolder",
+   "phrases": [
+    "open secure folder",
+    "open samsung secure folder",
+    "go to my private folder",
+    "unlock secure folder",
+    "knox secure folder",
+    "open hidden apps folder",
+    "打开安全文件夹",
+    "进入三星安全文件夹",
+    "打开私密文件夹",
+    "解锁安全文件夹"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "pkg": "com.samsung.knox.securefolder"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Secure Folder",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.find_my_mobile",
+   "app": "SmartThings Find",
+   "pkg": null,
+   "phrases": [
+    "open find my mobile",
+    "open smartthings find",
+    "find my samsung phone",
+    "locate my galaxy devices",
+    "find my galaxy buds",
+    "samsung find lost device",
+    "打开查找我的手机",
+    "打开三星查找设备",
+    "定位我的三星耳机",
+    "smartthings查找失物"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://smartthingsfind.samsung.com/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening SmartThings Find",
+   "source": "https://smartthingsfind.samsung.com/"
+  },
+  {
+   "id": "samsung.wallet",
+   "app": "Samsung Wallet",
+   "pkg": "com.samsung.android.spay",
+   "phrases": [
+    "open samsung wallet",
+    "open samsung pay",
+    "show my samsung cards",
+    "samsung digital keys",
+    "my samsung passes",
+    "launch samsung wallet",
+    "打开三星钱包",
+    "打开samsung pay",
+    "查看三星卡包",
+    "三星数字车钥匙与卡片"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "pkg": "com.samsung.android.spay"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Samsung Wallet",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.health_steps",
+   "app": "Samsung Health",
+   "pkg": "com.sec.android.app.shealth",
+   "phrases": [
+    "show my steps in samsung health",
+    "check samsung health steps",
+    "open samsung step counter",
+    "daily steps in samsung health",
+    "how many steps in samsung health",
+    "samsung health step tracker",
+    "在三星健康看步数",
+    "打开三星健康步数统计",
+    "查看今日三星步数",
+    "三星计步器"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.sec.android.app.shealth",
+      "link": "health://steps"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Samsung Health steps",
+   "source": "https://developer.samsung.com/health"
+  },
+  {
+   "id": "samsung.smartthings",
+   "app": "SmartThings",
+   "pkg": null,
+   "phrases": [
+    "open smartthings",
+    "open samsung smart home",
+    "control my smartthings devices",
+    "smartthings dashboard",
+    "manage samsung appliances",
+    "show smartthings hub",
+    "打开smartthings",
+    "打开三星智能家居",
+    "控制smartthings设备",
+    "管理三星家电"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://my.smartthings.com/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening SmartThings",
+   "source": "https://my.smartthings.com/"
+  },
+  {
+   "id": "samsung.notes_new",
+   "app": "Samsung Notes",
+   "pkg": "com.samsung.android.app.notes",
+   "phrases": [
+    "new samsung note",
+    "create a samsung note",
+    "open a blank note in samsung notes",
+    "write in samsung notes",
+    "start a new samsung note",
+    "quick note in samsung notes",
+    "新建三星笔记",
+    "在三星笔记里记一下",
+    "创建空白三星笔记",
+    "写一条三星笔记"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.CREATE_NOTE",
+      "pkg": "com.samsung.android.app.notes"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening a new Samsung Note",
+   "source": "https://developer.android.com/reference/android/content/Intent"
+  },
+  {
+   "id": "samsung.galaxy_store_search",
+   "app": "Galaxy Store",
+   "pkg": "com.sec.android.app.samsungapps",
+   "phrases": [
+    "search galaxy store",
+    "open galaxy store search",
+    "find apps in galaxy store",
+    "search samsung app store",
+    "browse galaxy store search",
+    "look up apps on galaxy store",
+    "搜索三星应用商店",
+    "在galaxy store搜应用",
+    "打开三星商店搜索",
+    "三星应用市场搜索"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.sec.android.app.samsungapps",
+      "link": "samsungapps://Search"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Galaxy Store search",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "samsung.interpreter",
+   "app": "Samsung Interpreter",
+   "pkg": "com.samsung.android.app.interpreter",
+   "phrases": [
+    "open samsung interpreter",
+    "start live interpreter",
+    "galaxy ai interpreter",
+    "conversation translate mode",
+    "real time voice interpreter",
+    "open live conversation translator",
+    "打开三星同传",
+    "打开实时语音翻译",
+    "启动对话翻译模式",
+    "打开三星同声传译"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "pkg": "com.samsung.android.app.interpreter"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Samsung Interpreter",
+   "source": "https://developer.samsung.com/"
+  },
+  {
+   "id": "google.find_my_device",
+   "app": "Google Find My Device",
+   "pkg": "com.google.android.apps.adm",
+   "phrases": [
+    "open find my device",
+    "open google find hub",
+    "find my android phone",
+    "locate my android device",
+    "google find my phone",
+    "track my lost android device",
+    "打开谷歌查找我的设备",
+    "查找我的安卓手机",
+    "定位丢失的安卓设备",
+    "谷歌设备定位"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.adm",
+      "link": "https://www.google.com/android/find/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Google Find My Device",
+   "source": "https://www.google.com/android/find/"
+  },
+  {
+   "id": "google.assistant_routines",
+   "app": "Google Assistant",
+   "pkg": "com.google.android.googlequicksearchbox",
+   "phrases": [
+    "open google assistant routines",
+    "manage assistant routines",
+    "google routines settings",
+    "edit my google routines",
+    "household routines google",
+    "show google assistant routines",
+    "打开谷歌助手日常安排",
+    "管理google assistant例程",
+    "查看谷歌日常自动化",
+    "谷歌助手例行程序设置"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.googlequicksearchbox",
+      "link": "https://assistant.google.com/settings/routines"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Google Assistant Routines",
+   "source": "https://assistant.google.com/settings/routines"
+  },
+  {
+   "id": "google.home",
+   "app": "Google Home",
+   "pkg": "com.google.android.apps.chromecast.app",
+   "phrases": [
+    "open google home",
+    "manage my google home devices",
+    "google smart home controls",
+    "show my smart home lights",
+    "open google nest controls",
+    "control google home",
+    "打开google home",
+    "打开谷歌智能家居",
+    "管理谷歌家居设备",
+    "控制家里智能灯"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.chromecast.app",
+      "link": "https://home.google.com/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Google Home",
+   "source": "https://home.google.com/"
+  },
+  {
+   "id": "google.fit",
+   "app": "Google Fit",
+   "pkg": "com.google.android.apps.fitness",
+   "phrases": [
+    "open google fit",
+    "check my google fit stats",
+    "google fit heart points",
+    "view google fit activity",
+    "show my google fit steps",
+    "google fitness tracker",
+    "打开google fit",
+    "查看谷歌健身数据",
+    "打开谷歌健康步数",
+    "google fit运动记录"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.fitness",
+      "link": "https://fit.google.com/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Google Fit",
+   "source": "https://fit.google.com/"
+  },
+  {
+   "id": "google.gemini",
+   "app": "Google Gemini",
+   "pkg": "com.google.android.apps.bard",
+   "phrases": [
+    "open google gemini",
+    "launch gemini assistant",
+    "switch to gemini",
+    "start gemini chat",
+    "ask google gemini",
+    "go to gemini app",
+    "打开google gemini",
+    "启动谷歌gemini助手",
+    "切换到gemini对话",
+    "打开gemini应用"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.google.android.apps.bard",
+      "link": "https://gemini.google.com/app"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Google Gemini",
+   "source": "https://gemini.google.com/app"
+  },
+  {
+   "id": "google.keep_new_note",
+   "app": "Google Keep",
+   "pkg": "com.google.android.keep",
+   "phrases": [
+    "new note in google keep",
+    "create a keep note",
+    "write a note in google keep",
+    "quick google keep note",
+    "start a note in keep",
+    "add a google keep note",
+    "在google keep新建笔记",
+    "新建谷歌keep便签",
+    "用google keep记一下",
+    "创建一条keep笔记"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "com.google.android.gms.actions.CREATE_NOTE",
+      "pkg": "com.google.android.keep"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening a new Google Keep note",
+   "source": "https://developers.google.com/android/reference/com/google/android/gms/actions/NoteIntents"
+  },
+  {
+   "id": "google.digital_wellbeing",
+   "app": "Digital Wellbeing",
+   "pkg": "com.google.android.apps.wellbeing",
+   "phrases": [
+    "open google digital wellbeing",
+    "google screen time dashboard",
+    "google focus mode settings",
+    "google bedtime mode settings",
+    "check google app timers",
+    "android digital wellbeing",
+    "打开谷歌数字健康",
+    "谷歌屏幕使用时间",
+    "打开谷歌专注模式设置",
+    "安卓数字健康页面"
+   ],
+   "steps": [
+    {
+     "intent": {
+      "action": "android.intent.action.MAIN",
+      "pkg": "com.google.android.apps.wellbeing"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Google Digital Wellbeing",
+   "source": "https://developer.android.com/"
+  },
+  {
+   "id": "google.passwords",
+   "app": "Google Password Manager",
+   "pkg": null,
+   "phrases": [
+    "open google password manager",
+    "show my saved passwords",
+    "manage google passwords",
+    "check saved logins",
+    "google saved passwords",
+    "password checkup google",
+    "打开谷歌密码管理器",
+    "查看保存的密码",
+    "管理谷歌已存密码",
+    "查看已保存的登录信息"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": null,
+      "link": "https://passwords.google.com/"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Google Password Manager",
+   "source": "https://passwords.google.com/"
+  },
+  {
+   "id": "google.play_subscriptions",
+   "app": "Google Play Store",
+   "pkg": "com.android.vending",
+   "phrases": [
+    "manage my google play subscriptions",
+    "check my app subscriptions",
+    "show play store subscriptions",
+    "cancel a subscription on google play",
+    "my google subscriptions",
+    "view active play subscriptions",
+    "查看谷歌商店订阅",
+    "管理google play订阅",
+    "查看我的应用订阅",
+    "管理自动续费订阅"
+   ],
+   "steps": [
+    {
+     "open": {
+      "pkg": "com.android.vending",
+      "link": "https://play.google.com/store/account/subscriptions"
+     }
+    }
+   ],
+   "expect": [],
+   "say": "Opening Google Play subscriptions",
+   "source": "https://play.google.com/store/account/subscriptions"
+  }
+ ]
+}

@@ -12,8 +12,8 @@ android {
         applicationId = "ai.lumen.assistant"
         minSdk = 30
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.3.0"
         ndk { abiFilters += listOf("arm64-v8a") }
         externalNativeBuild {
             cmake {
@@ -88,4 +88,8 @@ dependencies {
     implementation("net.java.dev.jna:jna:5.19.1@aar")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.activity:activity-ktx:1.9.3")
+    implementation("com.google.mlkit:text-recognition:16.0.1") // bundled: reads screenshots at once and offline, with or without Google services
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha11")
+    implementation("androidx.work:work-runtime-ktx:2.10.1")
 }

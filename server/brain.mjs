@@ -23,7 +23,9 @@ export function makeBrain(cfg) {
     const client = new Anthropic({ apiKey: cfg.apiKey, ...(cfg.baseUrl ? { baseURL: cfg.baseUrl } : {}) });
     return {
       model, webSearch: true,
-      async stream(params, onText) { const st = client.messages.stream({ ...params, model: params.model || model }); if (onText) st.on('text', onText); return st.finalMessage(); },
+      // the tools and instructions repeat on every step: cached, they cost a tenth and start faster
+      async stream(params, onText) { const tools = params.tools?.length ? [...params.tools.slice(0, -1), { ...params.tools.at(-1), cache_control: { type: 'ephemeral' } }] : params.tools, system = typeof params.system === 'string' ? [{ type: 'text', text: params.system, cache_control: { type: 'ephemeral' } }] : params.system;
+        const st = client.messages.stream({ ...params, tools, system, model: params.model || model }); if (onText) st.on('text', onText); return st.finalMessage(); },
       create: params => client.messages.create({ ...params, model: params.model || model }),
     };
   }
