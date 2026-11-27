@@ -164,6 +164,13 @@ Most everyday requests never reach a model:
   screen to load instead of fixed pauses.
 - **Rules on the phone**: at a time, when the car connects, when charging, on joining Wi-Fi; they run offline.
 
+### Ideas, filed where they belong
+- Say "note: ...", "idea: ...", "note to self ..." or "记一下……" any time. Your model reads the places you keep notes and
+  files it there in a few seconds: a database or page in **Notion** (connect an internal integration), a folder or a
+  running note in your **Obsidian** vault on the phone (choose the folder once), or Lumen's own Idea Box. It keeps your
+  words, adds a title and tags, and follows your own sorting rules ("work things go to Work").
+- "Summarize my ideas this week" or "what ideas do I have about the app" reads the capture log and groups them by theme.
+
 ### Email, routines and habits, by script
 - **Email** (IMAP; an app password, or one-tap Gmail and Outlook sign-in with your own OAuth client): a script reads
   new mail every few minutes and keeps only the facts (payments, deliveries, bookings, bills, cancellations, trial

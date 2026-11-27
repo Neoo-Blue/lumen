@@ -73,6 +73,8 @@ object ServiceActions {
             "settings" -> ok(Knobs.read(ctx))
             "skillList" -> ok(Skills.list(ctx))
             "calendarEvents" -> Cal.events(ctx, args)
+            "vaultList" -> Vault.list(ctx)
+            "vaultWrite" -> Vault.write(ctx, args)
             "live" -> LiveUpdates.post(ctx, args)
             "assistContext" -> AssistContext.read()
             "health" -> {

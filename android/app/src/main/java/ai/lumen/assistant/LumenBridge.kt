@@ -108,6 +108,9 @@ class LumenBridge(private val activity: MainActivity) {
             }
             "takePhoto" -> takePhoto(requestId)
             "pickPhotos" -> pickPhotos(requestId, args)
+            "vaultPick" -> ui(requestId) { activity.pickFolder { uri -> if (uri == null) deliver(requestId, error("cancelled")) else work(requestId) { deliver(requestId, try { Vault.keep(activity, uri) } catch (e: Exception) { error("could not keep that folder") }) } } }
+            "vaultList" -> work(requestId) { deliver(requestId, Vault.list(activity)) }
+            "vaultWrite" -> work(requestId) { deliver(requestId, Vault.write(activity, args)) }
             "notifications" -> notifications(requestId, args)
             "notifReplyTargets" -> work(requestId) { deliver(requestId, ReplyCache.targets(activity)) }
             "notifReply" -> work(requestId) { deliver(requestId, ReplyCache.reply(activity, args)) }
@@ -1430,7 +1433,7 @@ class LumenBridge(private val activity: MainActivity) {
             "photos",
             "photo",
             "takePhoto",
-            "pickPhotos",
+            "pickPhotos", "vaultPick", "vaultList", "vaultWrite",
             "notifications",
             "openNotificationAccess",
             "media",

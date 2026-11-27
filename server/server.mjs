@@ -8,6 +8,7 @@ import * as vault from './vault.mjs';
 import { op, recent } from './oplog.mjs';
 import { guess, needsJudgment, phoneCommand, skillFrom, cleanShortcut, describeStep, SHORTCUT_STEPS } from './prefetch.mjs';
 import { makeLife } from './life.mjs';
+import { makeIdeas } from './ideas.mjs';
 import { authUrl, exchange } from './mail.mjs';
 import { makeCalls } from './calls.mjs';
 import { readFile as readF, writeFile as writeF } from 'node:fs/promises';
@@ -199,6 +200,9 @@ PLAYBOOKS (do the whole job, not a piece of it):
 - SHORTCUTS: "when I say X, do Y" (or "make a shortcut", "teach you a routine") is shortcuts save: the person's
   phrases, then the steps in order using the phone actions; parts that need judgment go in one ask step at the end.
   Times and repeats are jobs, not shortcuts. Read the steps back in one line; the card on screen is where they confirm.
+- IDEAS: "记一下 / 我有个想法 / idea: / note to self" are usually filed by the page directly. When a thought to keep
+  comes up in conversation, ideas capture files it (their Notion, Obsidian vault or Idea Box, chosen by a fast model).
+  "Summarize my ideas this week" or "ideas about X" is ideas recent, then a short summary grouped by theme.
 - EMAIL (when the mail tool is there): a script already reads every new email and keeps the facts (payments,
   deliveries, bookings, bills, cancellations) and files bookings into the calendar. Start with mail digest; then search;
   read one message only when the facts are not enough. "Tell me when X arrives" is mail watch (a script, no AI), not a
@@ -435,6 +439,9 @@ const liveOn = (p, args) => { if (relayLive(p.who.uid)) relaySend(p.who.uid, { i
 const deviceAsk = (p, method, args, ms = 15000) => new Promise(res => { const did = randomBytes(9).toString('base64url'); p.deviceWait.set(did, res); setTimeout(() => { if (p.deviceWait.delete(did)) res({ ok: false, error: 'the phone did not answer' }); }, ms); relaySend(p.who.uid, { id: did, method, args }); });
 // ---------- mail, watches and routines by script (life.mjs); the AI reads what they leave ----------
 const life = makeLife({ vault, notify: notifyPhone, deviceAsk, relayLive, run: (n, i, here) => run(n, i, { state: freshState(), lang: 'en', here }), nextRun, save: p => saveWorld(p) });
+// ideas said out loud, filed where they belong by the person's model (ideas.mjs)
+const ideas = makeIdeas({ vault, deviceAsk, relayLive, save: p => saveWorld(p),
+  light: async (prompt, max) => (await brain().create({ max_tokens: max, messages: [{ role: 'user', content: prompt }] })).content.map(b => b.text || '').join('') });
 const LIFE_INDEX = `${DATA}/life-index.json`;
 const oauthStates = new Map(); // one-time mailbox sign-in states
 const publicUrl = () => (process.env.LUMEN_PUBLIC_URL || '').replace(/\/+$/, ''); // the server's own tailnet address, learned at start
@@ -635,7 +642,7 @@ async function turn(p, text, kind, tz, lang, write, device = [], here = null, sk
   try {
     let maxSteps = 6; // driving another app on screen takes more steps
     for (let step = 0; step < maxSteps; step++) {
-      const params = { max_tokens: 16000, system: config().name === 'Lumen' ? SYSTEM : SYSTEM.replace(/\bLumen\b/g, config().name), tools: [...tools, RECALL, CONNECT_API, API_CALL, JOBS_TOOL, CALL_TOOL, ...(device.length ? [phoneTool(device), SHORTCUTS_TOOL] : []), ...(p.state.mail?.addr ? [life.TOOL] : []), ...shared.toolDefs(), ...p.mcp.toolDefs()], messages: h };
+      const params = { max_tokens: 16000, system: config().name === 'Lumen' ? SYSTEM : SYSTEM.replace(/\bLumen\b/g, config().name), tools: [...tools, RECALL, CONNECT_API, API_CALL, JOBS_TOOL, CALL_TOOL, ...(device.length ? [phoneTool(device), SHORTCUTS_TOOL] : []), ...(p.state.mail?.addr ? [life.TOOL] : []), ideas.TOOL, ...shared.toolDefs(), ...p.mcp.toolDefs()], messages: h };
       const tm = Date.now(); steps++;
       lbuf = '';
       const msg = await slot(() => brain().stream(params, modelWrite));
@@ -731,6 +738,7 @@ async function turn(p, text, kind, tz, lang, write, device = [], here = null, sk
             if (c.input?.action === 'delete') { p.state.shortcuts = all.filter(x => x.name.toLowerCase() !== String(c.input.name || '').toLowerCase()); saveWorld(p); return { type: 'tool_result', tool_use_id: c.id, content: '{"deleted":true}' }; }
             return { type: 'tool_result', tool_use_id: c.id, content: JSON.stringify(all.map(x => ({ name: x.name, phrases: x.phrases, steps: x.steps.map(describeStep) }))) };
           }
+          if (c.name === 'ideas') { const r = await timed(ideas.tool(p, c.input || {}), 45000); trace.push({ tool: 'ideas.' + c.input?.action }); for (const u of r.ui || []) line(u); return { type: 'tool_result', tool_use_id: c.id, content: JSON.stringify(r.data).slice(0, 12000) }; }
           if (c.name === 'mail') { const r = await timed(life.tool(p, c.input || {}), 45000); trace.push({ tool: 'mail.' + c.input?.action }); for (const u of r.ui || []) line(u); return { type: 'tool_result', tool_use_id: c.id, content: JSON.stringify(r.data).slice(0, 12000) }; }
           if (c.name === 'api_call') { const r = await timed(vault.call(p.u.dir, c.input), 25000); trace.push({ tool: c.name, service: c.input.service, status: r.status, error: r.error }); return { type: 'tool_result', tool_use_id: c.id, content: JSON.stringify(r) }; }
           const set = p.mcp.owns(c.name) ? p.mcp : shared.owns(c.name) ? shared : null;
@@ -1028,6 +1036,15 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && url.pathname === '/moments') { // the phone joined or left the car (for habits); nothing else is noted
       const b = await readBody(req).catch(() => ({})); const ok = life.moment(p, String(b?.kind || ''), b?.t, b?.dev, b?.cls); if (ok) indexLife(p); return json(res, 200, { ok });
+    }
+    if (req.method === 'POST' && url.pathname === '/ideas') { // an idea said out loud: filed at once, no conversation turn
+      const b = await readBody(req).catch(() => ({})); const r = await ideas.capture(p, b?.text);
+      if (!r.error) { await memory.log(p.u, 'did', `kept an idea in ${r.to}: ${r.title}`); p.u.history.push({ role: 'user', content: `(kept an idea: "${r.title}" in ${r.to})` }, { role: 'assistant', content: [{ type: 'text', text: '(noted)' }] }); }
+      return json(res, r.error ? 400 : 200, r);
+    }
+    if (url.pathname === '/ideas/settings') {
+      if (req.method === 'GET') return json(res, 200, await ideas.view(p));
+      const b = await readBody(req).catch(() => ({})); const r = await ideas.settings(p, b || {}); return json(res, r.error ? 400 : 200, r);
     }
     if (url.pathname === '/shortcuts') { // the page runs these itself when their words are said
       if (req.method === 'POST') { const b = await readBody(req).catch(() => ({})); if (b?.action === 'delete') { p.state.shortcuts = (p.state.shortcuts || []).filter(x => x.name !== b.name); saveWorld(p); } }

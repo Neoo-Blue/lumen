@@ -670,7 +670,7 @@ body.sheet-open .sheet{transform:none;visibility:visible;transition:transform .6
   <aside class="sheet" id="setSheet">
     <div class="grab"></div>
     <h2 data-t="settings"></h2>
-    <div id="setHealth"></div><div id="setSmart"></div><div id="setShortcuts"></div><div id="setLife"></div><div id="setJobs"></div><div id="setSkills"></div>
+    <div id="setHealth"></div><div id="setIdeas"></div><div id="setSmart"></div><div id="setShortcuts"></div><div id="setLife"></div><div id="setJobs"></div><div id="setSkills"></div>
     <div class="lbl" data-t="language"></div>
     <div class="langs" id="langList"></div>
     <div class="other" id="otherBox" hidden><input id="otherLang" data-tp="other_ph" autocomplete="off"><button class="btn p" id="otherSave" data-t="save"></button></div>
@@ -1079,7 +1079,7 @@ async function instantCard(text, canvas) {
     const r = await nativeCall('teachStart', { name: m[1] }).catch(() => null); if (!r?.ok) return false;
     return say('Watching', `Do "${m[1]}" now, then tap Stop. Next time just say it.`);
   }
-  if (has('stashNote') && (m = t0.match(/^(?:note|remember this|save (?:a )?note|记一下)[:：,]?\s+(.{2,500})$/i))) {
+  if (has('stashNote') && (m = t0.match(/^(?:remember this|save (?:a )?private note)[:：,]?\s+(.{2,500})$/i))) {
     const r = await nativeCall('stashNote', { text: m[1] }).catch(() => null); if (!r?.ok) return false; return say('Noted', m[1].slice(0, 80));
   }
   if (has('stashSearch') && (m = t0.match(/^(?:find|search|show me) (?:my |the )?(?:screenshots?|notes?|saved) (?:of |about |with |for )?(.{2,80})$/i))) {
@@ -1090,6 +1090,8 @@ async function instantCard(text, canvas) {
 }
 // what was on screen when the side key summoned Lumen (kept by the phone for two minutes): attached to that question
 const screenNow = async () => { if (!OVERLAY || !DEVICE.includes('assistContext')) return null; try { const r = await nativeCall('assistContext', {}); const at = Date.parse(r?.data?.at) || r?.data?.at || 0; return r?.ok && r.data.text && Date.now() - at < 120e3 ? { app: r.data.app, url: r.data.url, text: String(r.data.text).slice(0, 6000) } : null; } catch { return null; } };
+// "记一下…", "我有个想法…", "idea: …", "note to self …": the words after it are the idea
+const CAPTURE = /^(?:(?:记一下|记下来?|帮我记(?:一下|下来)?|我有个(?:想法|点子|主意)|有个(?:想法|点子)|灵感|想法|点子)\s*[:：,，]?|(?:idea|note|灵感)\s*[:：,，]|(?:note to self|capture this|save (?:this|an) idea|jot (?:this )?down)\b\s*[:：,，]?)\s*(.{2,})$/i;
 let scList = null, scAt = 0;
 const myShortcuts = async () => {
   if (scList && Date.now() - scAt < 60e3) return scList;
@@ -1269,6 +1271,11 @@ async function ask(text, opts = {}) {
   voice.thinking();
   // the person's own shortcut: their words run their saved steps, before anything else
   if (kind !== 'tap') { const pc = await phoneCmds(), sc = pc?.shortcutMatch && pc.shortcutMatch(said, await myShortcuts()); if (sc) return runShortcut(sc, canvas, pc); }
+  // an idea said out loud: filed where it belongs (Notion, the Obsidian vault, or the Idea Box) without a conversation turn
+  { const cm = kind !== 'tap' && !said.includes('\n') && said.trim().match(CAPTURE);
+    if (cm) { const r = await api('/ideas', { method: 'POST', body: JSON.stringify({ text: cm[1] }) }).then(r => r.json()).catch(() => null);
+      if (r && !r.error) { canvas.querySelector('.wait')?.remove(); mount(canvas, { c: 'hero', title: t('idea_kept'), subtitle: `${r.title} → ${r.to}` }); if (r.note) mount(canvas, { c: 'note', text: r.note }); voice.say(t('idea_kept_say', { to: r.to }));
+        busy = false; document.body.classList.remove('busy'); panel('busy', { on: false }); voice.turnDone(); if (OVERLAY) afterTurn(canvas); return; } } }
   // instant answers from the phone itself (no model): parking, battery, steps, sleep, what I missed, what's next, replies, notes
   if (NATIVE && kind !== 'tap' && !said.includes('\n') && await instantCard(said, canvas)) { busy = false; document.body.classList.remove('busy'); panel('busy', { on: false }); voice.turnDone(); if (OVERLAY) afterTurn(canvas); return; }
   // instant: plain phone commands run right here on the phone (no server round trip; also works offline)
@@ -1664,7 +1671,7 @@ async function openSettings() {
   const custom = chosen && !I18N.langs.some(l => l[0] === chosen) ? row(chosen, chosen) : '';
   $('#langList').innerHTML = row('', t('follow_phone', { lang: langLabel(PHONE_LANG) }), true) + I18N.langs.map(([c, n]) => row(c, n)).join('') + custom + `<button class="lang wide" data-lang="__other"><i></i><span>${esc(t('other_lang'))}</span></button>`;
   document.body.classList.add('set-open');
-  loadHealth(); loadSmart(); loadShortcuts(); loadLife(); loadJobs(); loadSkills();
+  loadHealth(); loadIdeas(); loadSmart(); loadShortcuts(); loadLife(); loadJobs(); loadSkills();
 }
 /* ---------------- settings: phone health, hands-free, jobs and activity, skills ---------------- */
 const srow = (dot, title, sub, btn, attrs = '') => `<div class="srow" ${attrs}>${dot != null ? `<i class="dot ${dot}"></i>` : ''}<div class="tx"><b>${esc(title)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}</div>${btn || ''}</div>`;
@@ -1706,6 +1713,18 @@ async function habitChoice(id) {
     b.onclick = async () => { await lifePost({ action: 'habit', id, mode, lead: 15 }); row.remove(); mount(canvas, { c: 'done', text: t('hb_done_' + mode) }); }; row.append(b); }
   canvas.append(row);
 }
+// where ideas go: Notion (an integration secret), the Obsidian vault on the phone, and their own sorting rules
+async function loadIdeas() {
+  const box = $('#setIdeas'), r = await api('/ideas/settings').then(r => r.ok ? r.json() : null).catch(() => null); if (!r) return;
+  const notion = r.notion ? srow('ok', 'Notion: ' + r.notion, t('id_notion_on'), `<button class="go" data-idoff="notionOff">×</button>`)
+    : srow(null, t('id_notion'), t('id_notion_sub'), '') + `<div class="srow lifeform"><input id="notionKey" type="password" autocomplete="off" placeholder="ntn_…"><button class="go" data-idnotion>${esc(t('mail_go'))}</button></div>`;
+  const obs = !NATIVE || !DEVICE.includes('vaultPick') ? '' : r.vault ? srow('ok', 'Obsidian: ' + r.vault, t('id_vault_on'), `<button class="go" data-idvault>${esc(t('id_change'))}</button> <button class="go" data-idoff="vaultOff">×</button>`)
+    : srow(null, t('id_vault'), t('id_vault_sub'), `<button class="go p" data-idvault>${esc(t('id_pick'))}</button>`);
+  box.innerHTML = `<div class="sgroup"><h3>${esc(t('set_ideas'))}</h3>${srow(null, t('id_how'), t('id_how_sub', { n: r.places || 1 }), '')}${notion}${obs}
+    <div class="srow lifeform"><textarea class="rtcity" id="ideaRules" rows="3" placeholder="${esc(t('id_rules_ph'))}">${esc(r.rules || '')}</textarea></div>
+    ${(r.recent || []).map(x => srow(null, x.title, '→ ' + x.to, '')).join('')}<div class="srow"><span id="ideaMsg" class="lifemsg" role="status"></span></div></div>`;
+}
+const ideaPost = b => api('/ideas/settings', { method: 'POST', body: JSON.stringify(b) }).then(async r => ({ ok: r.ok, ...(await r.json().catch(() => ({}))) }));
 // notifications and the phone's own smarts (codes, calls, quiet apps, meetings)
 async function loadSmart() {
   const box = $('#setSmart'); if (!NATIVE || !DEVICE.includes('triage')) { box.innerHTML = ''; return; }
@@ -1769,6 +1788,7 @@ $('#setSheet').addEventListener('change', e => {
     nativeCall('triage', { set: { [k]: val } }).then(() => toast(t('saved'))).catch(() => {});
   }
   if (x.dataset?.rttime) lifePost({ action: 'routines', routines: { tz: tzNow(), units: unitsNow(), [x.dataset.rttime]: { time: x.value } } });
+  if (x.id === 'ideaRules') ideaPost({ action: 'rules', rules: x.value }).then(() => toast(t('saved')));
   if (x.id === 'rtCity') lifePost({ action: 'routines', routines: { tz: tzNow(), units: unitsNow(), city: x.value.trim() } });
 });
 $('#setSheet').addEventListener('click', async e => {
@@ -1776,6 +1796,9 @@ $('#setSheet').addEventListener('click', async e => {
   let b;
   if ((b = q('[data-fix]'))) { await nativeCall('fix', { what: b.dataset.fix }); return; }
   if ((b = q('[data-quick]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); localStorage.lumenQuickLearn = on ? 'on' : 'off'; return; }
+  if ((b = q('[data-idnotion]'))) { $('#ideaMsg').textContent = t('mail_trying'); const r = await ideaPost({ action: 'notion', token: $('#notionKey').value }); if (!r.ok) { $('#ideaMsg').textContent = r.error || t('mail_failed'); return; } loadIdeas(); return; }
+  if ((b = q('[data-idvault]'))) { const r = await nativeCall('vaultPick', {}).catch(() => null); if (!r?.ok) return; await ideaPost({ action: 'vault', name: r.data.picked }); loadIdeas(); return; }
+  if ((b = q('[data-idoff]'))) { await ideaPost({ action: b.dataset.idoff }); loadIdeas(); return; }
   if ((b = q('[data-meetsilence]'))) { const on = !b.classList.contains('on'); b.classList.toggle('on', on); await nativeCall('localRules', { meetingSilence: on }); return; }
   if ((b = q('[data-scdel]'))) { if (!confirm(t('sc_delete_q'))) return; await api('/shortcuts', { method: 'POST', body: JSON.stringify({ action: 'delete', name: b.dataset.scdel }) }); loadShortcuts(); return; }
   if ((b = q('[data-hbon]'))) { const on = !b.classList.contains('on'); if (!on && !confirm(t('hb_off_q'))) return; b.classList.toggle('on', on); await lifePost({ action: 'habits', on }); loadLife(); return; }

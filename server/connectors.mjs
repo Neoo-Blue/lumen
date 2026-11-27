@@ -19,7 +19,7 @@ const md = (iso, lang) => new Date(iso).toLocaleDateString(loc(lang), { month: '
 const isZh = lang => /^zh/.test(lang || '');
 
 // Everything a person makes here (reminders, trips, lists, notes) starts empty and holds only their own data.
-export const freshState = () => ({ reminders: [], trips: [], lists: {}, notes: [], seatPrefs: [], jobs: [], receipts: [], mail: null, routines: null, shortcuts: [], habits: null }); // mail and routines: life.mjs
+export const freshState = () => ({ reminders: [], trips: [], lists: {}, notes: [], seatPrefs: [], jobs: [], receipts: [], mail: null, routines: null, shortcuts: [], habits: null, ideas: null }); // mail and routines: life.mjs
 // worlds saved before the demo account was removed: keep what the person made, drop the sample data
 export const cleanState = s => { const f = freshState(); for (const k of Object.keys(f)) if (s && s[k]) f[k] = s[k]; return f; };
 

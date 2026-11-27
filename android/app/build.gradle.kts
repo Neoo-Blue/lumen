@@ -12,8 +12,8 @@ android {
         applicationId = "ai.lumen.assistant"
         minSdk = 30
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.3.0"
+        versionCode = 5
+        versionName = "1.4.0"
         ndk { abiFilters += listOf("arm64-v8a") }
         externalNativeBuild {
             cmake {
@@ -92,4 +92,5 @@ dependencies {
     implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
     implementation("androidx.health.connect:connect-client:1.1.0-alpha11")
     implementation("androidx.work:work-runtime-ktx:2.10.1")
+    implementation("androidx.documentfile:documentfile:1.0.1") // the notes vault folder
 }

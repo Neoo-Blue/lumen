@@ -159,6 +159,11 @@ open class MainActivity : AppCompatActivity() {
     private val pickQueue = ArrayDeque<PickReq>()
     private var pickInFlight: PickReq? = null
 
+    // the notes vault: Android's folder picker, once; the choice is kept across restarts (Vault.kt)
+    private var folderDone: ((Uri?) -> Unit)? = null
+    private val treePicker = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri -> val d = folderDone; folderDone = null; d?.invoke(uri) }
+    fun pickFolder(done: (Uri?) -> Unit) { folderDone = done; treePicker.launch(null) }
+
     private val singlePicker = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         finishPick(if (uri == null) null else listOf(uri))
     }

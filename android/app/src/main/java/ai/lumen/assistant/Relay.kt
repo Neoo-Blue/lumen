@@ -17,7 +17,7 @@ import java.net.URL
  */
 object DeviceRelay {
     // what the server may ask for over the direct line: reading and steering, never sending texts, calls, installs or settings of Lumen itself
-    private val RELAY_OK = setOf("formReview", "screenshot", "lifeSearch", "notify", "refreshTriggers", "skillList", "screenRead", "screenTap", "screenType", "screenScroll", "screenDo", "press", "toggle", "setting", "settings", "openApp", "openUrl", "skillRun", "flashlight", "battery", "phoneInfo", "location", "media", "calendarEvents", "calendarAdd", "playSearch", "systemScreen", "notifReplyTargets", "triage", "notifDigest", "live", "assistContext", "health", "stashSearch", "stashNote", "stashStats", "localRules", "teachStart", "teachStop", "parked", "localModel")
+    private val RELAY_OK = setOf("formReview", "screenshot", "lifeSearch", "notify", "refreshTriggers", "skillList", "screenRead", "screenTap", "screenType", "screenScroll", "screenDo", "press", "toggle", "setting", "settings", "openApp", "openUrl", "skillRun", "flashlight", "battery", "phoneInfo", "location", "media", "calendarEvents", "calendarAdd", "playSearch", "systemScreen", "notifReplyTargets", "triage", "notifDigest", "live", "assistContext", "health", "stashSearch", "stashNote", "stashStats", "localRules", "teachStart", "teachStop", "parked", "localModel", "vaultList", "vaultWrite")
     @Volatile var bridge: LumenBridge? = null   // set while Lumen's screen exists; otherwise the always-on service answers
     @Volatile private var started = false
     @Volatile private var poke = false
