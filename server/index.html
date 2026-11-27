@@ -1058,7 +1058,7 @@ async function instantCard(text, canvas) {
   }
   if (has('calendarEvents') && /^(what'?s next(?: on my calendar)?|my next (?:meeting|event|appointment)|when is my next (?:meeting|event)|下一个(?:日程|会议)是什么)$/i.test(t0)) {
     const now = new Date(), r = await nativeCall('calendarEvents', { from: now.toISOString(), to: new Date(+now + 7 * 864e5).toISOString() }).catch(() => null); if (!r?.ok) return false;
-    const ev = (Array.isArray(r.data) ? r.data : r.data?.events || []).filter(e => Date.parse(e.end || e.start) > +now).sort((a, b) => Date.parse(a.start) - Date.parse(b.start))[0];
+    const ev = calTidy(r.data).filter(e => e.allDay ? e.date >= localDay() : Date.parse(e.end || e.start) > +now).sort((a, b) => (a.allDay ? Date.parse(a.date + 'T00:00:00') : Date.parse(a.start)) - (b.allDay ? Date.parse(b.date + 'T00:00:00') : Date.parse(b.start)))[0];
     if (!ev) return say('Nothing coming up', 'This week is clear');
     const allDay = ev.allDay || (/T00:00:00(\.000)?Z$/.test(ev.start) && (Date.parse(ev.end) - Date.parse(ev.start)) % 864e5 === 0); // stored at midnight UTC
     return say(ev.title, (allDay ? new Date(ev.start.slice(0, 10) + 'T12:00:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) + ', all day' : new Date(ev.start).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + (ev.location ? ' · ' + ev.location : ''), ev.location ? [{ c: 'actions', items: [{ label: 'Directions', do: `Directions to ${ev.location}`, primary: true }] }] : []);
@@ -1092,6 +1092,21 @@ async function instantCard(text, canvas) {
 const screenNow = async () => { if (!OVERLAY || !DEVICE.includes('assistContext')) return null; try { const r = await nativeCall('assistContext', {}); const at = Date.parse(r?.data?.at) || r?.data?.at || 0; return r?.ok && r.data.text && Date.now() - at < 120e3 ? { app: r.data.app, url: r.data.url, text: String(r.data.text).slice(0, 6000) } : null; } catch { return null; } };
 // "记一下…", "我有个想法…", "idea: …", "note to self …": the words after it are the idea
 const CAPTURE = /^(?:(?:记一下|记下来?|帮我记(?:一下|下来)?|我有个(?:想法|点子|主意)|有个(?:想法|点子)|灵感|想法|点子)\s*[:：,，]?|(?:idea|note|灵感)\s*[:：,，]|(?:note to self|capture this|save (?:this|an) idea|jot (?:this )?down)\b\s*[:：,，]?)\s*(.{2,})$/i;
+// the phone's calendar, tidied: an all-day event (stored midnight to midnight UTC) belongs to its own date and reads
+// "All day", never "4:00 PM"; the same event from several calendars (holidays) shows once
+const localDay = (d = new Date()) => d.toLocaleDateString('en-CA');
+function calTidy(list, day) {
+  const seen = new Set(), out = [];
+  for (const e of (Array.isArray(list) ? list : list?.events || []).filter(e => e?.title)) {
+    const allDay = !!e.allDay || (/T00:00:00(\.000)?Z$/.test(e.start) && (Date.parse(e.end) - Date.parse(e.start)) % 864e5 === 0 && Date.parse(e.end) > Date.parse(e.start));
+    const date = allDay ? e.start.slice(0, 10) : localDay(new Date(e.start));
+    if (day && allDay ? date !== day : day && date !== day && Date.parse(e.end) < Date.parse(day + 'T00:00:00')) continue;
+    const key = `${e.title.trim().toLowerCase()}|${allDay ? date : e.start}`; if (seen.has(key)) continue; seen.add(key);
+    out.push({ ...e, allDay, date });
+  }
+  return out.sort((a, b) => (b.allDay - a.allDay) || a.start.localeCompare(b.start));
+}
+const calTime = (e, part = 'start') => e.allDay ? t('all_day') : new Date(e[part]).toLocaleTimeString(LANG, { hour: 'numeric', minute: '2-digit' });
 let scList = null, scAt = 0;
 const myShortcuts = async () => {
   if (scList && Date.now() - scAt < 60e3) return scList;
@@ -1181,11 +1196,10 @@ async function runDevice(d, canvas) {
   if (r.ok) {
     // instant "what's my day": the phone's calendar drawn without the model
     if (d.method === 'calendarEvents' && d.args?.show === 'today' && Array.isArray(r.data)) {
-      const hm = iso => new Date(iso).toLocaleTimeString(LANG, { hour: '2-digit', minute: '2-digit' });
-      const ev = r.data.filter(e => e.title).sort((a, b) => a.start.localeCompare(b.start));
-      const up = ev.filter(e => Date.parse(e.end) > Date.now());
-      show({ c: 'hero', title: ev.length ? t('day_n', { n: ev.length }) : t('day_free'), subtitle: up[0] ? `${t('next')}: ${up[0].title} · ${hm(up[0].start)}` : '' });
-      if (ev.length) show({ c: 'timeline', title: t('today_cal'), items: ev.slice(0, 6).map(e => ({ time: hm(e.start), end: hm(e.end), title: e.title, meta: e.location || '', tone: 'normal' })) });
+      const ev = calTidy(r.data, localDay());
+      const up = ev.filter(e => !e.allDay && Date.parse(e.end) > Date.now());
+      show({ c: 'hero', title: ev.length ? t('day_n', { n: ev.length }) : t('day_free'), subtitle: up[0] ? `${t('next')}: ${up[0].title} · ${calTime(up[0])}` : '' });
+      if (ev.length) show({ c: 'timeline', title: t('today_cal'), items: ev.slice(0, 6).map(e => ({ time: calTime(e), end: e.allDay ? '' : calTime(e, 'end'), title: e.title, meta: e.location || '', tone: 'normal' })) });
       voice.say(ev.length ? `${t('day_n', { n: ev.length })}. ${up[0] ? up[0].title : ''}` : t('day_free'));
     }
     if (d.method === 'photos' && Array.isArray(r.data)) show({ c: 'photos', items: r.data.map(x => ({ src: x.thumb, id: x.id, date: x.date })) });
@@ -1594,9 +1608,8 @@ async function boot() {
     if (DEVICE.includes('calendarEvents')) {
       const d0 = new Date(); const from = new Date(d0), to = new Date(d0); to.setHours(23, 59, 59);
       nativeCall('calendarEvents', { from: from.toISOString(), to: to.toISOString() }).then(r => {
-        const ev = (r.ok && Array.isArray(r.data) ? r.data : []).filter(e => e.title).slice(0, 4); if (!ev.length) return;
-        const hm = iso => new Date(iso).toLocaleTimeString(LANG, { hour: '2-digit', minute: '2-digit' });
-        const node = el(R.timeline(inert({ c: 'timeline', title: t('today_cal'), items: ev.map(e => ({ time: hm(e.start), end: hm(e.end), title: e.title, meta: e.location || '', tone: 'normal' })) })));
+        const ev = r.ok ? calTidy(r.data, localDay()).filter(e => e.allDay || Date.parse(e.end) > Date.now()).slice(0, 4) : []; if (!ev.length) return;
+        const node = el(R.timeline(inert({ c: 'timeline', title: t('today_cal'), items: ev.map(e => ({ time: calTime(e), end: e.allDay ? '' : calTime(e, 'end'), title: e.title, meta: e.location || '', tone: 'normal' })) })));
         box.prepend(node); animate(node); $('#chips').style.display = 'none';
       }).catch(() => {});
     }
